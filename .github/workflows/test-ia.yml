@@ -27,11 +27,11 @@ jobs:
       - name: Rédaction (modèle de qualité)
         run: |
           curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
-            -d '{"mode":"text","tier":"quality","prompt":"En deux phrases, dans un français posé et naturel, sans tiret long, explique ce que fait un assistant approvisionnement."}' | python3 -m json.tool
+            -d '{"mode":"text","tier":"quality","debug":true,"prompt":"En deux phrases, dans un français posé et naturel, sans tiret long, explique ce que fait un assistant approvisionnement."}' | python3 -m json.tool
       - name: Recherche Google via Gemini
         run: |
           curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
-            -d '{"mode":"text","tier":"light","search":true,"prompt":"Recherche sur internet ce que fait l entreprise Naval Group a Brest, en 3 lignes."}' | python3 -m json.tool
+            -d '{"mode":"text","tier":"light","search":true,"debug":true,"prompt":"Recherche sur internet ce que fait l entreprise Naval Group a Brest, en 3 lignes."}' | python3 -m json.tool
       - name: Lecture d'une vraie annonce
         run: |
           U="$URL_IN"

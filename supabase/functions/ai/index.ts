@@ -68,10 +68,20 @@ async function callGemini(model: string, r: Req): Promise<string> {
   if (r.mode === "json" && !r.url && !r.search) body.generationConfig.responseMimeType = "application/json";
   if (r.url) body.tools = [{ url_context: {} }];
   if (r.search) body.tools = [...(body.tools ?? []), { google_search: {} }];
-  const res = await fetch(`${GEM}/models/${model}:generateContent`, {
+  // Réflexion courte : réponses plus rapides, même qualité pour nos usages.
+  body.generationConfig.thinkingConfig = { thinkingLevel: "low" };
+  const send = () => fetch(`${GEM}/models/${model}:generateContent`, {
     method: "POST", headers: { "x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json" }, body: JSON.stringify(body),
+    signal: AbortSignal.timeout(r.images?.length ? 70000 : 55000),
   });
-  if (res.status === 429) throw new Exhausted(await res.text());
+  let res = await send();
+  if (res.status === 400) {
+    const t = await res.text();
+    if (!/thinking/i.test(t)) throw new Error(`gemini 400: ${t.slice(0, 300)}`);
+    delete body.generationConfig.thinkingConfig;
+    res = await send();
+  }
+  if (res.status === 429) throw new Exhausted((await res.text()).slice(0, 600));
   if (!res.ok) throw new Error(`gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const j = await res.json();
   const text = (j.candidates?.[0]?.content?.parts ?? []).filter((p: any) => !p.thought).map((p: any) => p.text ?? "").join("");
@@ -90,8 +100,9 @@ async function callGroq(model: string, r: Req): Promise<string> {
   if (r.mode === "json") body.response_format = { type: "json_object" };
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST", headers: { Authorization: `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+    signal: AbortSignal.timeout(55000),
   });
-  if (res.status === 429) throw new Exhausted(await res.text());
+  if (res.status === 429) throw new Exhausted((await res.text()).slice(0, 600));
   if (!res.ok) throw new Error(`groq ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const text = (await res.json()).choices?.[0]?.message?.content ?? "";
   if (!text.trim()) throw new Error("groq vide");
@@ -134,7 +145,9 @@ Deno.serve(async (req) => {
   if (!order.length) return json({ error: "quota", detail: "Toutes les IA gratuites ont atteint leur plafond du jour." }, 429);
 
   const errors: string[] = [];
+  const t0 = Date.now();
   for (const c of order) {
+    if (Date.now() - t0 > 85000) { errors.push("temps dépassé"); break; }
     try {
       const text = c.provider === "gemini" ? await callGemini(c.model, r) : await callGroq(c.model, r);
       const out: any = { provider: c.provider, model: c.model };
@@ -145,7 +158,10 @@ Deno.serve(async (req) => {
       const msg = String((e as Error).message ?? e);
       const daily = e instanceof Exhausted && isDaily(msg);
       await bumpUsage(c.provider, c.model, false, daily);
-      errors.push(`${c.provider}/${c.model}: ${e instanceof Exhausted ? (daily ? "plafond du jour" : "trop de demandes à la minute") : msg.slice(0, 160)}`);
+      const why = e instanceof Exhausted ? (daily ? "plafond du jour" : "trop de demandes à la minute") : /TimeoutError|aborted/i.test(msg) ? "trop lent" : msg.slice(0, 160);
+      console.log(`[ai] ${c.provider}/${c.model} : ${why} :: ${msg.slice(0, 400)}`);
+      errors.push(`${c.provider}/${c.model}: ${why}`);
+      if ((r as any).debug) errors.push(`  ↳ ${msg.slice(0, 300)}`);
     }
   }
   const allQuota = errors.every((e) => /plafond|minute/.test(e));
