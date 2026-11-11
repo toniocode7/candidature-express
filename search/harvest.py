@@ -257,7 +257,7 @@ def src_francetravail(C: dict) -> list[dict]:
                 r = get(url)
                 if r.status_code != 200:
                     raise RuntimeError(f"HTTP {r.status_code}")
-                items = re.findall(r'<li[^>]*class="[^"]*result[^"]*"[^>]*data-id-offre="([^"]+)"([\s\S]*?)</li>', r.text)
+                items = re.findall(r'<li[^>]*data-id-offre="([^"]+)"[^>]*>([\s\S]*?)</li>', r.text)
                 for idd, block in items:
                     t = re.search(r'class="media-heading-title"[^>]*>([\s\S]*?)<', block)
                     sub = re.search(r'class="subtext"[^>]*>([\s\S]*?)</p>', block)
@@ -312,58 +312,74 @@ def src_hellowork(C: dict) -> list[dict]:
     return out
 
 
-async def rendered(urls: list[str]) -> dict[str, str]:
-    """Pages qui ont besoin d'un navigateur : rendues par Crawl4AI (open source, sans crédits)."""
-    from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
-    res = {}
-    cfg = CrawlerRunConfig(cache_mode=CacheMode.BYPASS, page_timeout=45000, wait_until="networkidle", delay_before_return_html=2.0)
-    async with AsyncWebCrawler(config=BrowserConfig(headless=True, user_agent=UA, verbose=False)) as crawler:
-        for u in urls:
+def src_meteojob(C: dict) -> list[dict]:
+    """Meteojob : la page de résultats est lisible directement."""
+    out, errs = [], []
+    for lieu in (C["lieux"] if C["zf"] else [])[:3]:
+        for kw in C["kws"][:3]:
+            url = f"https://www.meteojob.com/jobsearch/offers?what={quote(kw)}&where={quote(lieu)}"
             try:
-                r = await crawler.arun(url=u, config=cfg)
-                res[u] = (r.html or "") if r.success else ""
+                r = get(url)
+                if r.status_code != 200:
+                    raise RuntimeError(f"HTTP {r.status_code}")
+                seen = set()
+                for m in re.finditer(r'<a[^>]+href="(/jobs/(\d{5,})[^"]*)"[^>]*>([\s\S]{0,1500}?)</a>', r.text):
+                    if m.group(2) in seen:
+                        continue
+                    seen.add(m.group(2))
+                    txt = clean(m.group(3))
+                    o = offer("meteojob", "Meteojob", "https://www.meteojob.com" + m.group(1).split("?")[0], txt[:140], "", lieu, "", "", None, txt[:400], "FR", web=True)
+                    if o:
+                        out.append(o)
             except Exception as e:
-                log(f"  rendu impossible : {u[:80]} ({str(e)[:80]})")
-                res[u] = ""
-    return res
-
-
-def links_from(html_text: str, base: str, pattern: str) -> list[tuple[str, str]]:
-    out, seen = [], set()
-    for m in re.finditer(r'<a[^>]+href="([^"]+)"[^>]*>([\s\S]{0,2000}?)</a>', html_text):
-        href = html.unescape(m.group(1))
-        if not re.search(pattern, href):
-            continue
-        u = urljoin(base, href.split("#")[0])
-        if u in seen:
-            continue
-        seen.add(u)
-        out.append((u, clean(m.group(2))))
+                errs.append(f"{kw} / {lieu} : {str(e)[:100]}")
+            time.sleep(random.uniform(1, 2))
+    if not out and errs:
+        raise RuntimeError(errs[0])
     return out
 
 
-def src_rendered_boards(C: dict) -> dict[str, list[dict]]:
-    """Welcome to the Jungle, Apec, Meteojob."""
+def ddg(q: str) -> list[tuple[str, str, str]]:
+    """Recherche web gratuite (DuckDuckGo, version HTML)."""
+    r = requests.get("https://html.duckduckgo.com/html/", params={"q": q, "kl": "fr-fr", "df": "m"},
+                     headers={"User-Agent": UA, "Accept-Language": "fr-FR,fr;q=0.9"}, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"moteur de recherche HTTP {r.status_code}")
+    out = []
+    for m in re.finditer(r'<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)</a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)</a>', r.text):
+        u = html.unescape(m.group(1))
+        ud = re.search(r"[?&]uddg=([^&]+)", u)
+        if ud:
+            from urllib.parse import unquote
+            u = unquote(ud.group(1))
+        if u.startswith("//"):
+            u = "https:" + u
+        out.append((u, clean(m.group(2)), clean(m.group(3))))
+    if not out and "anomaly" in r.text.lower():
+        raise RuntimeError("moteur de recherche temporairement bloqué")
+    return out
+
+
+def src_via_search(key: str, site_label: str, site_query: str, url_pat: str, C: dict) -> list[dict]:
+    """Sites qui bloquent les robots ou chargent leurs offres en JavaScript : on retrouve
+    leurs pages d'offres par un moteur de recherche (titre + extrait), sans ouvrir le site."""
+    out, errs = [], []
     lieux = (C["lieux"] if C["zf"] else [])[:3]
-    kws = C["kws"][:3]
-    plan = []
     for lieu in lieux:
-        for kw in kws:
-            plan.append(("wttj", "Welcome to the Jungle", f"https://www.welcometothejungle.com/fr/jobs?query={quote(kw)}&aroundQuery={quote(lieu)}&refinementList%5Bcontract_type%5D%5B%5D=full_time&refinementList%5Bcontract_type%5D%5B%5D=temporary", r"/fr/companies/[^/]+/jobs/[^/?#]+", lieu))
-            plan.append(("apec", "Apec", f"https://www.apec.fr/candidat/recherche-emploi.html/emploi?motsCles={quote(kw)}&lieux={quote(lieu)}", r"/candidat/recherche-emploi\.html/emploi/detail-offre/\w+", lieu))
-            plan.append(("meteojob", "Meteojob", f"https://www.meteojob.com/jobsearch/offers?what={quote(kw)}&where={quote(lieu)}", r"/(?:jobsearch/offers/offer|offre-d-emploi-)[^\"]*\d", lieu))
-    pages = asyncio.run(rendered([p[2] for p in plan]))
-    out: dict[str, list[dict]] = {"wttj": [], "apec": [], "meteojob": []}
-    for key, site, url, pat, lieu in plan:
-        for u, txt in links_from(pages.get(url, ""), url, pat):
-            title = re.split(r"\s{2,}|\|", txt)[0][:140] if txt else ""
-            company = ""
-            m = re.search(r"/fr/companies/([^/]+)/jobs/", u)
-            if m:
-                company = m.group(1).replace("-", " ").title()
-            o = offer(key, site, u, title or txt[:140], company, lieu, "", "", None, txt[:400], "FR", web=not company)
-            if o:
-                out[key].append(o)
+        for kw in C["kws"][:2]:
+            try:
+                for u, t, snip in ddg(f'{site_query} "{kw}" {lieu}'):
+                    if re.search(url_pat, u):
+                        o = offer(key, site_label, u.split("?")[0], re.split(r"\s[-|–]\s", t)[0], "", lieu, "", "", None, f"{t}. {snip}", "FR", web=True)
+                        if o:
+                            out.append(o)
+            except Exception as e:
+                errs.append(str(e)[:120])
+            time.sleep(random.uniform(3, 6))
+    if not out and errs:
+        raise RuntimeError(errs[0])
+    if not out:
+        raise RuntimeError("aucune offre trouvée par le moteur de recherche")
     return out
 
 
@@ -417,7 +433,6 @@ def main():
             todo.append(s)
     log("Sources à interroger :", ", ".join(LABEL[s] for s in todo) or "aucune (toutes récentes)")
     total = 0
-    rendered_cache = None
     for s in todo:
         t0 = time.time()
         log(f"\n== {LABEL[s]}")
@@ -428,12 +443,12 @@ def main():
                 found = src_francetravail(C)
             elif s == "hellowork":
                 found = src_hellowork(C)
+            elif s == "meteojob":
+                found = src_meteojob(C)
+            elif s == "wttj":
+                found = src_via_search("wttj", "Welcome to the Jungle", "site:welcometothejungle.com/fr/companies jobs", r"welcometothejungle\.com/fr/companies/[^/]+/jobs/", C)
             else:
-                if rendered_cache is None:
-                    rendered_cache = src_rendered_boards(C)
-                found = rendered_cache.get(s, [])
-                if not found:
-                    raise RuntimeError("aucune offre lisible sur la page (site bloqué ou modifié)")
+                found = src_via_search("apec", "Apec", "site:apec.fr detail-offre", r"apec\.fr/.*detail-offre", C)
             n = save(found)
             total += n
             state[s] = {"ok": True, "n": n, "at": int(time.time() * 1000), "lastOk": int(time.time() * 1000), "err": ""}
