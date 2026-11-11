@@ -84,9 +84,8 @@
           return { payload: { data: { markdown: j.markdown || "", metadata: { title: j.title || "", statusCode: j.statusCode || 200, via: j.via } } } };
         }
         if (server === "Firecrawl" && tool === "firecrawl_search") {
-          var q = String(args.query || "");
-          var r = await call("ai", { mode: "text", tier: "light", search: true, prompt: "Recherche sur internet : " + q + "\nObjectif : " + (args.objective || "") + "\nRésume en français, en 10 lignes au plus, ce que fait cette entreprise (activité, secteur, taille, implantations, actualité récente), uniquement d'après les résultats trouvés. Si tu trouves plusieurs sociétés au nom proche, dis-le. N'invente rien." });
-          return { payload: { data: { web: [{ title: "Recherche Google (Gemini)", url: "", description: r.text || "" }] } } };
+          var w = await call("read", { search: String(args.query || "") });
+          return { payload: { data: { web: w.web || [] } } };
         }
         throw unavailable();
       }

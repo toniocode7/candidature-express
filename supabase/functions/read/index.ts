@@ -98,11 +98,42 @@ async function viaGemini(req: Request, url: string): Promise<string> {
   return /^INDISPONIBLE\b/.test(t) ? "" : t;
 }
 
+// Recherche web gratuite et sans clé : DuckDuckGo (version HTML), Wikipédia en secours.
+async function webSearch(q: string): Promise<{ title: string; url: string; description: string }[]> {
+  const out: { title: string; url: string; description: string }[] = [];
+  try {
+    const r = await fetch("https://html.duckduckgo.com/html/?kl=fr-fr&q=" + encodeURIComponent(q), {
+      headers: { "User-Agent": UA, "Accept-Language": "fr-FR,fr;q=0.9" }, signal: AbortSignal.timeout(12000),
+    });
+    const h = await r.text();
+    const re = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+    let m;
+    while ((m = re.exec(h)) && out.length < 8) {
+      let u = decode(m[1]);
+      const ud = /[?&]uddg=([^&]+)/.exec(u);
+      if (ud) u = decodeURIComponent(ud[1]);
+      if (/duckduckgo\.com\/y\.js|ad_domain/.test(u)) continue;
+      out.push({ title: htmlToText(m[2]), url: u.startsWith("//") ? "https:" + u : u, description: htmlToText(m[3]) });
+    }
+  } catch (_) { /* secours */ }
+  if (!out.length) {
+    try {
+      const r = await fetch("https://fr.wikipedia.org/w/api.php?action=query&list=search&format=json&srlimit=5&srsearch=" + encodeURIComponent(q), { signal: AbortSignal.timeout(10000) });
+      for (const x of (await r.json()).query?.search ?? []) {
+        out.push({ title: x.title, url: "https://fr.wikipedia.org/wiki/" + encodeURIComponent(String(x.title).replace(/ /g, "_")), description: htmlToText(String(x.snippet)) });
+      }
+    } catch (_) { /* rien */ }
+  }
+  await bumpUsage("recherche-web", out.length ? "ok" : "vide", out.length > 0);
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (!(await authorize(req))) return json({ error: "non autorisé" }, 401);
-  let body: { url?: string; check?: boolean; noAi?: boolean };
+  let body: { url?: string; check?: boolean; noAi?: boolean; search?: string };
   try { body = await req.json(); } catch (_) { return json({ error: "requête illisible" }, 400); }
+  if (body.search) return json({ web: await webSearch(String(body.search).slice(0, 200)) });
   let url = String(body.url ?? "").trim();
   if (!/^https?:\/\//i.test(url)) return json({ error: "adresse invalide" }, 400);
 

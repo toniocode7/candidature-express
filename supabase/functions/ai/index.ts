@@ -65,9 +65,8 @@ async function callGemini(model: string, r: Req): Promise<string> {
   });
   const body: any = { contents, generationConfig: { temperature: r.mode === "json" ? 0.4 : 0.6 } };
   if (r.system) body.systemInstruction = { parts: [{ text: r.system }] };
-  if (r.mode === "json" && !r.url && !r.search) body.generationConfig.responseMimeType = "application/json";
+  if (r.mode === "json" && !r.url) body.generationConfig.responseMimeType = "application/json";
   if (r.url) body.tools = [{ url_context: {} }];
-  if (r.search) body.tools = [...(body.tools ?? []), { google_search: {} }];
   // Réflexion courte : réponses plus rapides, même qualité pour nos usages.
   body.generationConfig.thinkingConfig = { thinkingLevel: "low" };
   const send = () => fetch(`${GEM}/models/${model}:generateContent`, {
@@ -140,7 +139,7 @@ Deno.serve(async (req) => {
   let order: Cand[] = r.tier === "light"
     ? [...g(m.lite), ...q(groqList), ...g(m.flash)]
     : [...g(m.flash), ...g(m.lite), ...q(groqList)];
-  if (r.url || r.search) order = order.filter((c) => c.provider === "gemini");
+  if (r.url) order = order.filter((c) => c.provider === "gemini");
   order = order.filter((c) => (c.provider === "gemini" ? GEMINI_KEY : GROQ_KEY) && !ex.has(`${c.provider}:${c.model}`));
   if (!order.length) return json({ error: "quota", detail: "Toutes les IA gratuites ont atteint leur plafond du jour." }, 429);
 
@@ -156,7 +155,7 @@ Deno.serve(async (req) => {
       return json(out);
     } catch (e) {
       const msg = String((e as Error).message ?? e);
-      const daily = e instanceof Exhausted && isDaily(msg);
+      const daily = e instanceof Exhausted && isDaily(msg) && !r.url;
       await bumpUsage(c.provider, c.model, false, daily);
       const why = e instanceof Exhausted ? (daily ? "plafond du jour" : "trop de demandes à la minute") : /TimeoutError|aborted/i.test(msg) ? "trop lent" : msg.slice(0, 160);
       console.log(`[ai] ${c.provider}/${c.model} : ${why} :: ${msg.slice(0, 400)}`);

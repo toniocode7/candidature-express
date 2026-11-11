@@ -28,10 +28,15 @@ jobs:
         run: |
           curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
             -d '{"mode":"text","tier":"quality","debug":true,"prompt":"En deux phrases, dans un français posé et naturel, sans tiret long, explique ce que fait un assistant approvisionnement."}' | python3 -m json.tool
-      - name: Recherche Google via Gemini
+      - name: Recherche web (infos entreprise pour les lettres)
         run: |
-          curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
-            -d '{"mode":"text","tier":"light","search":true,"debug":true,"prompt":"Recherche sur internet ce que fait l entreprise Naval Group a Brest, en 3 lignes."}' | python3 -m json.tool
+          curl -s -X POST "$FN/read" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
+            -d '{"search":"Naval Group Brest entreprise activité"}' | python3 -c "import json,sys; w=json.load(sys.stdin).get('web',[]); print(len(w),'résultats'); [print('-',x['title'],'|',x['description'][:120]) for x in w[:4]]"
+      - name: Compteur du jour (modèles épuisés)
+        env:
+          URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+        run: |
+          curl -s "$URL/rest/v1/usage?select=provider,model,ok,fail,exhausted&order=provider" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -m json.tool
       - name: Lecture d'une vraie annonce
         run: |
           U="$URL_IN"
