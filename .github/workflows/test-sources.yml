@@ -1,0 +1,38 @@
+name: Tester les sources d'offres
+on: { workflow_dispatch: {} }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      ID: ${{ secrets.FT_CLIENT_ID }}
+      SECRET: ${{ secrets.FT_CLIENT_SECRET }}
+    steps:
+      - name: France Travail - accès à l'API Offres d'emploi
+        run: |
+          tok() {
+            curl -s -X POST "https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              --data-urlencode "grant_type=client_credentials" --data-urlencode "client_id=$ID" \
+              --data-urlencode "client_secret=$SECRET" --data-urlencode "scope=$1"
+          }
+          echo "Jeton Offres d'emploi :"
+          tok "api_offresdemploiv2 o2dsoffre" > t1.json
+          python3 -c "import json; j=json.load(open('t1.json')); print('  OK, valable', j['expires_in'], 's') if 'access_token' in j else print('  REFUSÉ :', j)"
+          T=$(python3 -c "import json; print(json.load(open('t1.json')).get('access_token',''))")
+          if [ -n "$T" ]; then
+            echo "Recherche « supply chain » à 30 km de Brest :"
+            code=$(curl -s -o r.json -w '%{http_code}' -H "Authorization: Bearer $T" -H "Accept: application/json" \
+              "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?motsCles=supply%20chain&commune=29019&distance=30&range=0-9")
+            echo "  HTTP $code"
+            python3 -c "
+          import json
+          try:
+            j=json.load(open('r.json'))
+            for o in j.get('resultats',[])[:6]: print('  -', o.get('intitule'), '|', (o.get('entreprise') or {}).get('nom',''), '|', (o.get('lieuTravail') or {}).get('libelle',''), '|', o.get('typeContrat'))
+            print('  ', len(j.get('resultats',[])), 'offres dans cette page')
+          except Exception as e: print('  réponse :', open('r.json').read()[:300])
+          "
+          fi
+          echo "Jeton La Bonne Boite :"
+          tok "api_labonneboitev2" > t2.json
+          python3 -c "import json; j=json.load(open('t2.json')); print('  OK') if 'access_token' in j else print('  REFUSÉ :', j)"
