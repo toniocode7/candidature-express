@@ -25,9 +25,10 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           CE_SERVICE_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           CE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          CE_MAIL_KEY: ${{ secrets.CE_MAIL_KEY }}
         run: |
           args=()
-          for v in GEMINI_API_KEY GROQ_API_KEY CE_SERVICE_KEY CE_PUBLISHABLE_KEY; do
+          for v in GEMINI_API_KEY GROQ_API_KEY CE_SERVICE_KEY CE_PUBLISHABLE_KEY CE_MAIL_KEY; do
             if [ -n "${!v}" ]; then args+=("$v=${!v}"); echo "$v : présent"; else echo "$v : absent"; fi
           done
           supabase secrets set --project-ref "$PROJECT_REF" --yes "${args[@]}" >/dev/null

@@ -87,10 +87,42 @@
           var w = await call("read", { search: String(args.query || "") });
           return { payload: { data: { web: w.web || [] } } };
         }
+        if (server === "Gmail") return gmail(tool, args);
         throw unavailable();
       }
     };
   };
+
+  /* ---------- Gmail : mails transmis par le script Google (toutes les 15 min) ---------- */
+  async function gmail(tool, args) {
+    var sb = window.CE && window.CE.supabase; if (!sb) throw err("hors connexion");
+    if (tool === "search_threads") {
+      var m = /after:(\d{4})\/(\d{1,2})\/(\d{1,2})/.exec(String(args.query || ""));
+      var since = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(Date.now() - 30 * 864e5);
+      var r = await sb.from("mails").select("id,thread_id,data").gte("received_at", since.toISOString()).order("received_at", { ascending: false }).limit(300);
+      if (r.error) throw err("mails indisponibles");
+      var by = {}, order = [];
+      (r.data || []).forEach(function (x) {
+        if (!by[x.thread_id]) { by[x.thread_id] = { id: x.thread_id, messages: [] }; order.push(x.thread_id); }
+        by[x.thread_id].messages.push({ id: x.id, sender: x.data.sender });
+      });
+      var threads = order.map(function (k) { var t = by[k]; t.messageCount = t.messages.length; return t; });
+      if (args.pageToken) threads = [];
+      return { payload: { threads: threads } };
+    }
+    if (tool === "get_thread") {
+      var r2 = await sb.from("mails").select("data").eq("thread_id", String(args.threadId || "")).order("received_at");
+      if (r2.error) throw err("mails indisponibles");
+      var msgs = (r2.data || []).map(function (x) { return x.data; });
+      return { payload: { messages: msgs, viewUrl: msgs[0] && msgs[0].viewUrl } };
+    }
+    if (tool === "create_draft") {
+      var r3 = await sb.from("drafts_out").insert({ data: args });
+      if (r3.error) throw err("brouillon impossible");
+      return { payload: { id: "en-attente", note: "Le brouillon apparaîtra dans Gmail d'ici 15 minutes." } };
+    }
+    throw unavailable();
+  }
 
   /* ---------- Envoyer à Claude ---------- */
   function toast(msg) {

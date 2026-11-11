@@ -19,7 +19,7 @@ SB_URL = f"https://{os.environ['SUPABASE_PROJECT_REF']}.supabase.co"
 SB_KEY = os.environ["SUPABASE_SECRET_KEY"]
 PUB = os.environ["SUPABASE_PUBLISHABLE_KEY"]
 H = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}", "Content-Type": "application/json"}
-MODE = sys.argv[1] if len(sys.argv) > 1 else "search"  # search | open
+MODE = sys.argv[1] if len(sys.argv) > 1 else "search"  # search | mail | open
 
 
 def session() -> dict:
@@ -68,6 +68,10 @@ def main():
                 res = page.evaluate("() => window.CE_LAST_RUN")
                 print("Résultat du tri :", res.get("msg"))
                 print("Nouvelles offres retenues :", res.get("nouvelles"))
+            if MODE == "mail":
+                page.evaluate("() => { window.CE_ML_DONE = null; window.CE_mlCheck(true); }")
+                page.wait_for_function("() => window.CE_ML_DONE", timeout=10 * 60000, polling=2000)
+                print("Mails :", page.evaluate("() => window.CE_ML_DONE.msg") or "vérification faite")
             # Laisser le temps à la synchronisation d'envoyer les changements.
             page.wait_for_timeout(4000)
             page.wait_for_function("() => !window.CE_PENDING_SYNC || window.CE_PENDING_SYNC() === 0", timeout=60000, polling=1000)
