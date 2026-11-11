@@ -53,3 +53,18 @@ export async function exhaustedToday(): Promise<Set<string>> {
   } catch (_) { /* ignore */ }
   return out;
 }
+
+/** Fiabilité récente de chaque modèle (3 derniers jours) : réussites moins échecs. */
+export async function reliability(): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!SERVICE_KEY) return out;
+  try {
+    const since = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10);
+    const r = await rest(`usage?select=provider,model,ok,fail&day=gte.${since}`);
+    if (r.ok) for (const x of await r.json()) {
+      const k = `${x.provider}:${x.model}`;
+      out.set(k, (out.get(k) ?? 0) + x.ok * 2 - x.fail);
+    }
+  } catch (_) { /* ignore */ }
+  return out;
+}

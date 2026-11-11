@@ -1,7 +1,7 @@
 // IA de Candidature Express : Gemini (offre gratuite) en priorité, Groq (gratuit) en secours.
 // Les clés restent ici, côté serveur. Sans moyen de paiement enregistré, rien ne peut être facturé :
 // au plafond, le service refuse la demande et on passe au modèle suivant.
-import { authorize, bumpUsage, CORS, exhaustedToday, json } from "../_shared/common.ts";
+import { authorize, bumpUsage, CORS, exhaustedToday, json, reliability } from "../_shared/common.ts";
 
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const GROQ_KEY = Deno.env.get("GROQ_API_KEY") ?? "";
@@ -71,7 +71,7 @@ async function callGemini(model: string, r: Req): Promise<string> {
   body.generationConfig.thinkingConfig = { thinkingLevel: "low" };
   const send = () => fetch(`${GEM}/models/${model}:generateContent`, {
     method: "POST", headers: { "x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json" }, body: JSON.stringify(body),
-    signal: AbortSignal.timeout(r.images?.length ? 70000 : 55000),
+    signal: AbortSignal.timeout(r.images?.length ? 60000 : 45000),
   });
   let res = await send();
   if (res.status === 400) {
@@ -132,8 +132,11 @@ Deno.serve(async (req) => {
   }
 
   const m = await models();
-  const ex = await exhaustedToday();
-  const g = (l: string[]): Cand[] => l.map((model) => ({ provider: "gemini" as const, model }));
+  const [ex, rel] = await Promise.all([exhaustedToday(), reliability()]);
+  // Dans chaque famille, on essaie d'abord les modèles qui ont bien répondu ces derniers jours.
+  const sortRel = (l: string[], p: string) => l.map((m, i) => ({ m, i, s: rel.get(`${p}:${m}`) ?? 0 }))
+    .sort((a, b) => (b.s - a.s) || (a.i - b.i)).map((x) => x.m);
+  const g = (l: string[]): Cand[] => sortRel(l, "gemini").map((model) => ({ provider: "gemini" as const, model }));
   const q = (l: string[]): Cand[] => l.map((model) => ({ provider: "groq" as const, model }));
   const groqList = r.images?.length ? m.groqVision : m.groq;
   let order: Cand[] = r.tier === "light"
@@ -146,7 +149,7 @@ Deno.serve(async (req) => {
   const errors: string[] = [];
   const t0 = Date.now();
   for (const c of order) {
-    if (Date.now() - t0 > 85000) { errors.push("temps dépassé"); break; }
+    if (Date.now() - t0 > 100000) { errors.push("temps dépassé"); break; }
     try {
       const text = c.provider === "gemini" ? await callGemini(c.model, r) : await callGroq(c.model, r);
       const out: any = { provider: c.provider, model: c.model };
