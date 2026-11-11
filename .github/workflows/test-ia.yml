@@ -1,0 +1,35 @@
+name: Tester l'IA et la lecture d'annonces
+on:
+  workflow_dispatch:
+    inputs:
+      url: { description: "Adresse d'une annonce à lire (facultatif)", required: false, default: "" }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      FN: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1
+      KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Modèles disponibles
+        run: curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" -d '{"ping":true}' | python3 -m json.tool
+      - name: Refus sans connexion (doit répondre 401)
+        run: curl -s -o /dev/null -w "HTTP %{http_code}\n" -X POST "$FN/ai" -H "Content-Type: application/json" -d '{"prompt":"test"}'
+      - name: Question simple en JSON (modèle léger)
+        run: |
+          curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
+            -d '{"mode":"json","tier":"light","prompt":"Réponds en JSON : {\"ville\":\"préfecture du Finistère\",\"habitants\":nombre approximatif}"}' | python3 -m json.tool
+      - name: Rédaction (modèle de qualité)
+        run: |
+          curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
+            -d '{"mode":"text","tier":"quality","prompt":"En deux phrases, dans un français posé et naturel, sans tiret long : explique ce que fait un assistant approvisionnement."}' | python3 -m json.tool
+      - name: Lecture d'une vraie annonce
+        env: { URL_IN: "${{ github.event.inputs.url }}" }
+        run: |
+          U="$URL_IN"
+          if [ -z "$U" ]; then
+            id=$(curl -s -A "Mozilla/5.0" "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=supply%20chain&location=Bretagne&start=0" | grep -oE 'jobs/view/[^"?]*-[0-9]{8,}' | head -1 | grep -oE '[0-9]{8,}$')
+            U="https://www.linkedin.com/jobs/view/$id"
+          fi
+          echo "Annonce : $U"
+          curl -s -X POST "$FN/read" -H "x-ce-key: $KEY" -H "Content-Type: application/json" -d "{\"url\":\"$U\"}" \
+            | python3 -c "import json,sys; j=json.load(sys.stdin); print('Statut :', j.get('statusCode'), '| lu par :', j.get('via'), '| bloqué :', j.get('blocked')); print('Titre :', j.get('title')); print(len(j.get('markdown','')), 'caractères lus'); print('---'); print(j.get('markdown','')[:700])"

@@ -19,8 +19,21 @@ jobs:
         run: supabase link --project-ref "$PROJECT_REF"
       - name: Appliquer la structure de la base
         run: supabase db push --remote --include-all --yes || supabase db push --linked --include-all --yes
+      - name: Ranger les clés des fonctions dans Supabase
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CE_SERVICE_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          CE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          args=()
+          for v in GEMINI_API_KEY GROQ_API_KEY CE_SERVICE_KEY CE_PUBLISHABLE_KEY; do
+            if [ -n "${!v}" ]; then args+=("$v=${!v}"); echo "$v : présent"; else echo "$v : absent"; fi
+          done
+          supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}" >/dev/null
       - name: Déployer les fonctions serveur
         run: |
-          if ls supabase/functions/*/index.ts >/dev/null 2>&1; then
-            supabase functions deploy --project-ref "$PROJECT_REF"
-          else echo "Aucune fonction pour l'instant."; fi
+          for f in supabase/functions/*/; do
+            n=$(basename "$f"); [ "$n" = "_shared" ] && continue
+            supabase functions deploy "$n" --no-verify-jwt --project-ref "$PROJECT_REF"
+          done

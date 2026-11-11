@@ -13,3 +13,8 @@ html.ce-gated body>.page,html.ce-gated .bnav{visibility:hidden}
    la zone d'affichage de la hauteur de la barre d'état, et la barre de navigation
    du bas remonte. Une page au moins aussi haute que l'écran rétablit la pleine hauteur. */
 @media (display-mode:standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
+.ab .ceboth{width:100%;min-height:46px;font-size:.95rem}
+.ceclaude{border-color:#D97757!important;color:#C2410C!important}
+:root[data-theme="dark"] .ceclaude{color:#F0A27F!important}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ceclaude{color:#F0A27F!important}}
+@media (max-width:560px){#dd>.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}#dd>.row>button{width:100%;min-width:0;padding-inline:10px}#dd>.row>#dgo{grid-column:1/-1}}

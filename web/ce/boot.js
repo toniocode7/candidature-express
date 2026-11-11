@@ -148,6 +148,15 @@
       var url = URL.createObjectURL(blob), a = el("a", { href: url, download: name });
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    },
+    saveAll: async function (list) {
+      var touch = matchMedia("(pointer:coarse)").matches;
+      var files = list.map(function (o) { var b = o.data instanceof Blob ? o.data : new Blob([o.data]); return new File([b], o.filename, { type: b.type || "application/pdf" }); });
+      if (touch && navigator.canShare && navigator.canShare({ files: files })) {
+        try { await navigator.share({ files: files }); return; }
+        catch (e) { if (e && e.name === "AbortError") throw err("cancelled"); }
+      }
+      for (var i = 0; i < list.length; i++) { await downloads.save(list[i]); await new Promise(function (r) { setTimeout(r, 400); }); }
     }
   };
 
