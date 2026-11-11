@@ -14,5 +14,6 @@ jobs:
           echo "Documents de l'app : $(q app)"
           echo "Réglages privés    : $(q ce)"
           curl -sf "$URL/rest/v1/docs?select=id&col=eq.app&id=like.o_*" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "import json,sys; print('Candidatures :', len(json.load(sys.stdin)))"
+          echo "Inscriptions fermées : $(curl -s "$URL/auth/v1/settings" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" | python3 -c 'import json,sys; print("oui" if json.load(sys.stdin).get("disable_signup") else "NON, à fermer")')"
           code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/rest/v1/docs?select=id" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}")
           echo "Lecture sans connexion (doit être vide ou refusée) : HTTP $code, $(curl -s "$URL/rest/v1/docs?select=id" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" | head -c 80)"
