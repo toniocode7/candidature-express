@@ -9,3 +9,7 @@ html.ce-gated body>.page,html.ce-gated .bnav{visibility:hidden}
 .ce-form button.main{margin-top:10px;min-height:46px}
 .ce-msg{margin:4px 0 0;font-size:.9rem;color:var(--mute);min-height:1.3em}
 @media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text}}
+/* iOS 26, app installée : quand la page est plus courte que l'écran, iOS raccourcit
+   la zone d'affichage de la hauteur de la barre d'état, et la barre de navigation
+   du bas remonte. Une page au moins aussi haute que l'écran rétablit la pleine hauteur. */
+@media (display-mode:standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
