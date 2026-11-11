@@ -1,0 +1,39 @@
+name: Recherche d'offres automatique
+on:
+  schedule:
+    - cron: "17 5-21 * * *"   # toutes les heures de 6 h à 22 h (heure de Paris en hiver) ; chaque source a son propre rythme
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Interroger toutes les sources maintenant"
+        type: boolean
+        default: true
+      only:
+        description: "Sources à interroger seulement (ex. linkedin,indeed), vide = toutes"
+        required: false
+        default: ""
+concurrency: { group: recherche, cancel-in-progress: false }
+jobs:
+  recherche:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: search/requirements.txt }
+      - name: Installer les outils (JobSpy, Crawl4AI, navigateur)
+        run: |
+          pip install -q -r search/requirements.txt
+          python -m playwright install --with-deps chromium > /dev/null
+      - name: Récolter les offres sur chaque source
+        run: |
+          ARGS=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then ARGS="--force"; fi
+          if [ -n "${{ inputs.only }}" ]; then ARGS="$ARGS --only=${{ inputs.only }}"; fi
+          python search/harvest.py $ARGS
+      - name: Trier les offres avec tes règles (l'app ouverte en arrière-plan)
+        run: python search/app_run.py search

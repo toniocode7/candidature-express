@@ -1,0 +1,4 @@
+python-jobspy
+crawl4ai
+playwright
+requests

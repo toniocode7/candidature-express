@@ -196,6 +196,7 @@
     s.textContent = src + "\n//# sourceURL=app.js";
     document.body.appendChild(s);
     realtime();
+    setTimeout(function () { try { window.CE_srcUI && window.CE_srcUI(); } catch (e) {} }, 1500);
   }
 
   async function main() {

@@ -19,3 +19,5 @@ html.ce-gated body>.page,html.ce-gated .bnav{visibility:hidden}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ceclaude{color:#F0A27F!important}}
 @media (max-width:560px){#dd>.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}#dd>.row>button{width:100%;min-width:0;padding-inline:10px}#dd>.row>#dgo{grid-column:1/-1}}
 .ceq{display:flex;flex-direction:column;gap:8px;margin:6px 0}.ceqr{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.ceqr b{font-size:.9rem}.ceqr span{font-size:.86rem}.ceqr small{font-size:.76rem;color:var(--mute)}
+.cesrc{font-size:.78rem!important;line-height:1.5}.cesrl{display:inline-flex;flex-wrap:wrap;gap:4px 10px;vertical-align:middle}
+.cesr{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--mute)}.cesr i{width:7px;height:7px;border-radius:50%;background:var(--good)}.cesr.ko i{background:var(--warn)}

@@ -1,6 +1,6 @@
 /* Service worker : app utilisable hors ligne, mises à jour récupérées au lancement. */
 const VERSION = "ce-v1";
-const CORE = ["./", "index.html", "app.js", "config.js", "ce/boot.js", "ce/ai.js", "ce/ce.css", "manifest.webmanifest",
+const CORE = ["./", "index.html", "app.js", "config.js", "ce/boot.js", "ce/ai.js", "ce/search.js", "ce/ce.css", "manifest.webmanifest",
   "vendor/supabase.js", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 const LAZY = /\/vendor\/|fonts\.(googleapis|gstatic)\.com/;
 
