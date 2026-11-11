@@ -1,0 +1,17 @@
+name: Tester les notifications et le calendrier
+on: { workflow_dispatch: {} }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      FN: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1
+      KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Clé publique des notifications (créée au premier appel)
+        run: curl -s -X POST "$FN/push" -H "Content-Type: application/json" -d '{"action":"vapid"}' | python3 -c "import json,sys; k=json.load(sys.stdin)['publicKey']; print('Clé publique :', k[:12]+'…', len(k), 'caractères')"
+      - name: Envoi sans autorisation (doit être refusé)
+        run: curl -s -o /dev/null -w "HTTP %{http_code}\n" -X POST "$FN/push" -H "Content-Type: application/json" -d '{"action":"test"}'
+      - name: Notification de test vers les appareils abonnés
+        run: curl -s -X POST "$FN/push" -H "x-ce-key: $KEY" -H "Content-Type: application/json" -d '{"action":"test"}'; echo
+      - name: Calendrier avec un mauvais jeton (doit être refusé)
+        run: curl -s -o /dev/null -w "HTTP %{http_code}\n" "$FN/ics?k=faux"

@@ -1,0 +1,19 @@
+name: Garder les automatisations actives
+# GitHub met en pause les tâches planifiées d'un dépôt public sans activité depuis 60 jours.
+# Ce passage mensuel ajoute une petite trace datée pour l'éviter.
+on:
+  schedule: [{ cron: "23 4 1 * *" }]
+  workflow_dispatch: {}
+permissions: { contents: write }
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          date -u +%Y-%m-%d > .derniere-activite
+          git config user.name "candidature-express"
+          git config user.email "actions@users.noreply.github.com"
+          git add .derniere-activite
+          git commit -m "Trace d'activité mensuelle" || exit 0
+          git push

@@ -21,3 +21,5 @@ html.ce-gated body>.page,html.ce-gated .bnav{visibility:hidden}
 .ceq{display:flex;flex-direction:column;gap:8px;margin:6px 0}.ceqr{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.ceqr b{font-size:.9rem}.ceqr span{font-size:.86rem}.ceqr small{font-size:.76rem;color:var(--mute)}
 .cesrc{font-size:.78rem!important;line-height:1.5}.cesrl{display:inline-flex;flex-wrap:wrap;gap:4px 10px;vertical-align:middle}
 .cesr{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--mute)}.cesr i{width:7px;height:7px;border-radius:50%;background:var(--good)}.cesr.ko i{background:var(--warn)}
+.ceng{padding:12px 14px;display:flex;flex-direction:column;gap:10px}.cenrow{display:flex;flex-wrap:wrap;gap:8px}.cenrow .sb{flex:1 1 auto}
+.cenk{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-weight:500;color:var(--ink);margin:0}.cenk:last-child{border-bottom:0}

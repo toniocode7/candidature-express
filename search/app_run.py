@@ -37,6 +37,15 @@ def session() -> dict:
     return s
 
 
+def push(kind: str, title: str, body: str, url: str = "./", once: str | None = None) -> None:
+    try:
+        r = requests.post(f"{SB_URL}/functions/v1/push", headers={"x-ce-key": SB_KEY, "Content-Type": "application/json"},
+                          json={"action": "send", "kind": kind, "title": title, "body": body, "url": url, "once": once}, timeout=60)
+        print(f"Notification « {title} » :", r.json())
+    except Exception as e:
+        print("Notification impossible :", e)
+
+
 def main():
     srv = subprocess.Popen([sys.executable, "-m", "http.server", "8765", "-d", "web"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(1.5)
@@ -68,6 +77,12 @@ def main():
                 res = page.evaluate("() => window.CE_LAST_RUN")
                 print("Résultat du tri :", res.get("msg"))
                 print("Nouvelles offres retenues :", res.get("nouvelles"))
+                if res.get("nouvelles"):
+                    top = page.evaluate("""() => { const s = JSON.parse(localStorage.getItem('candexp.sugg')||'{}'); const it = s.items||[];
+                        const f = Math.max(0, ...it.map(x => x.fd||0)); return it.filter(x => x.fd === f).sort((a,b) => (b.pertinence||0)-(a.pertinence||0))
+                        .slice(0,2).map(x => `${x.titre}${x.entreprise ? ' chez ' + x.entreprise : ''} (${x.pertinence}/100)`); }""")
+                    n = int(res.get("nouvelles"))
+                    push("offres", f"{n} nouvelle{'s' if n > 1 else ''} offre{'s' if n > 1 else ''} pour toi", " ; ".join(top), "./?v=sugg")
             if MODE == "mail":
                 page.evaluate("() => { window.CE_ML_DONE = null; window.CE_mlCheck(true); }")
                 page.wait_for_function("() => window.CE_ML_DONE", timeout=10 * 60000, polling=2000)
@@ -76,6 +91,10 @@ def main():
             page.wait_for_timeout(4000)
             page.wait_for_function("() => !window.CE_PENDING_SYNC || window.CE_PENDING_SYNC() === 0", timeout=60000, polling=1000)
             page.wait_for_timeout(2000)
+            for ev in page.evaluate("() => window.CE_EVENTS || []"):
+                import hashlib
+                key = ev["kind"] + ":" + hashlib.sha1((ev["title"] + ev["body"]).encode()).hexdigest()[:16]
+                push(ev["kind"], ev["title"], ev["body"], ev.get("url") or "./", once=key)
             for l in logs[-15:]:
                 print("  ", l)
             b.close()

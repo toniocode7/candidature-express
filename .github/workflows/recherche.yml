@@ -29,6 +29,8 @@ jobs:
         run: |
           pip install -q -r search/requirements.txt
           python -m playwright install --with-deps chromium > /dev/null
+      - name: Rappels d'entretien et objectif de la semaine
+        run: python search/notify.py || echo "Rappels indisponibles pour ce passage"
       - name: Récolter les offres sur chaque source
         run: |
           ARGS=""
