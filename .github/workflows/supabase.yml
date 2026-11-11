@@ -12,13 +12,13 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: supabase/setup-cli@v1
         with: { version: latest }
       - name: Lier le projet
-        run: supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+        run: supabase link --project-ref "$PROJECT_REF"
       - name: Appliquer la structure de la base
-        run: supabase db push --include-all --password "$SUPABASE_DB_PASSWORD"
+        run: supabase db push --remote --include-all --yes || supabase db push --linked --include-all --yes
       - name: Déployer les fonctions serveur
         run: |
           if ls supabase/functions/*/index.ts >/dev/null 2>&1; then
