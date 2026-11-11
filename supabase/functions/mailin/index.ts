@@ -2,12 +2,12 @@
 // remet les brouillons de réponse à créer. Protégé par une phrase secrète (CE_MAIL_KEY).
 import { bumpUsage, CORS, json, SERVICE_KEY, SUPABASE_URL } from "../_shared/common.ts";
 
-const MAIL_KEY = Deno.env.get("CE_MAIL_KEY") ?? "";
+const MAIL_KEY = (Deno.env.get("CE_MAIL_KEY") ?? "").trim();
 const H = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (!MAIL_KEY || req.headers.get("x-ce-mail-key") !== MAIL_KEY) return json({ error: "non autorisé" }, 401);
+  if (!MAIL_KEY || (req.headers.get("x-ce-mail-key") ?? "").trim() !== MAIL_KEY) return json({ error: "non autorisé" }, 401);
   let b: any;
   try { b = await req.json(); } catch (_) { return json({ error: "requête illisible" }, 400); }
 
