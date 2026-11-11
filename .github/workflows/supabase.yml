@@ -30,10 +30,10 @@ jobs:
           for v in GEMINI_API_KEY GROQ_API_KEY CE_SERVICE_KEY CE_PUBLISHABLE_KEY; do
             if [ -n "${!v}" ]; then args+=("$v=${!v}"); echo "$v : présent"; else echo "$v : absent"; fi
           done
-          supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}" >/dev/null
+          supabase secrets set --project-ref "$PROJECT_REF" --yes "${args[@]}" >/dev/null
       - name: Déployer les fonctions serveur
         run: |
           for f in supabase/functions/*/; do
             n=$(basename "$f"); [ "$n" = "_shared" ] && continue
-            supabase functions deploy "$n" --no-verify-jwt --project-ref "$PROJECT_REF"
+            supabase functions deploy "$n" --no-verify-jwt --project-ref "$PROJECT_REF" --yes
           done
