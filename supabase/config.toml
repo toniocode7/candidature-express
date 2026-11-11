@@ -1,0 +1,2 @@
+# Configuration minimale pour le déploiement automatique (GitHub Actions).
+project_id = "candidature-express"

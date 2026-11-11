@@ -1,0 +1,11 @@
+/* Écrans de connexion et d'import, dans le style de l'app */
+html.ce-gated body>.page,html.ce-gated .bnav{visibility:hidden}
+.ce-gate{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom));background:var(--bg);overflow:auto}
+.ce-card{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px 22px;box-shadow:var(--shh);display:flex;flex-direction:column;gap:10px;color:var(--ink);font-family:var(--fb)}
+.ce-card h1{font:700 1.7rem/1.1 var(--fd);letter-spacing:-.035em;margin:4px 0 0}.ce-card h1 em{font-style:normal;color:var(--brand)}
+.ce-logo{width:52px;height:52px}.ce-logo svg{width:100%;height:100%;display:block}
+.ce-lead{margin:0;color:var(--mute);line-height:1.5}
+.ce-form{display:flex;flex-direction:column;gap:8px;margin-top:8px}.ce-form label{margin:6px 0 0}
+.ce-form button.main{margin-top:10px;min-height:46px}
+.ce-msg{margin:4px 0 0;font-size:.9rem;color:var(--mute);min-height:1.3em}
+@media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text}}
