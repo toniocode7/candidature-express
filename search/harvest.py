@@ -339,52 +339,10 @@ def src_meteojob(C: dict) -> list[dict]:
     return out
 
 
-def ddg(q: str) -> list[tuple[str, str, str]]:
-    """Recherche web gratuite (DuckDuckGo, version HTML)."""
-    r = requests.get("https://html.duckduckgo.com/html/", params={"q": q, "kl": "fr-fr", "df": "m"},
-                     headers={"User-Agent": UA, "Accept-Language": "fr-FR,fr;q=0.9"}, timeout=30)
-    if r.status_code != 200:
-        raise RuntimeError(f"moteur de recherche HTTP {r.status_code}")
-    out = []
-    for m in re.finditer(r'<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)</a>[\s\S]*?<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)</a>', r.text):
-        u = html.unescape(m.group(1))
-        ud = re.search(r"[?&]uddg=([^&]+)", u)
-        if ud:
-            from urllib.parse import unquote
-            u = unquote(ud.group(1))
-        if u.startswith("//"):
-            u = "https:" + u
-        out.append((u, clean(m.group(2)), clean(m.group(3))))
-    if not out and "anomaly" in r.text.lower():
-        raise RuntimeError("moteur de recherche temporairement bloqué")
-    return out
-
-
-def src_via_search(key: str, site_label: str, site_query: str, url_pat: str, C: dict) -> list[dict]:
-    """Sites qui bloquent les robots ou chargent leurs offres en JavaScript : on retrouve
-    leurs pages d'offres par un moteur de recherche (titre + extrait), sans ouvrir le site."""
-    out, errs = [], []
-    lieux = (C["lieux"] if C["zf"] else [])[:3]
-    for lieu in lieux:
-        for kw in C["kws"][:2]:
-            try:
-                for u, t, snip in ddg(f'{site_query} "{kw}" {lieu}'):
-                    if re.search(url_pat, u):
-                        o = offer(key, site_label, u.split("?")[0], re.split(r"\s[-|–]\s", t)[0], "", lieu, "", "", None, f"{t}. {snip}", "FR", web=True)
-                        if o:
-                            out.append(o)
-            except Exception as e:
-                errs.append(str(e)[:120])
-            time.sleep(random.uniform(3, 6))
-    if not out and errs:
-        raise RuntimeError(errs[0])
-    if not out:
-        raise RuntimeError("aucune offre trouvée par le moteur de recherche")
-    return out
-
-
 # ---------------------------------------------------------------- Orchestration
-SOURCES = ["francetravail", "indeed", "linkedin", "hellowork", "wttj", "apec", "meteojob"]
+# Welcome to the Jungle et Apec ne sont pas interrogés : le premier charge ses offres d'une façon
+# illisible sans navigateur complet, le second bloque les robots (DataDome). On respecte ces blocages.
+SOURCES = ["francetravail", "indeed", "linkedin", "hellowork", "meteojob"]
 LABEL = {"francetravail": "France Travail", "indeed": "Indeed", "linkedin": "LinkedIn", "hellowork": "HelloWork",
          "wttj": "Welcome to the Jungle", "apec": "Apec", "meteojob": "Meteojob"}
 EVERY_H = {"francetravail": 3, "indeed": 3, "linkedin": 4, "hellowork": 3, "wttj": 6, "apec": 6, "meteojob": 6}
@@ -421,6 +379,8 @@ def main():
     C = criteria(uid)
     log(f"Critères : {len(C['kws'])} mots-clés, {len(C['lieux'])} villes, outre-mer={C['zd']}, étranger={C['ze']}, entreprises={C['zc']}, fenêtre {C['win']} j")
     state = get_doc(uid, "ce", "sources") or {}
+    for k in [k for k in state if k not in SOURCES and not k.startswith("_")]:
+        del state[k]
     todo = []
     for s in SOURCES:
         if ONLY and s not in ONLY:
@@ -445,10 +405,8 @@ def main():
                 found = src_hellowork(C)
             elif s == "meteojob":
                 found = src_meteojob(C)
-            elif s == "wttj":
-                found = src_via_search("wttj", "Welcome to the Jungle", "site:welcometothejungle.com/fr/companies jobs", r"welcometothejungle\.com/fr/companies/[^/]+/jobs/", C)
             else:
-                found = src_via_search("apec", "Apec", "site:apec.fr detail-offre", r"apec\.fr/.*detail-offre", C)
+                raise RuntimeError("source inconnue")
             n = save(found)
             total += n
             state[s] = {"ok": True, "n": n, "at": int(time.time() * 1000), "lastOk": int(time.time() * 1000), "err": ""}
