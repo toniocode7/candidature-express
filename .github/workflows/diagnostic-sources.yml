@@ -1,0 +1,20 @@
+name: Diagnostic d'une source d'offres
+on:
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Sources à examiner (francetravail wttj meteojob apec)"
+        default: "francetravail wttj meteojob apec"
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: search/requirements.txt }
+      - run: |
+          pip install -q -r search/requirements.txt
+          python -m playwright install --with-deps chromium > /dev/null
+      - env: { CRAWL4AI_NO_CLOUD_NOTICE: "1" }
+        run: python search/debug_sources.py ${{ inputs.sources }}

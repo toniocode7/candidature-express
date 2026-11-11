@@ -451,7 +451,7 @@ def main():
     set_doc(uid, "ce", "sources", state)
     # Ménage : offres vues pour la dernière fois il y a plus de 45 jours.
     try:
-        rest("DELETE", f"raw_offers?last_seen=lt.{(NOW - timedelta(days=45)).isoformat()}")
+        rest("DELETE", "raw_offers?last_seen=lt." + quote((NOW - timedelta(days=45)).isoformat()))
     except Exception as e:
         log("Ménage impossible :", e)
     log(f"\nTotal : {total} offres récoltées (avant tri).")
