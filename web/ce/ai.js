@@ -109,3 +109,35 @@
     toast(short ? "Demande ouverte dans Claude." + (copied ? " Elle est aussi copiée." : "") : copied ? "Demande copiée : colle-la dans Claude (appui long, Coller)." : "Claude est ouvert. La demande est trop longue pour être transmise automatiquement.");
   };
 })();
+
+/* ---------- Quotas des services gratuits (Paramètres) ---------- */
+(function () {
+  var LIM = [
+    [/^gemini:.*flash-lite/, "IA Gemini légère (tri, mails)", "plafond gratuit d'environ 500 par jour et par modèle"],
+    [/^gemini:/, "IA Gemini (analyses, CV, lettres)", "plafond gratuit d'environ 20 par jour et par modèle"],
+    [/^groq:/, "IA de secours Groq", "plafond gratuit de 1 000 par jour environ"],
+    [/^lecture:/, "Lecture d'annonces", "sans plafond"],
+    [/^recherche-web:/, "Recherche web (infos entreprise)", "sans plafond"],
+    [/^francetravail:/, "France Travail", "plafond de quelques appels par seconde"]
+  ];
+  window.CE_quotaUI = async function () {
+    var box = document.getElementById("ceq"); if (!box) return;
+    var sb = window.CE && window.CE.supabase; if (!sb) { box.innerHTML = '<p class="note">Indisponible hors connexion.</p>'; return; }
+    var day = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(new Date());
+    var r = await sb.from("usage").select("provider,model,ok,fail,exhausted").eq("day", day);
+    if (r.error) { box.innerHTML = '<p class="note">Compteur indisponible pour l\'instant.</p>'; return; }
+    var agg = {};
+    (r.data || []).forEach(function (x) {
+      var k = x.provider + ":" + x.model, lab = null, lim = "";
+      for (var i = 0; i < LIM.length; i++) if (LIM[i][0].test(k)) { lab = LIM[i][1]; lim = LIM[i][2]; break; }
+      if (!lab) return;
+      var a = agg[lab] = agg[lab] || { ok: 0, fail: 0, full: 0, lim: lim };
+      a.ok += x.ok; a.fail += x.fail; if (x.exhausted) a.full++;
+    });
+    var keys = Object.keys(agg);
+    box.innerHTML = keys.length ? keys.map(function (k) {
+      var a = agg[k];
+      return '<div class="ceqr"><b>' + k + '</b><span>' + a.ok + ' réussite' + (a.ok > 1 ? 's' : '') + (a.fail ? ', ' + a.fail + ' refus ou échec' + (a.fail > 1 ? 's' : '') : '') + (a.full ? ' · plafond atteint sur ' + a.full + ' modèle' + (a.full > 1 ? 's' : '') : '') + '</span><small>' + a.lim + '</small></div>';
+    }).join("") : '<p class="note">Rien d\'utilisé aujourd\'hui.</p>';
+  };
+})();
