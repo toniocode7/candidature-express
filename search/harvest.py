@@ -10,6 +10,7 @@ Aucune donnée personnelle n'est écrite dans ce fichier : tout est lu dans la b
 from __future__ import annotations
 
 import asyncio
+import email.utils
 import hashlib
 import html
 import json
@@ -415,7 +416,17 @@ ATS = [
     ("greenhouse", re.compile(r"https?://(?:job-)?boards(?:\.eu)?\.greenhouse\.io/([\w-]+)")),
     ("recruitee", re.compile(r"https?://([\w-]+)\.recruitee\.com")),
     ("teamtailor", re.compile(r"https?://([\w-]+)\.teamtailor\.com")),
+    ("talentsoft", re.compile(r"https?://([\w-]+\.talent-soft\.com)")),
+    ("gestmax", re.compile(r"https?://([\w-]+\.gestmax\.fr)")),
 ]
+# Plateformes déjà vérifiées pour de grands employeurs (la recherche web les trouve mal).
+KNOWN = {
+    "thales": {"ats": "workday", "tenant": "thales", "wd": "wd3", "site": "Careers", "url": "https://thales.wd3.myworkdayjobs.com/Careers"},
+    "airbus": {"ats": "workday", "tenant": "ag", "wd": "wd3", "site": "Airbus", "url": "https://ag.wd3.myworkdayjobs.com/Airbus"},
+    "dassault aviation": {"ats": "talentsoft", "key": "dassault-aviation-cand.talent-soft.com", "url": "https://dassault-aviation-cand.talent-soft.com"},
+    "safran": {"ats": "talentsoft", "key": "careers.safran-group.com", "url": "https://www.safran-group.com/fr/offres"},
+    "mbda": {"ats": "gestmax", "key": "mbda.gestmax.fr", "url": "https://mbda.gestmax.fr"},
+}
 JOBWORDS = ["supply", "achat", "acheteu", "approvision", "appro ", "logisti", "procurement", "purchas", "buyer", "sourcing",
             "import", "export", "transport", "planif", "planner", "planning", "ordonnanc", " adv ", "administration des ventes",
             "customs", "douane", "flux", "stock", "inventory", "demand", "s op", "material", "commodity"]
@@ -432,7 +443,17 @@ def web_search(q: str) -> list[str]:
     return urls
 
 
+def known_ats(company: str) -> dict | None:
+    n = norm(company)
+    for k, v in KNOWN.items():
+        if k == n or n.startswith(k + " ") or k.startswith(n + " "):
+            return dict(v)
+    return None
+
+
 def find_ats(company: str) -> dict | None:
+    if known_ats(company):
+        return known_ats(company)
     for q in (f"{company} careers jobs myworkdayjobs OR smartrecruiters OR lever OR greenhouse OR recruitee OR teamtailor",
               f"{company} offres d'emploi carrières recrutement", f"{company} careers"):
         for u in web_search(q):
@@ -465,7 +486,8 @@ def place_ok(loc: str, country: str, C: dict) -> bool:
     l = " " + norm(loc + " " + country) + " "
     if re.search(r" (france|fra) ", l):
         return True
-    foreign = any(f" {f} " in l for f in FOREIGN) or norm(country) in FOREIGN_CC
+    foreign = (any(f" {f} " in l for f in FOREIGN) or norm(country) in FOREIGN_CC
+               or bool(re.search(r",\s*[A-Z]{2}\s+\d{5}\b|,\s*[A-Z]{2}$", loc.strip())))
     if not foreign:
         return True
     return C["ze"] and any(f" {norm(e)} " in l for e in C["etr"])
@@ -488,14 +510,61 @@ def ats_jobs(a: dict, company: str, C: dict) -> list[dict]:
 
     if kind == "workday":
         base = f"https://{a['tenant']}.{a['wd']}.myworkdayjobs.com"
-        for kw in (C["kws"][:3] + C["kwen"][:2]):
-            r = requests.post(f"{base}/wday/cxs/{a['tenant']}/{a['site']}/jobs", json={"limit": 20, "offset": 0, "searchText": kw, "appliedFacets": {}},
-                              headers={"User-Agent": UA, "Accept": "application/json", "Content-Type": "application/json"}, timeout=30)
+        api = f"{base}/wday/cxs/{a['tenant']}/{a['site']}/jobs"
+        hd = {"User-Agent": UA, "Accept": "application/json", "Content-Type": "application/json", "Accept-Language": "fr-FR"}
+        # Filtre pays de Workday : France, plus les pays choisis dans « Étranger ».
+        r = requests.post(api, json={"limit": 1, "offset": 0, "searchText": "", "appliedFacets": {}}, headers=hd, timeout=30)
+        if r.status_code != 200:
+            raise RuntimeError(f"Workday HTTP {r.status_code}")
+        wanted = {"france"} | ({norm(e) for e in C["etr"]} if C["ze"] else set())
+        facets = {}
+
+        def walk(fs):
+            for f in fs or []:
+                par = f.get("facetParameter") or ""
+                for v in f.get("values") or []:
+                    if v.get("values"):
+                        walk([v])
+                    elif "ountry" in par and norm(v.get("descriptor")) in wanted:
+                        facets.setdefault(par, []).append(v.get("id"))
+        walk(r.json().get("facets"))
+        if not facets:
+            raise RuntimeError("filtre pays introuvable")
+        for kw in (C["kws"][:4] + C["kwen"][:2]):
+            r = requests.post(api, json={"limit": 20, "offset": 0, "searchText": kw, "appliedFacets": facets}, headers=hd, timeout=30)
             if r.status_code != 200:
                 raise RuntimeError(f"Workday HTTP {r.status_code}")
             for j in r.json().get("jobPostings") or []:
-                add(f"{base}/{a['site']}{j.get('externalPath', '')}", j.get("title"), j.get("locationsText") or "")
+                po = str(j.get("postedOn") or "")
+                m = re.search(r"(\d+)\s*(?:jours|days)", po)
+                d = 0 if re.search(r"aujourd|today", po, re.I) else 1 if re.search(r"hier|yesterday", po, re.I) else int(m.group(1)) if m else None
+                if d is not None and d > max(C["win"], 14):
+                    continue
+                add(f"{base}/fr-FR/{a['site']}{j.get('externalPath', '')}", j.get("title"), j.get("locationsText") or "", "",
+                    (NOW - timedelta(days=d)).isoformat() if d is not None else None)
             time.sleep(1)
+    elif kind == "talentsoft":
+        r = get(f"https://{a['key']}/handlers/offerRss.ashx?LCID=1036")
+        for it in re.findall(r"<item>([\s\S]*?)</item>", r.text):
+            g = lambda t: html.unescape((re.search(rf"<{t}>([\s\S]*?)</{t}>", it) or [None, ""])[1])
+            cats = [html.unescape(c) for c in re.findall(r"<category>([\s\S]*?)</category>", it)]
+            title = re.sub(r"^\s*[\w-]*\d{4}-\d+\s*-\s*", "", g("title"))
+            ct = next((c for c in cats if re.search(r"\b(cdi|cdd|stage|alternance|apprentissage|int[ée]rim|vie)\b", c, re.I)), "")
+            loc = cats[-1] if cats and cats[-1] != ct else ""
+            try:
+                pub = email.utils.parsedate_to_datetime(g("pubDate")).isoformat()
+            except Exception:
+                pub = None
+            add(g("link").strip(), title, loc, "", pub, ct, clean(g("description")))
+    elif kind == "gestmax":
+        r = get(f"https://{a['key']}/search/index/order/vacancy_activation_date/dir/desc")
+        seen = set()
+        for m in re.finditer(r'href="(https://' + re.escape(a["key"]) + r'/(\d+)/\d+/[^"?]+)[^"]*"[^>]*>([\s\S]{0,300}?)</a>', r.text):
+            if m.group(2) in seen:
+                continue
+            seen.add(m.group(2))
+            t = clean(m.group(3)) or m.group(1).rsplit("/", 1)[-1].replace("-", " ")
+            add(m.group(1), t)
     elif kind == "smartrecruiters":
         r = get(f"https://api.smartrecruiters.com/v1/companies/{a['key']}/postings?limit=100")
         for j in r.json().get("content") or []:
@@ -532,6 +601,10 @@ def src_careers(C: dict, uid: str) -> list[dict]:
     for company in C["ent"][:25]:
         k = norm(company)
         a = known.get(k) or {}
+        kn = known_ats(company)
+        if kn and a.get("ats") != kn["ats"]:
+            a = {**kn, "name": company, "tried": now}
+            known[k] = a
         if not a.get("ats") and now - (a.get("tried") or 0) > 7 * 864e5:
             f = find_ats(company)
             a = {**(f or {}), "name": company, "tried": now}
