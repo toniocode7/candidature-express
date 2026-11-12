@@ -1,36 +1,23 @@
-"""Diagnostic : comment chaque site écrit l'expérience demandée sur la page d'une annonce."""
+"""Diagnostic : d'où vient le détail d'une annonce France Travail (composant chargé en JavaScript)."""
 import re
-import html as H
 import requests
+from playwright.sync_api import sync_playwright
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15"
-S = requests.Session()
-S.headers.update({"User-Agent": UA, "Accept-Language": "fr-FR,fr;q=0.9"})
-
-
-def txt(h):
-    h = re.sub(r"<(script|style)[\s\S]*?</\1>", " ", h)
-    return re.sub(r"\s+", " ", H.unescape(re.sub(r"<[^>]+>", " | ", h)))
-
-
-def snip(name, url, h):
-    t = txt(h)
-    print(f"\n### {name} {url} ({len(h)} car.)")
-    for m in list(re.finditer(r"exp[ée]rience|experience|exig|ann[ée]es? d|\bans? d", t, re.I))[:8]:
-        print("  …", t[max(0, m.start() - 140):m.end() + 140].strip(), "…")
-    for m in re.finditer(r'<[^>]*(experience|exp[ée]rience)[^>]*>[\s\S]{0,300}', h, re.I):
-        print("  [balise]", re.sub(r"\s+", " ", m.group(0))[:300]); break
-
-
-r = S.get("https://candidat.francetravail.fr/offres/recherche?motsCles=supply+chain&lieux=29019&rayon=30&tri=1", timeout=30)
-ids = re.findall(r'data-id-offre="([^"]+)"', r.text)[:2]
-h = S.get(f"https://candidat.francetravail.fr/offres/recherche/detail/{ids[0]}", timeout=30).text
-print("liens detail/ajax :", sorted(set(re.findall(r'["\'](/[^"\']*(?:detail|ajax|offre)[^"\']*)["\']', h)))[:40])
-print("modal :", [re.sub(r"\s+", " ", h[m.start():m.start()+300]) for m in re.finditer(r'modal-details|id="detailOffre|offre-detail', h)][:3])
-for u in [f"https://candidat.francetravail.fr/offres/emploi/detail/{ids[0]}", f"https://candidat.francetravail.fr/offres/recherche/detail/{ids[0]}?isFromRecherche=false",
-          f"https://candidat.francetravail.fr/offres/recherche.detailoffre:afficherdetailoffre/{ids[0]}", f"https://candidat.francetravail.fr/offres/recherche/detail/{ids[0]}?t:ac=1"]:
-    rr = S.get(u, timeout=30, headers={"X-Requested-With": "XMLHttpRequest"})
-    t = txt(rr.text)
-    k = [m.start() for m in re.finditer(r"xp[ée]rience", t)]
-    print("\n==", u, rr.status_code, len(rr.text), "| exp:", len(k))
-    for a in k[:4]: print("   …", t[max(0,a-150):a+150])
+r = requests.get("https://candidat.francetravail.fr/offres/recherche?motsCles=acheteur&lieux=29019&rayon=30&tri=1", headers={"User-Agent": UA}, timeout=30)
+ids = re.findall(r'data-id-offre="([^"]+)"', r.text)[:3]
+with sync_playwright() as p:
+    b = p.chromium.launch()
+    pg = b.new_page(user_agent=UA, locale="fr-FR")
+    calls = []
+    pg.on("response", lambda resp: calls.append((resp.status, resp.request.resource_type, resp.url, resp.headers.get("content-type", ""))) if resp.request.resource_type in ("xhr", "fetch") else None)
+    for i in ids:
+        calls.clear()
+        pg.goto(f"https://candidat.francetravail.fr/offres/recherche/detail/{i}", wait_until="networkidle", timeout=60000)
+        t = pg.inner_text("body")
+        print("\n### FT", i, len(t))
+        for c in calls:
+            print("  XHR", c)
+        for m in list(re.finditer(r"xp[ée]rience", t, re.I))[:5]:
+            print("   …", re.sub(r"\s+", " ", t[max(0, m.start() - 150):m.end() + 150]))
+    b.close()

@@ -3,7 +3,12 @@ on: workflow_dispatch
 jobs:
   diag:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - run: pip install -q requests && python search/debug_xp.py
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: |
+          pip install -q requests playwright
+          python -m playwright install --with-deps chromium > /dev/null
+          python search/debug_xp.py
