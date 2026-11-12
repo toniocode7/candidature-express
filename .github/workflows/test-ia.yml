@@ -28,6 +28,30 @@ jobs:
         run: |
           curl -s -X POST "$FN/ai" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
             -d '{"mode":"text","tier":"quality","debug":true,"prompt":"En deux phrases, dans un français posé et naturel, sans tiret long, explique ce que fait un assistant approvisionnement."}' | python3 -m json.tool
+      - name: Analyse longue (comme dans l'app)
+        run: |
+          python3 - <<'PY'
+          import json, time, urllib.request, os
+          offre = ("Assistant approvisionnement H/F. Entreprise industrielle à Brest. Missions : passer les commandes fournisseurs dans SAP, suivre les livraisons, "
+                   "gérer les stocks, relancer les fournisseurs, mettre à jour les tableaux de bord Excel, travailler avec la production et la logistique. "
+                   "Profil : bac+3 à bac+5 en supply chain ou achats, première expérience appréciée, anglais professionnel, rigueur. CDI, 32-36 k€. ") * 25
+          cv = ("Master supply chain et achats. Assistant logistique en entreprise industrielle : suivi des flux, SAP, tableaux de bord Excel. "
+                "Transport et import-export : documents douaniers, transitaires. Anglais C1. ") * 20
+          prompt = ("Tu analyses une offre d'emploi classique face au CV du candidat. Tutoie-le. Réponds en JSON seulement : "
+                    '{"score":0,"criteres":[{"nom":"","note":0,"commentaire":""}],"points_forts":[""],"points_faibles":[""],"motscles":[""],"verdict":"","conseil":"","salaire":{"avis":"","fourchette":""}}'
+                    "\n\nCV :\n" + cv + "\n\nANNONCE :\n" + offre)
+          print(len(prompt), "caractères envoyés")
+          t = time.time()
+          req = urllib.request.Request(os.environ["FN"] + "/ai", data=json.dumps({"mode": "json", "tier": "quality", "debug": True, "prompt": prompt}).encode(),
+                                       headers={"x-ce-key": os.environ["KEY"], "Content-Type": "application/json"})
+          try:
+              r = urllib.request.urlopen(req, timeout=160); j = json.load(r)
+          except urllib.error.HTTPError as e:
+              j = json.load(e)
+          print(f"Durée : {time.time() - t:.0f} s")
+          print("Modèle :", j.get("model"), "| erreur :", j.get("error"), "| détail :", str(j.get("detail"))[:900])
+          if j.get("json"): print("Note obtenue :", j["json"].get("score"))
+          PY
       - name: Recherche web (infos entreprise pour les lettres)
         run: |
           curl -s -X POST "$FN/read" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
