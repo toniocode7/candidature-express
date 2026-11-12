@@ -22,7 +22,7 @@
     } catch (e) { throw err("réseau indisponible"); }
     var j = null; try { j = await r.json(); } catch (e) {}
     if (r.status === 429 || (j && j.error === "quota")) throw err("plafond gratuit du jour atteint, réessaie demain ou utilise « Envoyer à Claude »", j && j.detail);
-    if (!r.ok || !j) throw err(j && j.error || "erreur " + r.status, j && j.detail);
+    if (!r.ok || !j) throw err(j && j.error === "echec" ? "IA gratuites surchargées en ce moment, réessaie dans une minute ou utilise « Envoyer à Claude »" : (j && j.error || "erreur " + r.status), j && j.detail);
     return j;
   }
 

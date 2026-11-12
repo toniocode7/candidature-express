@@ -71,7 +71,7 @@ async function callGemini(model: string, r: Req): Promise<string> {
   body.generationConfig.thinkingConfig = { thinkingLevel: "low" };
   const send = () => fetch(`${GEM}/models/${model}:generateContent`, {
     method: "POST", headers: { "x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json" }, body: JSON.stringify(body),
-    signal: AbortSignal.timeout(r.images?.length ? 60000 : 45000),
+    signal: AbortSignal.timeout(r.images?.length ? 55000 : 40000),
   });
   let res = await send();
   if (res.status === 400) {
@@ -139,9 +139,14 @@ Deno.serve(async (req) => {
   const g = (l: string[]): Cand[] => sortRel(l, "gemini").map((model) => ({ provider: "gemini" as const, model }));
   const q = (l: string[]): Cand[] => l.map((model) => ({ provider: "groq" as const, model }));
   const groqList = r.images?.length ? m.groqVision : m.groq;
+  // Un modèle qui n'a jamais réussi ces derniers jours et a souvent échoué passe en dernier.
+  const bad = (p: string, model: string) => (rel.get(`${p}:${model}`) ?? 0) <= -4;
+  const fl = g(m.flash), li = g(m.lite), gq = q(groqList);
+  const goodFlash = fl.filter((c) => !bad(c.provider, c.model)), badFlash = fl.filter((c) => bad(c.provider, c.model));
   let order: Cand[] = r.tier === "light"
-    ? [...g(m.lite), ...q(groqList), ...g(m.flash)]
-    : [...g(m.flash), ...g(m.lite), ...q(groqList)];
+    ? [...li, ...gq, ...goodFlash, ...badFlash]
+    // Qualité : le meilleur modèle fiable, puis tout de suite le modèle léger (rapide et fiable), puis le reste.
+    : [...goodFlash.slice(0, 1), ...li.slice(0, 1), ...goodFlash.slice(1), ...gq, ...li.slice(1), ...badFlash];
   if (r.url) order = order.filter((c) => c.provider === "gemini");
   order = order.filter((c) => (c.provider === "gemini" ? GEMINI_KEY : GROQ_KEY) && !ex.has(`${c.provider}:${c.model}`));
   if (!order.length) return json({ error: "quota", detail: "Toutes les IA gratuites ont atteint leur plafond du jour." }, 429);
@@ -149,7 +154,7 @@ Deno.serve(async (req) => {
   const errors: string[] = [];
   const t0 = Date.now();
   for (const c of order) {
-    if (Date.now() - t0 > 100000) { errors.push("temps dépassé"); break; }
+    if (Date.now() - t0 > 95000) { errors.push("temps dépassé"); break; }
     try {
       const text = c.provider === "gemini" ? await callGemini(c.model, r) : await callGroq(c.model, r);
       const out: any = { provider: c.provider, model: c.model };
