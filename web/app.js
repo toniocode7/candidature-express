@@ -646,7 +646,7 @@ var EXPBUSY=false;
 function expApply(){var n=0,now=Date.now();OFF.forEach(function(o){if(o.st===1&&o.exp&&now-o.exp>7*864e5){o.st=3;o.autoRef=1;o.expRef=1;histAdd(o,"Annonce retirée, aucun contact en 7 jours : passée en Refusée");touch(o);mark("o_"+o.id);n++}});if(n){UNDOSKIP=true;try{saveOff()}finally{UNDOSKIP=false}renderList()}return n}
 async function expCheck(){if(EXPBUSY||SETV().expchk===false)return;if(lsg("expday","")===new Date().toDateString()){expApply();return}var mcp=null;try{mcp=await MCP()}catch(e){}if(!mcp){expApply();return}
 EXPBUSY=true;var now=Date.now(),list=OFF.filter(function(o){return (o.st===0||o.st===1)&&!o.exp&&(o.url||(o.sug&&o.sug.url))&&now-(o.chk||0)>3*864e5}).sort(function(a,b){return (a.st===1?dSent(a):a.ct)-(b.st===1?dSent(b):b.ct)});
-var ind=0,fc=0,fcMax=fcLeft()>FCRES+30?5:0,found=0;
+var ind=0,fc=0,fcMax=window.CE_RAW?40:(fcLeft()>FCRES+30?5:0),found=0;
 for(var i=0;i<list.length;i++){var o=list[i],g=o.sug||{},x=Object.assign({},g,{url:o.url||g.url,titre:g.titre||dInfo(o).poste,entreprise:g.entreprise||(o.an||{}).entreprise||"",lieu:g.lieu||dInfo(o).lieu});
 var isInd=x.src==="indeed"||/indeed\./.test(x.url||"");if(isInd){if(ind>=15)continue;ind++;if(x.src!=="indeed")x.src="indeed"}else{if(fc>=fcMax)continue;fc++}
 var alive=null;try{alive=await sgAlive(x,mcp)}catch(e){alive=null}o.chk=Date.now();if(alive===false){o.exp=Date.now();histAdd(o,"Annonce plus en ligne");found++}touch(o);mark("o_"+o.id)}
