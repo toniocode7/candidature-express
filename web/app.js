@@ -1195,7 +1195,7 @@ var CEDROM={RE:1,MQ:1,GP:1,GF:1,YT:1,NC:1,PF:1,PM:1,BL:1,MF:1,WF:1};
 function ceOut(x){if(ceHas(SG.exent,x.entreprise))return "entreprise";var c=ceCt(x);if(c&&c!=="stage"&&SG.ct&&SG.ct.length&&SG.ct.indexOf(c)<0)return "contrat";
 if(SG.zc!==false&&ceHas(SG.ent,x.entreprise))return "";var p=x.lieu?geoOf(x.lieu):null;if(!p||(p.ctry&&(p.cc==="FR"||!p.cc)))return "";var R=+SG.rayon||30;
 var drom=!!(p.cc&&CEDROM[p.cc])||(p.fr&&(p.lon<-20||p.lon>40)),foreign=!drom&&!!p.cc&&p.cc!=="FR";
-if(foreign){if(SG.ze===false)return "lieu";var E=splitList(SG.etr).map(geoOf).filter(Boolean);if(!E.length)return "";return E.some(function(g){return g.ctry?g.cc===p.cc:hav(g,p)<=R})?"":"lieu"}
+if(foreign){if(SG.ze===false)return "lieu";var E=splitList(SG.etr).map(geoOf).filter(Boolean);if(!E.length)return "";if(p.ctry)return E.some(function(g){return g.ctry&&g.cc===p.cc})?"":"lieu";return E.some(function(g){return g.ctry?g.cc===p.cc:hav(g,p)<=R})?"":"lieu"}
 if(drom){if(SG.zd===false)return "lieu";var D=splitList(SG.drom).map(geoOf).filter(Boolean);if(!D.length)return "";return D.some(function(g){return hav(g,p)<=400})?"":"lieu"}
 if(SG.zf===false)return "lieu";var F=splitList(SG.lieux).map(geoOf).filter(Boolean);if(!F.length)return "";return F.some(function(g){return hav(g,p)<=R})?"":"lieu"}
 function sgKeep(){return sgKeep0().filter(function(x){return !ceOut(x)})}
