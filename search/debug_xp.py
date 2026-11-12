@@ -23,13 +23,14 @@ def snip(name, url, h):
 
 
 r = S.get("https://candidat.francetravail.fr/offres/recherche?motsCles=supply+chain&lieux=29019&rayon=30&tri=1", timeout=30)
-for i in re.findall(r'data-id-offre="([^"]+)"', r.text)[:3]:
-    u = f"https://candidat.francetravail.fr/offres/recherche/detail/{i}"
-    h = S.get(u, timeout=30).text
-    print("\n### FT", u, len(h))
-    for k in ("itemprop", "skill", "Exp", "exp&", "experience", "description"):
-        for m in list(re.finditer(k, h))[:3]:
-            print(f"  [{k}]", re.sub(r"\s+", " ", h[max(0, m.start() - 120):m.start() + 250]))
-    t = txt(h)
-    j = t.find("Profil")
-    print("  TEXTE:", t[:200], "...", t[j:j + 900] if j >= 0 else "")
+ids = re.findall(r'data-id-offre="([^"]+)"', r.text)[:2]
+h = S.get(f"https://candidat.francetravail.fr/offres/recherche/detail/{ids[0]}", timeout=30).text
+print("liens detail/ajax :", sorted(set(re.findall(r'["\'](/[^"\']*(?:detail|ajax|offre)[^"\']*)["\']', h)))[:40])
+print("modal :", [re.sub(r"\s+", " ", h[m.start():m.start()+300]) for m in re.finditer(r'modal-details|id="detailOffre|offre-detail', h)][:3])
+for u in [f"https://candidat.francetravail.fr/offres/emploi/detail/{ids[0]}", f"https://candidat.francetravail.fr/offres/recherche/detail/{ids[0]}?isFromRecherche=false",
+          f"https://candidat.francetravail.fr/offres/recherche.detailoffre:afficherdetailoffre/{ids[0]}", f"https://candidat.francetravail.fr/offres/recherche/detail/{ids[0]}?t:ac=1"]:
+    rr = S.get(u, timeout=30, headers={"X-Requested-With": "XMLHttpRequest"})
+    t = txt(rr.text)
+    k = [m.start() for m in re.finditer(r"xp[ée]rience", t)]
+    print("\n==", u, rr.status_code, len(rr.text), "| exp:", len(k))
+    for a in k[:4]: print("   …", t[max(0,a-150):a+150])
