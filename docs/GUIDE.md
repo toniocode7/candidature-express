@@ -32,6 +32,7 @@
 | Plus de notifications | Paramètres de l'app, « Activer sur cet appareil » ; vérifier Réglages de l'iPhone, Notifications, Candidatures. |
 | Plus aucune recherche automatique | GitHub, onglet Actions : si un bandeau indique que les tâches planifiées sont en pause, cliquer « Enable workflow ». |
 | L'app ne s'ouvre plus ou « Supabase » en pause | Se connecter sur supabase.com et cliquer « Restore project » (gratuit). |
+| « Voir l'annonce » ouvre une autre offre | GitHub, Actions, « Vérifier les liens des offres suggérées », cocher « Retirer… et les retrier », Run workflow. |
 | Une clé a expiré ou a été changée | La remplacer dans GitHub, Settings, Secrets and variables, Actions, puis relancer l'action « Mettre à jour Supabase ». |
 
 ## Gratuité
