@@ -454,6 +454,9 @@ def ft_xp(o: dict, j: dict):
             o["xpsoft"] = max(n, o.get("xpsoft") or 0)
 
 
+ENRICH_END = time.time() + 14 * 60  # 14 minutes de lecture au plus par récolte ; le reste attend la suivante
+
+
 def enrich(found: list[dict]):
     """Lit la page de chaque nouvelle annonce pour connaître l'expérience exigée.
     Les annonces déjà lues lors d'une récolte précédente gardent leur résultat."""
@@ -475,7 +478,7 @@ def enrich(found: list[dict]):
             fresh.append(o)
     t0, n, hard = time.time(), 0, 0
     for o in [o for o in fresh if o["src"] == "francetravail"][:150]:
-        if time.time() - t0 > 300:
+        if time.time() > ENRICH_END:
             break
         try:
             j = ft_detail(o["url"].rsplit("/", 1)[-1])
@@ -485,7 +488,7 @@ def enrich(found: list[dict]):
             pass
         time.sleep(random.uniform(0.3, 0.7))
     for o in [o for o in fresh if o["src"] in ("linkedin", "hellowork")][:150]:
-        if time.time() - t0 > 600:
+        if time.time() > ENRICH_END:
             break
         u = o["url"]
         if o["src"] == "linkedin":
