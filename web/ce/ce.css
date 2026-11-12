@@ -23,3 +23,9 @@ html.ce-gated body>.page,html.ce-gated .bnav{visibility:hidden}
 .cesr{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--mute)}.cesr i{width:7px;height:7px;border-radius:50%;background:var(--good)}.cesr.ko i{background:var(--warn)}
 .ceng{padding:12px 14px;display:flex;flex-direction:column;gap:10px}.cenrow{display:flex;flex-wrap:wrap;gap:8px}.cenrow .sb{flex:1 1 auto}
 .cenk{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-weight:500;color:var(--ink);margin:0}.cenk:last-child{border-bottom:0}
+/* App installée : les fenêtres pleine hauteur ne passent plus sous l'heure et la batterie. */
+dialog.drawer{padding-top:env(safe-area-inset-top,0px)!important;padding-bottom:env(safe-area-inset-bottom,0px)!important;box-sizing:border-box}
+dialog{max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px)!important}
+dialog.sheet{max-height:calc(100dvh - env(safe-area-inset-top,0px) - 12px)!important}
+dialog.sheet.tall,dialog.sheet.ofd{height:min(88dvh,calc(100dvh - env(safe-area-inset-top,0px) - 12px))!important}
+dialog.drawer{max-height:100dvh!important}
