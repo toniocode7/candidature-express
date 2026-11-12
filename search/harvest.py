@@ -329,6 +329,23 @@ def ld_posting(html_text: str) -> dict | None:
     return None
 
 
+CONTRATS = {"FULL_TIME": "Temps plein", "PART_TIME": "Temps partiel", "TEMPORARY": "Intérim", "CONTRACTOR": "CDD",
+            "CONTRACT": "CDD", "PERMANENT": "CDI", "INTERN": "Stage", "INTERNSHIP": "Stage", "PER_DIEM": "Vacation", "VOLUNTEER": "Bénévolat"}
+
+
+def contrat_fr(v) -> str:
+    vals = v if isinstance(v, list) else [v or ""]
+    out = []
+    for x in vals:
+        t = CONTRATS.get(str(x).upper(), str(x))
+        if t and t not in out:
+            out.append(t)
+    # « Intérim » ou « CDD » priment sur « Temps plein »
+    if len(out) > 1 and "Temps plein" in out:
+        out.remove("Temps plein")
+    return ", ".join(out)
+
+
 def src_meteojob(C: dict) -> list[dict]:
     """Meteojob : liste des offres sur la page de résultats, puis lecture de chaque annonce
     sur sa propre page (intitulé, entreprise et lieu exacts, données structurées)."""
@@ -367,7 +384,7 @@ def src_meteojob(C: dict) -> list[dict]:
                     a = (l or {}).get("address") or {}
                     loc.append(", ".join(str(v) for v in [a.get("addressLocality"), a.get("postalCode")] if v))
                 o = offer("meteojob", "Meteojob", u, jp.get("title") or "", org or "", "; ".join(x for x in loc if x),
-                          ", ".join(jp.get("employmentType") if isinstance(jp.get("employmentType"), list) else [jp.get("employmentType") or ""]),
+                          contrat_fr(jp.get("employmentType")),
                           "", jp.get("datePosted"), clean(jp.get("description") or "")[:600])
             else:
                 t = re.search(r"<title[^>]*>([\s\S]*?)</title>", r.text)
