@@ -1200,16 +1200,21 @@ if(drom){if(SG.zd===false)return "lieu";var D=splitList(SG.drom).map(geoOf).filt
 if(SG.zf===false)return "lieu";var F=splitList(SG.lieux).map(geoOf).filter(Boolean);if(!F.length)return "";return F.some(function(g){return hav(g,p)<=R})?"":"lieu"}
 function sgKeep(){return sgKeep0().filter(function(x){return !ceOut(x)})}
 function ceSortKey(){try{return localStorage.getItem("ce.sgsort")||"conseil"}catch(e){return "conseil"}}
-function ceSort(items){var k=ceSortKey(),a=items.slice(),t=function(x){return x.fd||0},pb=function(x){return pubOf(x)||0};
-if(k==="note")a.sort(function(p,q){return (q.pertinence||0)-(p.pertinence||0)||pb(q)-pb(p)});
-else if(k==="pub")a.sort(function(p,q){return pb(q)-pb(p)||(q.pertinence||0)-(p.pertinence||0)});
-else if(k==="fd")a.sort(function(p,q){return t(q)-t(p)||(q.pertinence||0)-(p.pertinence||0)});
-else if(k==="dist"){var c=geoOf(splitList(SG.lieux)[0]||""),d=function(x){var g=x.lieu?geoOf(x.lieu):null;return c&&g?hav(c,g):1e9};a.sort(function(p,q){return d(p)-d(q)||(q.pertinence||0)-(p.pertinence||0)})}
-else if(k==="ent")a.sort(function(p,q){return String(p.entreprise||"~").localeCompare(String(q.entreprise||"~"),"fr",{sensitivity:"base"})});
-else if(k==="ville")a.sort(function(p,q){return String(p.lieu||"~").localeCompare(String(q.lieu||"~"),"fr",{sensitivity:"base"})});
-return a}
-function ceSortUI(){var el=G("cesort");if(!el)return;var c=splitList(SG.lieux)[0]||"",o=[["conseil","Ordre conseillé (nouvelles d'abord)"],["note","Note la plus haute"],["pub","Publiées le plus récemment"],["fd","Repérées le plus récemment"]].concat(c?[["dist","Les plus proches de "+c]]:[]).concat([["ent","Entreprise (A à Z)"],["ville","Ville (A à Z)"]]);
-el.innerHTML=o.map(function(x){return '<option value="'+x[0]+'">'+esc(x[1])+'</option>'}).join("");el.value=ceSortKey();if(el.value!==ceSortKey())el.value="conseil";el.onchange=function(){try{localStorage.setItem("ce.sgsort",el.value)}catch(e){}sgUI()}}
+function ceSortInv(){try{return localStorage.getItem("ce.sgdir")==="inv"}catch(e){return false}}
+var CESORT={conseil:["Ordre conseillé","Nouvelles d'abord","Nouvelles en dernier"],note:["Note","Plus haute d'abord","Plus basse d'abord"],pub:["Date de publication","Plus récentes d'abord","Plus anciennes d'abord"],fd:["Date de repérage","Plus récentes d'abord","Plus anciennes d'abord"],dist:["Distance","Plus proches d'abord","Plus éloignées d'abord"],ent:["Entreprise","De A à Z","De Z à A"],ville:["Ville","De A à Z","De Z à A"]};
+function ceSort(items){var k=ceSortKey(),inv=ceSortInv(),c=k==="dist"?geoOf(splitList(SG.lieux)[0]||""):null;
+var val=function(x){if(k==="note")return x.pertinence!=null?-x.pertinence:null;if(k==="pub"){var p=pubOf(x);return p?-p:null}if(k==="fd")return x.fd?-x.fd:null;if(k==="dist"){var g=x.lieu?geoOf(x.lieu):null;return c&&g?hav(c,g):null}if(k==="ent")return x.entreprise?String(x.entreprise):null;if(k==="ville")return x.lieu?String(x.lieu):null;return null};
+if(k==="conseil"){var a0=items.slice();return inv?a0.reverse():a0}
+var known=[],unk=[];items.forEach(function(x){(val(x)==null?unk:known).push(x)});
+var cmp=function(p,q){var a=val(p),b=val(q),r=typeof a==="string"?a.localeCompare(b,"fr",{sensitivity:"base"}):a-b;return inv?-r:r};
+known.sort(function(p,q){return cmp(p,q)||(q.pertinence||0)-(p.pertinence||0)});return known.concat(unk)}
+function ceSortUI(){var el=G("cesort"),bt=G("cesortdir");if(!el)return;var c=splitList(SG.lieux)[0]||"";
+var keys=["conseil","note","pub","fd"].concat(c?["dist"]:[]).concat(["ent","ville"]);
+el.innerHTML=keys.map(function(k){return '<option value="'+k+'">'+esc(k==="dist"?"Distance de "+c:CESORT[k][0])+'</option>'}).join("");
+el.value=ceSortKey();if(el.value!==ceSortKey())el.value="conseil";var lab=CESORT[el.value]||CESORT.conseil,inv=ceSortInv();
+if(bt){bt.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg><span>'+esc(inv?lab[2]:lab[1])+'</span>';bt.setAttribute("aria-label","Sens du tri : "+(inv?lab[2]:lab[1])+". Toucher pour inverser.");
+bt.onclick=function(){try{localStorage.setItem("ce.sgdir",ceSortInv()?"":"inv")}catch(e){}sgUI()}}
+el.onchange=function(){try{localStorage.setItem("ce.sgsort",el.value);localStorage.setItem("ce.sgdir","")}catch(e){}sgUI()}}
 function ceHiddenN(){try{return sgKeep0().length-sgKeep().length}catch(e){return 0}}
 function sgKeep0(){var mine=mineList(),hl=hidList(),lim=Date.now()-SGDAYS*864e5,known={},hid={};OFF.forEach(function(o){if(o.url)known[nurl(o.url)]=1});(SG.hidden||[]).forEach(function(u){hid[nurl(u)]=1});
 return (SG.items||[]).filter(function(x){if(!x.fd)x.fd=SG.at||Date.now();return x.fd>=lim&&!sgUrls(x).some(function(u){u=nurl(u);return known[u]||hid[u]})&&!sgStale(x)&&!sgIsMine(x,mine)&&!sgIsHid(x,hl)&&!sgExcl(x)&&!sgExpX(x)&&!x.xpReq&&!sgStage(x)&&!sgLang(x)&&!x.lgReq&&!isCaIndeed(x)})}
