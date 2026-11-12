@@ -40,7 +40,7 @@ def main():
             st, t, c = page_title(url)
         except Exception as e:
             print(f"  ? {x.get('titre')} : page illisible ({str(e)[:60]})"); unk += 1; continue
-        if not t:
+        if not t or "authenticat" in t.lower():
             unk += 1
             print(f"  ? {x.get('titre')} | {x.get('site')} : titre de page introuvable (HTTP {st})")
             continue

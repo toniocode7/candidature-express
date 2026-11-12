@@ -23,6 +23,14 @@ def main():
     sg = get_doc(uid, "app", "sugg") or {}
     items = sg.get("items") or []
     keep, bad = [], []
+    # Meteojob : anciennes offres lues depuis la page de résultats (intitulés peu fiables) :
+    # on les retire et on efface leur version brute, elles seront relues sur leur propre page.
+    mj = [x for x in items if "meteojob.com" in (x.get("url") or "")]
+    if mj:
+        rest("DELETE", "raw_offers?source=eq.meteojob")
+        print(f"  {len(mj)} offre(s) Meteojob retirée(s), elles seront relues sur leur propre page")
+    items_all = items
+    items = [x for x in items if "meteojob.com" not in (x.get("url") or "")]
     for x in items:
         raw = rest("GET", f"raw_offers?select=id,data&id=eq.{oid(x.get('url', ''))}")
         if raw:
@@ -35,11 +43,11 @@ def main():
     for x, rid, r in bad:
         print(f"  retirée : « {x.get('titre')} » ({x.get('entreprise')}) — le lien menait à « {r.get('titre')} » ({r.get('entreprise')})")
         rest("PATCH", f"raw_offers?id=eq.{rid}", headers={"Prefer": "return=minimal"}, data=json.dumps({"evaluated_at": None}))
-    if bad:
+    if bad or mj:
         sg["items"] = keep
         sg["mt"] = int(time.time() * 1000)
         set_doc(uid, "app", "sugg", sg)
-    print(f"\n{len(items)} suggestions vérifiées : {len(bad)} retirées et remises en tri, {len(keep)} conservées.")
+    print(f"\n{len(items_all)} suggestions vérifiées : {len(bad)} retirées et remises en tri, {len(keep)} conservées.")
 
 
 if __name__ == "__main__":

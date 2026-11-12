@@ -312,9 +312,27 @@ def src_hellowork(C: dict) -> list[dict]:
     return out
 
 
+def ld_posting(html_text: str) -> dict | None:
+    for m in re.finditer(r'<script[^>]*application/ld\+json[^>]*>([\s\S]*?)</script>', html_text):
+        try:
+            d = json.loads(m.group(1).strip())
+        except Exception:
+            continue
+        stack = d if isinstance(d, list) else [d]
+        while stack:
+            x = stack.pop(0)
+            if isinstance(x, dict):
+                t = x.get("@type")
+                if t == "JobPosting" or (isinstance(t, list) and "JobPosting" in t):
+                    return x
+                stack.extend(x.get("@graph") or [])
+    return None
+
+
 def src_meteojob(C: dict) -> list[dict]:
-    """Meteojob : la page de résultats est lisible directement."""
-    out, errs = [], []
+    """Meteojob : liste des offres sur la page de résultats, puis lecture de chaque annonce
+    sur sa propre page (intitulé, entreprise et lieu exacts, données structurées)."""
+    out, errs, ids = [], [], []
     for lieu in (C["lieux"] if C["zf"] else [])[:3]:
         for kw in C["kws"][:3]:
             url = f"https://www.meteojob.com/jobsearch/offers?what={quote(kw)}&where={quote(lieu)}"
@@ -322,18 +340,46 @@ def src_meteojob(C: dict) -> list[dict]:
                 r = get(url)
                 if r.status_code != 200:
                     raise RuntimeError(f"HTTP {r.status_code}")
-                seen = set()
-                for m in re.finditer(r'<a[^>]+href="(/jobs/(\d{5,})[^"]*)"[^>]*>([\s\S]{0,1500}?)</a>', r.text):
-                    if m.group(2) in seen:
-                        continue
-                    seen.add(m.group(2))
-                    txt = clean(m.group(3))
-                    o = offer("meteojob", "Meteojob", "https://www.meteojob.com" + m.group(1).split("?")[0], txt[:140], "", lieu, "", "", None, txt[:400], "FR", web=True)
-                    if o:
-                        out.append(o)
+                for jid in re.findall(r'href="/jobs/(\d{5,})', r.text):
+                    if jid not in ids:
+                        ids.append(jid)
             except Exception as e:
                 errs.append(f"{kw} / {lieu} : {str(e)[:100]}")
             time.sleep(random.uniform(1, 2))
+    known = set()
+    try:
+        rows = rest("GET", "raw_offers?select=data->>url&source=eq.meteojob&last_seen=gte." + quote((NOW - timedelta(days=30)).isoformat()))
+        known = {r.get("url") for r in rows}
+    except Exception:
+        pass
+    for jid in ids[:80]:
+        u = f"https://www.meteojob.com/jobs/{jid}"
+        try:
+            r = get(u)
+            if r.status_code != 200:
+                continue
+            jp = ld_posting(r.text)
+            if jp:
+                org = jp.get("hiringOrganization")
+                org = org.get("name") if isinstance(org, dict) else org
+                loc = []
+                for l in ([] + (jp.get("jobLocation") if isinstance(jp.get("jobLocation"), list) else [jp.get("jobLocation") or {}])):
+                    a = (l or {}).get("address") or {}
+                    loc.append(", ".join(str(v) for v in [a.get("addressLocality"), a.get("postalCode")] if v))
+                o = offer("meteojob", "Meteojob", u, jp.get("title") or "", org or "", "; ".join(x for x in loc if x),
+                          ", ".join(jp.get("employmentType") if isinstance(jp.get("employmentType"), list) else [jp.get("employmentType") or ""]),
+                          "", jp.get("datePosted"), clean(jp.get("description") or "")[:600])
+            else:
+                t = re.search(r"<title[^>]*>([\s\S]*?)</title>", r.text)
+                tt = clean(t.group(1)) if t else ""
+                m = re.match(r"Annonce Emploi (\S+) (.+?) - (.+?) Recrute", tt)
+                o = offer("meteojob", "Meteojob", u, m.group(2) if m else tt.split("|")[0], m.group(3) if m else "", "",
+                          m.group(1) if m else "", "", None, tt)
+            if o:
+                out.append(o)
+        except Exception as e:
+            errs.append(str(e)[:100])
+        time.sleep(random.uniform(0.5, 1.2))
     if not out and errs:
         raise RuntimeError(errs[0])
     return out
