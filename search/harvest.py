@@ -161,9 +161,9 @@ CC = {"usa": "US", "canada": "CA", "switzerland": "CH", "uk": "GB", "netherlands
       "luxembourg": "LU", "portugal": "PT"}
 
 
-def jobspy_rows(site: str, term: str, location: str, country: str, hours: int, n: int):
+def jobspy_rows(site: str, term: str, location: str, country: str, hours: int, n: int, km: int = 30):
     from jobspy import scrape_jobs
-    df = scrape_jobs(site_name=[site], search_term=term, location=location, country_indeed=country,
+    df = scrape_jobs(site_name=[site], search_term=term, location=location, country_indeed=country, distance=max(5, round(km / 1.609)),
                      results_wanted=n, hours_old=hours, linkedin_fetch_description=False, verbose=0)
     return [] if df is None else df.to_dict("records")
 
@@ -207,7 +207,7 @@ def src_jobspy(site: str, C: dict) -> list[dict]:
     budget = 26 if site == "indeed" else 16
     for term, loc, country, cc in queries[:budget]:
         try:
-            rows = jobspy_rows(site, term, loc, country, hours, 25 if site == "indeed" else 15)
+            rows = jobspy_rows(site, term, loc, country, hours, 25 if site == "indeed" else 15, C["rayon"])
             done += 1
             for r in rows:
                 o = from_jobspy(r, site, cc)
@@ -252,7 +252,8 @@ def src_francetravail(C: dict) -> list[dict]:
                 places.append((dep + "D", d))
     for code, label in places:
         for kw in C["kws"]:
-            url = f"https://candidat.francetravail.fr/offres/recherche?motsCles={quote_plus(kw)}&lieux={code}&rayon=30&tri=1&offresPartenaires=true"
+            ftc = ",".join(x for x in ({"CDI": "CDI", "CDD": "CDD", "Intérim": "MIS"}.get(c) for c in C["ct"]) if x)
+            url = f"https://candidat.francetravail.fr/offres/recherche?motsCles={quote_plus(kw)}&lieux={code}&rayon={min(100, C['rayon'])}&tri=1&offresPartenaires=true" + (f"&typeContrat={ftc}" if ftc else "")
             try:
                 r = get(url)
                 if r.status_code != 200:
@@ -285,7 +286,8 @@ def src_hellowork(C: dict) -> list[dict]:
     out, errs = [], []
     for lieu in (C["lieux"] if C["zf"] else []) + (C["drom"][:3] if C["zd"] else []):
         for kw in C["kws"]:
-            url = f"https://www.hellowork.com/fr-fr/emploi/recherche.html?k={quote_plus(kw)}&l={quote_plus(lieu)}&c=CDI&c=CDD&c=Travail_temp&d=w"
+            hwc = "".join(f"&c={x}" for x in ({"CDI": "CDI", "CDD": "CDD", "Intérim": "Travail_temp"}.get(c) for c in C["ct"]) if x)
+            url = f"https://www.hellowork.com/fr-fr/emploi/recherche.html?k={quote_plus(kw)}&l={quote_plus(lieu)}{hwc}&d=w"
             try:
                 r = get(url)
                 if r.status_code != 200:
@@ -404,6 +406,8 @@ def criteria(uid: str) -> dict:
         "drom": split_list(sg.get("drom")), "etr": split_list(sg.get("etr")), "ent": split_list(sg.get("ent")),
         "zf": sg.get("zf", True), "zd": sg.get("zd", False), "ze": sg.get("ze", False), "zc": sg.get("zc", False),
         "win": int(st.get("win") or 10), "rot": int(time.time() // 3600) % 97,
+        "rayon": int(sg.get("rayon") or 30), "ct": sg.get("ct") or ["CDI", "CDD", "Intérim"],
+        "critAt": int(sg.get("critAt") or 0),
     }
 
 
@@ -427,6 +431,15 @@ def main():
     state = get_doc(uid, "ce", "sources") or {}
     for k in [k for k in state if k not in SOURCES and not k.startswith("_")]:
         del state[k]
+    last_run = (state.get("_run") or {}).get("at") or 0
+    changed = C["critAt"] > last_run
+    if changed:
+        log("Critères modifiés depuis la dernière recherche : toutes les sources sont interrogées, et les offres récentes seront retriées.")
+        try:
+            rest("PATCH", "raw_offers?last_seen=gte." + quote((NOW - timedelta(days=C["win"])).isoformat()),
+                 headers={"Prefer": "return=minimal"}, data=json.dumps({"evaluated_at": None}))
+        except Exception as e:
+            log("Remise en tri impossible :", e)
     todo = []
     for s in SOURCES:
         if ONLY and s not in ONLY:
@@ -435,7 +448,7 @@ def main():
         last_ok = st.get("lastOk") or 0
         failed = st.get("ok") is False
         due = (time.time() * 1000 - last_ok) > EVERY_H[s] * 3600e3 * 0.9
-        if FORCE or due or failed:
+        if FORCE or due or failed or changed:
             todo.append(s)
     log("Sources à interroger :", ", ".join(LABEL[s] for s in todo) or "aucune (toutes récentes)")
     total = 0

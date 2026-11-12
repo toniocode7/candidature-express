@@ -30,3 +30,20 @@ dialog.sheet{max-height:calc(100dvh - env(safe-area-inset-top,0px) - 12px)!impor
 dialog.sheet.tall,dialog.sheet.ofd{height:min(88dvh,calc(100dvh - env(safe-area-inset-top,0px) - 12px))!important}
 dialog.drawer{max-height:100dvh!important}
 .cecount{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;padding:0 .35em;margin-left:.3em;border-radius:.8em;background:var(--brand);color:var(--onbrand);font-size:.62em;vertical-align:.18em;font-variant-numeric:tabular-nums;letter-spacing:0}
+/* Critères de recherche */
+#sgcrit .ceold{display:none!important}
+.cesum{display:flex;flex-direction:column;gap:3px;min-width:0}.cesum small{font-weight:500;font-size:.82rem;color:var(--mute);line-height:1.35}
+.cecrit{display:flex;flex-direction:column;gap:12px}.cehint{margin:0}#cehid:empty{display:none}#cehid{color:var(--warn);font-weight:600;margin:0}
+.cesec{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--card);display:flex;flex-direction:column;gap:10px}
+.cesec.off>*:not(.cesh){opacity:.45;pointer-events:none}
+.cesh{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.cesh h4{margin:0;font:700 .98rem var(--fd)}.cesh .note{margin:3px 0 0;font-size:.84rem}
+.cetog{margin:0;flex:none;padding:0;border:0}
+.cesub{display:flex;flex-direction:column;gap:8px;padding-top:6px}.cesub+.cesub{border-top:1px solid var(--line);padding-top:12px}
+.cel{display:block;margin:4px 0 0;font-size:.84rem;font-weight:600;color:var(--mute)}
+.cechips{display:flex;flex-wrap:wrap;gap:6px}.cechips:empty{display:none}
+.cechip{display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 11px;border-radius:999px;background:var(--tint);color:var(--chip);font:600 .86rem var(--fb)}
+.cechip.unk{background:var(--warnbg);color:var(--warn)}
+.cechip button{border:0;background:transparent;color:inherit;width:24px;height:24px;min-height:0;padding:0;border-radius:50%;font:700 1rem/1 var(--fb);cursor:pointer}
+.ceadd{display:flex;gap:8px}.ceadd input{flex:1;min-width:0;padding:9px 12px}.ceadd .sb{flex:none}
+.cerow{display:flex;flex-direction:column;gap:4px}.cerow select{width:100%}
+.cechks{display:flex;flex-wrap:wrap;gap:8px}

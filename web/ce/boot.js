@@ -199,6 +199,7 @@
     realtime();
     setTimeout(function () { try { window.CE_srcUI && window.CE_srcUI(); } catch (e) {} }, 1500);
     setTimeout(function () { try { window.CE_handleShare && window.CE_handleShare(); } catch (e) {} }, 2500);
+    setTimeout(function () { try { window.CE_critInit && window.CE_critInit(); } catch (e) {} }, 300);
   }
 
   async function main() {
