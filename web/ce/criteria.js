@@ -9,7 +9,7 @@
   function list(s) { return String(s || "").split(/[,;\n]/).map(function (x) { return x.trim(); }).filter(Boolean); }
   function C() { return window.CE_crit; }
   function sg() { return C().SG(); }
-  function save() { C().save(); summary(); counts(); }
+  function save() { C().save(); summary(); counts(); careers(); }
 
   /* ---------- Résumé dans l'en-tête ---------- */
   function summary() {
@@ -21,6 +21,7 @@
     if (s.ze !== false && list(s.etr).length) z.push("étranger");
     parts.push(z.join(", ") || "aucune zone");
     parts.push((s.ct || []).join(", ") || "aucun contrat");
+    if (+s.salmin) parts.push("≥ " + s.salmin + " k€");
     parts.push("note ≥ " + v.minsc);
     var el = document.querySelector("#sgcrit > summary");
     if (el) el.innerHTML = '<span class="cesum"><b>Critères de recherche</b><small>' + esc(parts.join(" · ")) + "</small></span>";
@@ -28,6 +29,20 @@
   function counts() {
     var n = C().hidden(), el = G("cehid");
     if (el) el.textContent = n ? n + " offre" + (n > 1 ? "s" : "") + " déjà trouvée" + (n > 1 ? "s sont masquées" : " est masquée") + " car hors de ces critères." : "";
+  }
+
+  /* ---------- Pages carrières repérées pour les entreprises surveillées ---------- */
+  var ATSN = { workday: "Workday", smartrecruiters: "SmartRecruiters", lever: "Lever", greenhouse: "Greenhouse", recruitee: "Recruitee", teamtailor: "Teamtailor" };
+  async function careers() {
+    var el = G("ce-entst"); if (!el || !window.CE_doc) return;
+    var d = {}; try { d = (await window.CE_doc.get("careers")) || {}; } catch (e) { return; }
+    var names = list(sg().ent); if (!names.length) { el.innerHTML = ""; return; }
+    var nk = function (t) { return String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim(); };
+    el.innerHTML = '<span class="cel">Leurs sites carrières</span>' + names.map(function (n) {
+      var a = d[nk(n)];
+      var t = !a ? "sera cherché à la prochaine recherche automatique" : a.ats ? '<a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(ATSN[a.ats] || a.ats) + "</a>" + (a.err ? " (lecture en échec, nouvel essai plus tard)" : a.at ? ", " + (a.n || 0) + " offre" + ((a.n || 0) > 1 ? "s" : "") + " dans tes métiers" : "") : "pas de page lisible trouvée : ses offres restent cherchées sur Indeed, LinkedIn et les autres sites";
+      return "<br>• " + esc(n) + " : " + t;
+    }).join("");
   }
 
   /* ---------- Listes modifiables (étiquettes) ---------- */
@@ -83,7 +98,8 @@
       sec("ce-dom", "Outre-mer", "Territoires où chercher.", '<div class="cechks" id="ce-drom"></div>', "ce-zd") +
       sec("ce-etr", "Étranger", "Pays (tout le pays) ou villes (avec le même rayon que pour la France).", '<div id="ce-etrl"></div>', "ce-ze") +
       sec("ce-ct", "Contrats", "Les offres d'un autre type de contrat sont écartées. Stages et alternances sont toujours exclus.", '<div class="cechks" id="ce-cts"></div>') +
-      sec("ce-ent", "Entreprises", "", '<div class="cesub"><div class="cesh"><div><label class="cel">Entreprises surveillées</label><p class="note">Leurs offres sont cherchées sur leurs sites et gardées partout, même hors de tes villes.</p></div><label class="prc swl cetog"><input type="checkbox" class="sw" id="ce-zc"><i class="swt" aria-hidden="true"></i></label></div><div id="ce-entl"></div></div><div class="cesub"><label class="cel">Entreprises à ne jamais proposer</label><div id="ce-exent"></div></div>') +
+      sec("ce-sal", "Salaire", "", '<div class="cerow"><label class="cel" for="ce-salmin">Salaire minimum (brut annuel)</label><select id="ce-salmin"></select></div><p class="note">Une offre est écartée seulement si son salaire est indiqué et que même le haut de la fourchette est en dessous. Les salaires mensuels ou horaires sont convertis en annuel. Les offres sans salaire, ou dans une autre monnaie que l\'euro, restent affichées.</p>') +
+      sec("ce-ent", "Entreprises", "", '<div class="cesub"><div class="cesh"><div><label class="cel">Entreprises surveillées</label><p class="note">Leurs offres sont cherchées sur leurs sites et gardées partout, même hors de tes villes.</p></div><label class="prc swl cetog"><input type="checkbox" class="sw" id="ce-zc"><i class="swt" aria-hidden="true"></i></label></div><div id="ce-entl"></div><div id="ce-entst" class="note"></div></div><div class="cesub"><label class="cel">Entreprises à ne jamais proposer</label><div id="ce-exent"></div></div>') +
       sec("ce-exc", "À exclure", "", '<label class="cel">Métiers à ne jamais proposer (dans l\'intitulé)</label><div id="ce-excl"></div><div class="cerow"><label class="cel" for="ce-xp">Écarter les offres qui exigent au moins</label><select id="ce-xp"></select></div><p class="note">Expérience : seule l\'expérience exigée compte (« exigée », « obligatoire », « indispensable », « minimum », « au moins », « vous justifiez de »). Si elle est seulement souhaitée (« idéalement », « de préférence », « un plus »), l\'offre reste affichée avec la mention « Expérience souhaitée ».</p><p class="note">Langues : seules les offres en français, anglais ou espagnol sont gardées, et celles qui exigent une autre langue sont écartées.</p>') +
       sec("ce-tri", "Tri et affichage", "", '<div class="cerow"><label class="cel" for="ce-min">Note minimale</label><select id="ce-min"></select></div><div class="cerow"><label class="cel" for="ce-cap">Nouvelles offres au maximum par recherche</label><select id="ce-cap"></select></div><div class="cerow"><label class="cel" for="ce-win">Offres publiées depuis</label><select id="ce-win"></select></div><div class="cerow"><label class="cel" for="ce-age">Garder une suggestion pendant</label><select id="ce-age"></select></div>');
 
@@ -92,11 +108,13 @@
     chips(G("ce-lieux"), "lieux", "Ajouter une ville", true);
     chips(G("ce-etrl"), "etr", "Ajouter un pays ou une ville", true);
     chips(G("ce-entl"), "ent", "Ajouter une entreprise");
+    careers();
     chips(G("ce-exent"), "exent", "Ajouter une entreprise");
     chips(G("ce-excl"), "excl", "Ajouter un métier à exclure");
     toggle("ce-zf", "zf"); toggle("ce-zd", "zd"); toggle("ce-ze", "ze"); toggle("ce-zc", "zc");
     select("ce-rayon", [[10, "10 km"], [20, "20 km"], [30, "30 km"], [50, "50 km"], [80, "80 km"], [100, "100 km"], [150, "150 km"]], function () { return +sg().rayon || 30; }, function (x) { sg().rayon = +x; save(); });
     select("ce-xp", [[3, "3 ans d'expérience"], [4, "4 ans d'expérience"], [5, "5 ans d'expérience"], [6, "6 ans d'expérience"], [99, "jamais (pas de limite)"]], function () { return +sg().xpmax || 4; }, function (x) { sg().xpmax = +x; save(); });
+    select("ce-salmin", [[0, "pas de minimum"]].concat([22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 45, 50].map(function (n) { return [n, n + " k€"]; })), function () { return +sg().salmin || 0; }, function (x) { sg().salmin = +x; save(); });
     var ss = function (k) { return function (x) { C().saveSet(k, +x); sg().critAt = Date.now(); save(); }; };
     select("ce-min", [50, 55, 60, 65, 70, 75, 80].map(function (n) { return [n, n + " / 100"]; }), function () { return v.minsc; }, ss("minsc"));
     select("ce-cap", [[30, "30"], [50, "50"], [80, "80"], [120, "120"]], function () { return v.cap; }, ss("cap"));

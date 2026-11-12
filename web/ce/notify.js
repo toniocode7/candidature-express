@@ -8,7 +8,8 @@
     ["recruteur", "Réponse d'un recruteur"],
     ["statut", "Statut changé automatiquement"],
     ["entretien", "Rappel la veille et le jour d'un entretien"],
-    ["objectif", "Objectif de la semaine pas atteint"]
+    ["objectif", "Objectif de la semaine pas atteint"],
+    ["bilan", "Bilan de la semaine, le dimanche soir"]
   ];
   function sb() { return window.CE && window.CE.supabase; }
   function uid() { return window.CE && window.CE.user && window.CE.user.id; }
@@ -26,6 +27,7 @@
   async function setDoc(id, data) {
     return sb().from("docs").upsert({ user_id: uid(), col: "ce", id: id, data: data, updated_at: new Date().toISOString() });
   }
+  window.CE_doc = { get: getDoc, set: setDoc };
 
   /* ---------- Abonnement de cet appareil ---------- */
   function b64ToBytes(s) {
@@ -69,7 +71,7 @@
     var devs = (c.data || []).map(function (x) { return x.device || "appareil"; });
     G("cenon").textContent = on ? "Réactiver sur cet appareil" : "Activer sur cet appareil";
     if (!n.dataset.busy) n.textContent = (on ? "Activées sur cet appareil. " : "Pas encore activées sur cet appareil. ") + (devs.length ? "Appareils abonnés : " + devs.join(", ") + "." : "");
-    var p = Object.assign({ offres: true, recruteur: true, statut: true, entretien: true, objectif: true }, (await getDoc("notifs")) || {});
+    var p = Object.assign({ offres: true, recruteur: true, statut: true, entretien: true, objectif: true, bilan: true }, (await getDoc("notifs")) || {});
     document.querySelectorAll("[data-nf]").forEach(function (x) { x.checked = p[x.getAttribute("data-nf")] !== false; });
     calUI();
   }
@@ -121,6 +123,14 @@
   /* ---------- Annonce partagée depuis Safari, LinkedIn, Indeed (Raccourci iOS) ---------- */
   window.CE_handleShare = function () {
     var q = new URLSearchParams(location.search), s = q.get("share") || q.get("url") || q.get("text");
+    // Lien d'une notification : ouvrir le bon onglet (et la candidature concernée).
+    var v = q.get("v"), tab = { accueil: 0, analyser: 1, sugg: 2, list: 3, stats: 4 }[v];
+    if (!s && tab != null) {
+      history.replaceState(null, "", location.pathname);
+      var b = document.querySelectorAll(".bnav button")[tab]; if (b) b.click();
+      var oid = q.get("o"); if (oid && window.CE_openOffer) setTimeout(function () { window.CE_openOffer(oid); }, 500);
+      return;
+    }
     if (!s) return;
     history.replaceState(null, "", location.pathname);
     var m = /https?:\/\/[^\s<>"']+/i.exec(s);

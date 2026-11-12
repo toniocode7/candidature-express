@@ -4,7 +4,7 @@ import { newVapid, sendPush, type Vapid } from "../_shared/webpush.ts";
 
 const H = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" };
 const SUBJECT = "https://toniocode7.github.io/candidature-express/";
-const KINDS = ["offres", "recruteur", "statut", "entretien", "objectif", "test"];
+const KINDS = ["offres", "recruteur", "statut", "entretien", "objectif", "bilan", "test"];
 
 async function rest(path: string, init: RequestInit = {}) {
   return await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { ...init, headers: { ...H, ...(init.headers ?? {}) } });
@@ -23,7 +23,7 @@ async function vapid(): Promise<Vapid> {
 async function prefs(): Promise<Record<string, boolean>> {
   const r = await rest("docs?select=data&col=eq.ce&id=eq.notifs");
   const rows = r.ok ? await r.json() : [];
-  return { offres: true, recruteur: true, statut: true, entretien: true, objectif: true, ...(rows[0]?.data ?? {}), test: true };
+  return { offres: true, recruteur: true, statut: true, entretien: true, objectif: true, bilan: true, ...(rows[0]?.data ?? {}), test: true };
 }
 
 async function broadcast(kind: string, title: string, body: string, url: string, tag?: string) {

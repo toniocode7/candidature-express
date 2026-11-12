@@ -87,6 +87,13 @@ def main():
                 page.evaluate("() => { window.CE_ML_DONE = null; window.CE_mlCheck(true); }")
                 page.wait_for_function("() => window.CE_ML_DONE", timeout=10 * 60000, polling=2000)
                 print("Mails :", page.evaluate("() => window.CE_ML_DONE.msg") or "vérification faite")
+            # Entretien fixé sans fiche de préparation : on la prépare maintenant.
+            try:
+                k = page.evaluate("async () => window.CE_autoPrep ? await window.CE_autoPrep() : 0")
+                if k:
+                    print(f"Fiche d'entretien préparée : {k}")
+            except Exception as e:
+                print("Préparation d'entretien impossible pour ce passage :", str(e)[:150])
             # Laisser le temps à la synchronisation d'envoyer les changements.
             page.wait_for_timeout(4000)
             page.wait_for_function("() => !window.CE_PENDING_SYNC || window.CE_PENDING_SYNC() === 0", timeout=60000, polling=1000)

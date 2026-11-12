@@ -404,6 +404,157 @@ def src_meteojob(C: dict) -> list[dict]:
     return out
 
 
+# ---------------------------------------------------------------- Sites carrières des entreprises surveillées
+# Beaucoup de grandes entreprises publient leurs offres via une plateforme de recrutement qui expose
+# une liste publique (Workday, SmartRecruiters, Lever, Greenhouse, Recruitee, Teamtailor). On repère
+# la plateforme de chaque entreprise une fois (recherche web), puis on lit sa liste à chaque passage.
+ATS = [
+    ("workday", re.compile(r"https?://([\w-]+)\.(wd\d+)\.myworkdayjobs\.com/(?:[a-z]{2}-[A-Z]{2}/)?([\w-]+)")),
+    ("smartrecruiters", re.compile(r"https?://(?:jobs|careers)\.smartrecruiters\.com/([\w-]+)")),
+    ("lever", re.compile(r"https?://jobs\.(?:eu\.)?lever\.co/([\w-]+)")),
+    ("greenhouse", re.compile(r"https?://(?:job-)?boards(?:\.eu)?\.greenhouse\.io/([\w-]+)")),
+    ("recruitee", re.compile(r"https?://([\w-]+)\.recruitee\.com")),
+    ("teamtailor", re.compile(r"https?://([\w-]+)\.teamtailor\.com")),
+]
+JOBWORDS = ["supply", "achat", "acheteu", "approvision", "appro ", "logisti", "procurement", "purchas", "buyer", "sourcing",
+            "import", "export", "transport", "planif", "planner", "planning", "ordonnanc", " adv ", "administration des ventes",
+            "customs", "douane", "flux", "stock", "inventory", "demand", "s op", "material", "commodity"]
+
+
+def web_search(q: str) -> list[str]:
+    urls = []
+    try:
+        r = requests.post(f"{SB_URL}/functions/v1/read", headers={"x-ce-key": SB_KEY, "Content-Type": "application/json"},
+                          data=json.dumps({"search": q}), timeout=40)
+        urls = [x.get("url", "") for x in (r.json().get("web") or [])]
+    except Exception:
+        pass
+    return urls
+
+
+def find_ats(company: str) -> dict | None:
+    for q in (f"{company} careers jobs myworkdayjobs OR smartrecruiters OR lever OR greenhouse OR recruitee OR teamtailor",
+              f"{company} offres d'emploi carrières recrutement", f"{company} careers"):
+        for u in web_search(q):
+            for kind, rx in ATS:
+                m = rx.search(u)
+                if m:
+                    g = m.groups()
+                    if kind == "workday":
+                        return {"ats": kind, "tenant": g[0], "wd": g[1], "site": g[2], "url": f"https://{g[0]}.{g[1]}.myworkdayjobs.com/{g[2]}"}
+                    return {"ats": kind, "key": g[0], "url": m.group(0)}
+        time.sleep(1)
+    return None
+
+
+def want(title: str, C: dict) -> bool:
+    t = " " + norm(title) + " "
+    return any(norm(k) in t for k in C["kws"] + C["kwen"]) or any(w in t for w in JOBWORDS)
+
+
+FOREIGN = ["united states", "usa", "canada", "germany", "deutschland", "united kingdom", "england", "india", "china", "mexico",
+           "brazil", "spain", "espana", "italy", "italia", "poland", "netherlands", "belgium", "belgique", "singapore", "japan", "australia",
+           "morocco", "maroc", "tunisia", "tunisie", "romania", "czech", "hungary", "portugal", "switzerland", "suisse", "sweden", "denmark",
+           "norway", "finland", "austria", "ireland", "turkey", "korea", "vietnam", "malaysia", "thailand", "philippines", "indonesia",
+           "south africa", "egypt", "saudi", "emirates", "dubai", "qatar", "israel", "argentina", "chile", "colombia", "peru", "luxembourg"]
+FOREIGN_CC = {"us", "uk", "gb", "de", "es", "it", "pl", "nl", "be", "in", "cn", "mx", "br", "ca", "ch", "se", "dk", "no", "fi", "at", "ie", "pt", "ro", "cz", "hu", "sg", "jp", "au", "ma", "tn", "lu"}
+
+
+def place_ok(loc: str, country: str, C: dict) -> bool:
+    """Offres en France (ou sans lieu précis) ; à l'étranger seulement si ce pays ou cette ville est dans tes critères."""
+    l = " " + norm(loc + " " + country) + " "
+    if re.search(r" (france|fra) ", l):
+        return True
+    foreign = any(f" {f} " in l for f in FOREIGN) or norm(country) in FOREIGN_CC
+    if not foreign:
+        return True
+    return C["ze"] and any(f" {norm(e)} " in l for e in C["etr"])
+
+
+def ats_jobs(a: dict, company: str, C: dict) -> list[dict]:
+    out, kind = [], a["ats"]
+    lim = NOW - timedelta(days=max(C["win"], 14))
+
+    def add(url, title, loc="", country="", pub=None, contrat="", desc=""):
+        if not title or not want(title, C) or not place_ok(loc, country, C):
+            return
+        p = ms(pub)
+        if p and p < lim.timestamp() * 1000:
+            return
+        o = offer("carrieres", f"Site carrières {company}", url, title, company, loc, contrat, "", pub, clean(desc)[:600],
+                  "FR" if not country or re.search(r"france|^fr", norm(country)) else "", full=clean(desc))
+        if o:
+            out.append(o)
+
+    if kind == "workday":
+        base = f"https://{a['tenant']}.{a['wd']}.myworkdayjobs.com"
+        for kw in (C["kws"][:3] + C["kwen"][:2]):
+            r = requests.post(f"{base}/wday/cxs/{a['tenant']}/{a['site']}/jobs", json={"limit": 20, "offset": 0, "searchText": kw, "appliedFacets": {}},
+                              headers={"User-Agent": UA, "Accept": "application/json", "Content-Type": "application/json"}, timeout=30)
+            if r.status_code != 200:
+                raise RuntimeError(f"Workday HTTP {r.status_code}")
+            for j in r.json().get("jobPostings") or []:
+                add(f"{base}/{a['site']}{j.get('externalPath', '')}", j.get("title"), j.get("locationsText") or "")
+            time.sleep(1)
+    elif kind == "smartrecruiters":
+        r = get(f"https://api.smartrecruiters.com/v1/companies/{a['key']}/postings?limit=100")
+        for j in r.json().get("content") or []:
+            l = j.get("location") or {}
+            add(f"https://jobs.smartrecruiters.com/{a['key']}/{j.get('id')}", j.get("name"), ", ".join(x for x in [l.get("city"), l.get("region")] if x),
+                l.get("country") or "", j.get("releasedDate"), (j.get("typeOfEmployment") or {}).get("label") or "")
+    elif kind == "lever":
+        r = get(f"https://api.lever.co/v0/postings/{a['key']}?mode=json")
+        for j in r.json() if r.status_code == 200 else []:
+            c = j.get("categories") or {}
+            add(j.get("hostedUrl"), j.get("text"), c.get("location") or "", j.get("country") or "",
+                datetime.fromtimestamp(j["createdAt"] / 1000, timezone.utc).isoformat() if j.get("createdAt") else None, c.get("commitment") or "", j.get("descriptionPlain") or "")
+    elif kind == "greenhouse":
+        r = get(f"https://boards-api.greenhouse.io/v1/boards/{a['key']}/jobs")
+        for j in r.json().get("jobs") or []:
+            add(j.get("absolute_url"), j.get("title"), (j.get("location") or {}).get("name") or "", "", j.get("updated_at"))
+    elif kind == "recruitee":
+        r = get(f"https://{a['key']}.recruitee.com/api/offers/")
+        for j in r.json().get("offers") or []:
+            add(j.get("careers_url"), j.get("title"), j.get("location") or j.get("city") or "", j.get("country") or j.get("country_code") or "",
+                j.get("published_at"), j.get("employment_type_code") or "", j.get("description") or "")
+    elif kind == "teamtailor":
+        r = get(f"https://{a['key']}.teamtailor.com/jobs")
+        for m in re.finditer(r'href="(https://[\w-]+\.teamtailor\.com/jobs/\d+[^"]*)"[^>]*>([\s\S]{0,400}?)</a>', r.text):
+            add(m.group(1), clean(m.group(2)).split("  ")[0][:120])
+    return out
+
+
+def src_careers(C: dict, uid: str) -> list[dict]:
+    if not C["zc"] or not C["ent"]:
+        return []
+    known = get_doc(uid, "ce", "careers") or {}
+    out, errs, now = [], [], int(time.time() * 1000)
+    for company in C["ent"][:25]:
+        k = norm(company)
+        a = known.get(k) or {}
+        if not a.get("ats") and now - (a.get("tried") or 0) > 7 * 864e5:
+            f = find_ats(company)
+            a = {**(f or {}), "name": company, "tried": now}
+            known[k] = a
+        if not a.get("ats"):
+            continue
+        try:
+            jobs = ats_jobs(a, company, C)
+            a.update({"n": len(jobs), "at": now, "err": ""})
+            out.extend(jobs)
+        except Exception as e:
+            a.update({"at": now, "err": str(e)[:120]})
+            errs.append(f"{company} : {str(e)[:100]}")
+        time.sleep(random.uniform(1, 2))
+    # Entreprises retirées de la liste : on oublie leur page.
+    keep = {norm(c) for c in C["ent"]}
+    set_doc(uid, "ce", "careers", {k: v for k, v in known.items() if k in keep})
+    if not out and errs and len(errs) == len([1 for c in C["ent"] if (known.get(norm(c)) or {}).get("ats")]):
+        raise RuntimeError(errs[0])
+    log(f"  {sum(1 for c in C['ent'] if (known.get(norm(c)) or {}).get('ats'))} pages carrières sur {len(C['ent'])} entreprises")
+    return out
+
+
 def xp_ld(e) -> str:
     """experienceRequirements des données structurées : texte, ou nombre de mois (cité, pas exigé)."""
     if isinstance(e, str):
@@ -441,6 +592,10 @@ def ft_detail(idd: str) -> dict | None:
 def ft_xp(o: dict, j: dict):
     """France Travail précise lui-même si l'expérience est indispensable : on suit ce champ."""
     xp_set(o, str(j.get("descriptif") or "").replace("\\n", "\n"))
+    sal = j.get("salaire")
+    sal = (sal.get("libelle") or sal.get("complement1") or "") if isinstance(sal, dict) else (sal or "")
+    if sal and not o.get("salaire"):
+        o["salaire"] = clean(sal)
     ep = j.get("experienceProfil") or {}
     m = re.search(r"(\d+)\s*(an|mois)", str(ep.get("experience") or ""), re.I)
     if m:
@@ -513,10 +668,10 @@ def enrich(found: list[dict]):
 # ---------------------------------------------------------------- Orchestration
 # Welcome to the Jungle et Apec ne sont pas interrogés : le premier charge ses offres d'une façon
 # illisible sans navigateur complet, le second bloque les robots (DataDome). On respecte ces blocages.
-SOURCES = ["francetravail", "indeed", "linkedin", "hellowork", "meteojob"]
+SOURCES = ["francetravail", "indeed", "linkedin", "hellowork", "meteojob", "carrieres"]
 LABEL = {"francetravail": "France Travail", "indeed": "Indeed", "linkedin": "LinkedIn", "hellowork": "HelloWork",
-         "wttj": "Welcome to the Jungle", "apec": "Apec", "meteojob": "Meteojob"}
-EVERY_H = {"francetravail": 3, "indeed": 3, "linkedin": 4, "hellowork": 3, "wttj": 6, "apec": 6, "meteojob": 6}
+         "wttj": "Welcome to the Jungle", "apec": "Apec", "meteojob": "Meteojob", "carrieres": "Sites carrières"}
+EVERY_H = {"francetravail": 3, "indeed": 3, "linkedin": 4, "hellowork": 3, "wttj": 6, "apec": 6, "meteojob": 6, "carrieres": 6}
 
 
 def criteria(uid: str) -> dict:
@@ -587,6 +742,8 @@ def main():
                 found = src_hellowork(C)
             elif s == "meteojob":
                 found = src_meteojob(C)
+            elif s == "carrieres":
+                found = src_careers(C, uid)
             else:
                 raise RuntimeError("source inconnue")
             try:

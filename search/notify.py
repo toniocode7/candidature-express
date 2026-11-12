@@ -67,6 +67,42 @@ def main():
             else:
                 print(f"Objectif atteint : {sent}/{goal}")
 
+    bilan(now, offers)
+
+
+def bilan(now, offers):
+    """Bilan de la semaine, le dimanche à partir de 18 h."""
+    if now.weekday() != 6 or now.hour < 18:
+        return
+    monday = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    t0, nms = monday.timestamp() * 1000, now.timestamp() * 1000
+    sent = sum(1 for o in offers if (o.get("st") or 0) >= 1 and (o.get("sentAt") or 0) >= t0)
+    rep = itv = ref = 0
+    for o in offers:
+        h = [e for e in (o.get("hist") or []) if isinstance(e, dict) and (e.get("t") or 0) >= t0]
+        if any(e.get("s") == 2 for e in h):
+            itv += 1
+        elif any(e.get("s") == 4 for e in h):
+            rep += 1
+        elif any(e.get("s") == 3 for e in h) and not o.get("autoRef"):
+            ref += 1
+    venir = sum(1 for o in offers if (o.get("iv") or {}).get("at") and nms < o["iv"]["at"] < nms + 7 * 864e5 and not o.get("ir"))
+    relance = sum(1 for o in offers if o.get("st") == 1 and nms - 30 * 864e5 < (o.get("sentAt") or 0) < nms - 7 * 864e5)
+    sg = (docs("select=data&col=eq.app&id=eq.sugg") or [{}])[0]
+    top = sum(1 for x in (sg.get("items") or []) if (x.get("pertinence") or 0) >= 80 and (x.get("fd") or 0) >= t0)
+    parts = []
+    reponses = itv + rep + ref
+    parts.append(f"{reponses} réponse{'s' if reponses > 1 else ''} reçue{'s' if reponses > 1 else ''}"
+                 + (f" ({', '.join(x for x in [f'{itv} entretien' + ('s' if itv > 1 else '') if itv else '', f'{rep} premier' + ('s' if rep > 1 else '') + ' contact' + ('s' if rep > 1 else '') if rep else '', f'{ref} refus' if ref else ''] if x)})" if reponses else ""))
+    if venir:
+        parts.append(f"{venir} entretien{'s' if venir > 1 else ''} dans les 7 jours")
+    if relance:
+        parts.append(f"{relance} candidature{'s' if relance > 1 else ''} sans réponse depuis plus d'une semaine, à relancer")
+    if top:
+        parts.append(f"{top} offre{'s' if top > 1 else ''} notée{'s' if top > 1 else ''} 80 ou plus repérée{'s' if top > 1 else ''} cette semaine")
+    push("bilan", f"Ta semaine : {sent} candidature{'s' if sent > 1 else ''} envoyée{'s' if sent > 1 else ''}", " · ".join(parts) + ".",
+         f"bilan:{monday.date()}", "./?v=stats")
+
 
 if __name__ == "__main__":
     main()

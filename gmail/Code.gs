@@ -88,7 +88,7 @@ function synchroniser() {
 /** À lancer une seule fois : vérifie la connexion et programme le passage toutes les 15 minutes. */
 function installer() {
   if (PHRASE_SECRETE.indexOf("COLLE-ICI") === 0) throw new Error("Colle d'abord ta phrase secrète en haut du script, puis enregistre.");
-  ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "synchroniser") ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger("synchroniser").timeBased().everyMinutes(15).create();
   synchroniser();
   console.log("Installation terminée : le script tournera toutes les 15 minutes.");

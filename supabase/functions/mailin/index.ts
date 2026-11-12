@@ -42,5 +42,20 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true });
   }
+  // Sauvegarde complète (déposée chaque semaine dans ton Google Drive par le script Google).
+  if (b.action === "backup") {
+    const docs: any[] = [];
+    for (let from = 0; from < 50000; from += 1000) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/docs?select=col,id,data,updated_at&col=in.(app,ce)&id=neq.autoprep&order=col,id`, {
+        headers: { ...H, Range: `${from}-${from + 999}`, "Range-Unit": "items" },
+      });
+      if (!r.ok) return json({ error: "base", detail: (await r.text()).slice(0, 200) }, 500);
+      const part = await r.json();
+      docs.push(...part);
+      if (part.length < 1000) break;
+    }
+    await bumpUsage("sauvegarde", "drive", true);
+    return json({ app: "Candidature Express", v: 2, at: new Date().toISOString(), candidatures: docs.filter((d) => d.col === "app" && /^o_/.test(d.id)).length, docs });
+  }
   return json({ error: "action inconnue" }, 400);
 });
