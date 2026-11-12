@@ -25,11 +25,16 @@ self.addEventListener("fetch", e => {
     })));
     return;
   }
-  // Code de l'app : le réseau d'abord (mises à jour), le cache si hors ligne.
-  e.respondWith(fetch(req).then(res => {
+  // Code de l'app : ouverture immédiate depuis le cache, mise à jour en arrière-plan
+  // (la nouvelle version est utilisée à l'ouverture suivante).
+  const net = fetch(req).then(res => {
     if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
     return res;
-  }).catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match("index.html"))));
+  });
+  e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => {
+    if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
+    return net.catch(() => caches.match("index.html"));
+  }));
 });
 
 /* Notifications : affichage et ouverture de l'app au bon endroit. */

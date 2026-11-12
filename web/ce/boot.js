@@ -71,7 +71,7 @@
           if (!d || !d.ls || typeof d.ls !== "object") throw err("format", "Ce fichier n'est pas une sauvegarde de Candidature Express.");
           var n = 0; try { n = JSON.parse(d.ls.off || "[]").length; } catch (e) {}
           Object.keys(d.ls).forEach(function (k) { if (typeof d.ls[k] === "string") localStorage.setItem(LS + k, d.ls[k]); });
-          if (d.perso && typeof d.perso === "object") { PERSO = d.perso; await savePerso(PERSO); }
+          if (d.perso && typeof d.perso === "object") { PERSO = d.perso; await savePerso(PERSO); try { localStorage.setItem("ce.perso", JSON.stringify(PERSO)); } catch (e) {} }
           m.textContent = n + " candidatures importées. Envoi vers ton compte...";
           resolve(true);
         } catch (e) { m.textContent = e && e.message || "Import impossible."; }
@@ -195,6 +195,7 @@
     var s = document.createElement("script");
     s.textContent = src + "\n//# sourceURL=app.js";
     document.body.appendChild(s);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { document.documentElement.classList.remove("ce-boot"); }); });
     realtime();
     setTimeout(function () { try { window.CE_srcUI && window.CE_srcUI(); } catch (e) {} }, 1500);
     setTimeout(function () { try { window.CE_handleShare && window.CE_handleShare(); } catch (e) {} }, 2500);
@@ -208,7 +209,9 @@
       var s = await sb.auth.getSession();
       USER = s.data && s.data.session ? s.data.session.user : null;
       if (!USER) USER = await loginScreen();
-      PERSO = await loadPerso();
+      try { PERSO = JSON.parse(localStorage.getItem("ce.perso") || "null"); } catch (e) { PERSO = null; }
+      var fresh = loadPerso().then(function (p) { if (p) { try { localStorage.setItem("ce.perso", JSON.stringify(p)); } catch (e) {} } return p; });
+      if (!PERSO) PERSO = await fresh;
     }
     var hasLocal = !!localStorage.getItem(LS + "off");
     if (!hasLocal) {
@@ -222,5 +225,5 @@
   if ("serviceWorker" in navigator && !DEMO) {
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
-  main().catch(function (e) { showGate('<h1>Oups</h1><p class="ce-lead">Le démarrage a échoué : ' + esc(e && e.message || e) + '</p><button class="main" onclick="location.reload()">Réessayer</button>'); });
+  main().catch(function (e) { document.documentElement.classList.remove("ce-boot"); showGate('<h1>Oups</h1><p class="ce-lead">Le démarrage a échoué : ' + esc(e && e.message || e) + '</p><button class="main" onclick="location.reload()">Réessayer</button>'); });
 })();
