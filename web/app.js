@@ -675,7 +675,7 @@ var best=null;for(var k=0;k<cands.length;k++){var c=cands[k],f=g.frc[c]||g.frc[g
 if(best)return best;for(k=0;k<cands.length;k++){var f2=g.frc[cands[k]];if(f2)return {lon:f2[0],lat:f2[1],nm:cands[k],fr:1}}
 if(dep&&g.dep[dep]){var d=g.dep[dep];return {lon:d[0],lat:d[1],nm:d[2],fr:1,dep:1}}
 for(var cn in g.ctry){if((" "+n+" ").indexOf(" "+cn+" ")>=0){var q=g.ctry[cn];return {lon:q[0],lat:q[1],nm:cn,cc:q[2],ctry:1}}}
-var tl=t.split(",").map(function(x){return x.trim()}).filter(Boolean);for(var j=tl.length-1;j>=1&&j>=tl.length-2;j--){var cd=tl[j].toUpperCase(),cc2={UK:"GB",ENG:"GB",SCT:"GB",WLS:"GB",NIR:"GB",USA:"US"}[cd]||(/^[A-Z]{2}$/.test(tl[j])?cd:"");if(cc2&&cc2!=="FR"&&g.ccp[cc2]){var q2=g.ccp[cc2];return {lon:q2[0],lat:q2[1],nm:cd,cc:cc2,ctry:1}}}return null}
+var tl=t.split(",").map(function(x){return x.trim()}).filter(Boolean);if(tl.length>=2){var lt=tl[tl.length-1],cd=lt.toUpperCase(),cc2={UK:"GB",ENG:"GB",SCT:"GB",WLS:"GB",NIR:"GB",USA:"US"}[cd]||(/^[A-Z]{2}$/.test(lt)?cd:"");if(cd==="ENG"||cd==="SCT"||cd==="WLS")cc2="GB";if(cc2&&cc2!=="FR"&&g.ccp[cc2]){var q2=g.ccp[cc2];return {lon:q2[0],lat:q2[1],nm:cd,cc:cc2,ctry:1}}}return null}
 var GCACHE={};window.__geoOf=function(l){return geoOf(l)};function geoOf(lieu){var k=String(lieu||"");if(!(k in GCACHE))GCACHE[k]=geoFind(k);return GCACHE[k]}
 function titleCase(s){return String(s||"").replace(/\s+\d+(er|e)?$/,"").replace(/(^|[\s-])([a-zà-ÿ])/g,function(a,b,c){return b+c.toUpperCase()})}
 var MCOL={2:"var(--ochre)",4:"var(--brand)",1:"var(--good)",0:"var(--mute)",3:"var(--bad)"},MRANK={2:5,4:4,1:3,0:2,3:1};
@@ -1417,7 +1417,7 @@ okN+=ch.length;(r&&r.offres||[]).forEach(function(o){var x=ch[+o.i];if(o.titre&&
 catch(e){bad++;lastErr=e;if(e&&(e.code==="rate_limited"||e.code==="not_granted"))ci=chunks.length}
 done++;b.textContent="Tri "+done+"/"+chunks.length+"...";n.textContent=cand.length+" offres trouvées, tri selon ton profil ("+done+" lots sur "+chunks.length+"), "+out.length+" retenues pour l'instant..."}}
 var okN=0;await Promise.all([sortW(),sortW()]);var rejN=Math.max(0,okN-out.length);if(!out.length&&bad)throw lastErr||{code:"erreur"};
-out=out.filter(function(x){if(ceOut(x)){crN++;return false}if(xpOut(x)){xpN++;return false}if(sgStage(x)){stgN++;return false}if(x.lgReq||sgLang(x)){lgN++;return false}return true});
+window.CE_crStat={};out=out.filter(function(x){var why=ceOut(x);if(why){crN++;var kk=why+" / "+(x.src||"?")+(why==="lieu"?" / "+(x.lieu&&geoOf(x.lieu)?(geoOf(x.lieu).cc||"FR"):"lieu inconnu, pays "+(x.cc||"?")):"");CE_crStat[kk]=(CE_crStat[kk]||0)+1;return false}if(xpOut(x)){xpN++;return false}if(sgStage(x)){stgN++;return false}if(x.lgReq||sgLang(x)){lgN++;return false}return true});
 var indC=indBusy()?[]:out.filter(function(x){return x.src==="indeed"&&x.jid}).slice(0,15);if(indC.length){b.textContent="Vérification des exigences...";n.textContent="Je lis les annonces Indeed retenues pour écarter celles qui exigent "+EXPMAX+" ans d'expérience ou plus...";
 for(var xi=0;xi<indC.length;xi++){if(indBusy())break;try{var rr=await mcp.callTool("Indeed","get_job_details",{job_id:indC[xi].jid});var tt=mcpText(rr);if(!tt&&rr&&rr.payload)tt=rr.payload.result||"";try{var jj=JSON.parse(tt);if(jj&&jj.result)tt=jj.result}catch(e){}if(tt&&tt.length>200){if(!indC[xi].fpFull)indC[xi].fpFull=fpOf(tt);xpSet(indC[xi],tt);if(langOf(tt.slice(0,4000))||langReq(tt))indC[xi].lgReq=1}}catch(e){indErr(e)}}
 out=out.filter(function(x){if(xpOut(x)){xpN++;return false}if(x.lgReq){lgN++;return false}return true})}

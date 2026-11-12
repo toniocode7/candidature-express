@@ -77,6 +77,7 @@ def main():
                 res = page.evaluate("() => window.CE_LAST_RUN")
                 print("Résultat du tri :", res.get("msg"))
                 print("Nouvelles offres retenues :", res.get("nouvelles"))
+                print("Hors critères, par motif / source / pays :", page.evaluate("() => window.CE_crStat || {}"))
                 if res.get("nouvelles"):
                     top = page.evaluate("""() => { const s = JSON.parse(localStorage.getItem('candexp.sugg')||'{}'); const it = s.items||[];
                         const f = Math.max(0, ...it.map(x => x.fd||0)); return it.filter(x => x.fd === f).sort((a,b) => (b.pertinence||0)-(a.pertinence||0))
