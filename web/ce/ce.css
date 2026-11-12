@@ -47,3 +47,4 @@ dialog.drawer{max-height:100dvh!important}
 .ceadd{display:flex;gap:8px}.ceadd input{flex:1;min-width:0;padding:9px 12px}.ceadd .sb{flex:none}
 .cerow{display:flex;flex-direction:column;gap:4px}.cerow select{width:100%}
 .cechks{display:flex;flex-wrap:wrap;gap:8px}
+.cesortrow{display:flex;align-items:center;gap:10px;margin:2px 0 4px}.cesortrow label{margin:0;flex:none;font-size:.88rem}.cesortrow select{flex:1;min-width:0;padding:9px 12px;border-radius:999px;font-weight:600}
