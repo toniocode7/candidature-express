@@ -29,3 +29,4 @@ dialog{max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-ins
 dialog.sheet{max-height:calc(100dvh - env(safe-area-inset-top,0px) - 12px)!important}
 dialog.sheet.tall,dialog.sheet.ofd{height:min(88dvh,calc(100dvh - env(safe-area-inset-top,0px) - 12px))!important}
 dialog.drawer{max-height:100dvh!important}
+.cecount{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;padding:0 .35em;margin-left:.3em;border-radius:.8em;background:var(--brand);color:var(--onbrand);font-size:.62em;vertical-align:.18em;font-variant-numeric:tabular-nums;letter-spacing:0}
