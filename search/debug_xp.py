@@ -23,16 +23,13 @@ def snip(name, url, h):
 
 
 r = S.get("https://candidat.francetravail.fr/offres/recherche?motsCles=supply+chain&lieux=29019&rayon=30&tri=1", timeout=30)
-for i in re.findall(r'data-id-offre="([^"]+)"', r.text)[:4]:
+for i in re.findall(r'data-id-offre="([^"]+)"', r.text)[:3]:
     u = f"https://candidat.francetravail.fr/offres/recherche/detail/{i}"
-    snip("FT", u, S.get(u, timeout=30).text)
-r = S.get("https://www.hellowork.com/fr-fr/emploi/recherche.html?k=acheteur&l=Brest", timeout=30)
-for i in list(dict.fromkeys(re.findall(r'/fr-fr/emplois/(\d+)\.html', r.text)))[:4]:
-    u = f"https://www.hellowork.com/fr-fr/emplois/{i}.html"
-    snip("HW", u, S.get(u, timeout=30).text)
-r = S.get("https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=supply%20chain&location=Bretagne&start=0", timeout=30)
-for i in list(dict.fromkeys(re.findall(r'jobs/view/[^"?]*?-(\d{8,})', r.text)))[:4]:
-    u = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{i}"
-    rr = S.get(u, timeout=30)
-    print("LI statut", rr.status_code)
-    snip("LI", u, rr.text)
+    h = S.get(u, timeout=30).text
+    print("\n### FT", u, len(h))
+    for k in ("itemprop", "skill", "Exp", "exp&", "experience", "description"):
+        for m in list(re.finditer(k, h))[:3]:
+            print(f"  [{k}]", re.sub(r"\s+", " ", h[max(0, m.start() - 120):m.start() + 250]))
+    t = txt(h)
+    j = t.find("Profil")
+    print("  TEXTE:", t[:200], "...", t[j:j + 900] if j >= 0 else "")
