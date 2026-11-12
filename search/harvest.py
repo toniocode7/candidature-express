@@ -25,6 +25,9 @@ from urllib.parse import quote, quote_plus, urljoin, urlparse, parse_qs, urlenco
 
 import requests
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from xp import scan as xp_scan  # noqa: E402
+
 SB_URL = f"https://{os.environ['SUPABASE_PROJECT_REF']}.supabase.co"
 SB_KEY = os.environ["SUPABASE_SECRET_KEY"]
 FORCE = "--force" in sys.argv
@@ -123,7 +126,7 @@ def ms(d) -> int | None:
 
 
 def offer(src: str, site: str, url: str, titre: str, entreprise="", lieu="", contrat="", salaire="", pub=None,
-          extrait="", cc="FR", web=False) -> dict | None:
+          extrait="", cc="FR", web=False, full="") -> dict | None:
     titre = clean(titre)
     if not url or not titre or len(titre) < 4:
         return None
@@ -138,7 +141,19 @@ def offer(src: str, site: str, url: str, titre: str, entreprise="", lieu="", con
         o["extrait"] = clean(extrait)[:600]
     if web:
         o["web"] = 1
+    if full and len(str(full)) > 150:
+        xp_set(o, str(full))
     return o
+
+
+def xp_set(o: dict, text: str):
+    """Expérience demandée, lue sur le texte complet de l'annonce (voir xp.py)."""
+    r = xp_scan(text)
+    o["xpChk"] = 1
+    o["xpmin"] = r["hard"]
+    o["xpsoft"] = r["soft"]
+    if r["txt"]:
+        o["xpTxt"] = r["txt"]
 
 
 def get(url: str, **kw) -> requests.Response:
@@ -179,7 +194,8 @@ def from_jobspy(r: dict, site: str, cc: str) -> dict | None:
     contrat = {"fulltime": "", "parttime": "Temps partiel", "contract": "CDD", "temporary": "Intérim", "internship": "Stage"}.get(jt.split(",")[0].strip(), "")
     return offer(site, "Indeed" if site == "indeed" else "LinkedIn", r.get("job_url") or "", r.get("title") or "",
                  r.get("company") or "", loc, contrat, sal, r.get("date_posted"),
-                 str(r.get("description") or "")[:600] if str(r.get("description") or "") != "nan" else "", cc)
+                 str(r.get("description") or "")[:600] if str(r.get("description") or "") != "nan" else "", cc,
+                 full=str(r.get("description") or "") if str(r.get("description") or "") != "nan" else "")
 
 
 def src_jobspy(site: str, C: dict) -> list[dict]:
@@ -370,7 +386,8 @@ def src_meteojob(C: dict) -> list[dict]:
                     loc.append(", ".join(str(v) for v in [a.get("addressLocality"), a.get("postalCode")] if v))
                 o = offer("meteojob", "Meteojob", u, jp.get("title") or "", org or "", "; ".join(x for x in loc if x),
                           ", ".join(jp.get("employmentType") if isinstance(jp.get("employmentType"), list) else [jp.get("employmentType") or ""]),
-                          "", jp.get("datePosted"), clean(jp.get("description") or "")[:600])
+                          "", jp.get("datePosted"), clean(jp.get("description") or "")[:600],
+                          full=clean(jp.get("description") or "") + " " + xp_ld(jp.get("experienceRequirements")))
             else:
                 t = re.search(r"<title[^>]*>([\s\S]*?)</title>", r.text)
                 tt = clean(t.group(1)) if t else ""
@@ -385,6 +402,109 @@ def src_meteojob(C: dict) -> list[dict]:
     if not out and errs:
         raise RuntimeError(errs[0])
     return out
+
+
+def xp_ld(e) -> str:
+    """experienceRequirements des données structurées : texte, ou nombre de mois (cité, pas exigé)."""
+    if isinstance(e, str):
+        return clean(e)
+    if isinstance(e, dict) and e.get("monthsOfExperience"):
+        try:
+            return f". Expérience de {round(float(e['monthsOfExperience']) / 12)} ans."
+        except Exception:
+            return ""
+    return ""
+
+
+def page_text(src: str, h: str) -> str:
+    h = re.sub(r"<(script|style|noscript)[\s\S]*?</\1>", " ", h)
+    if src == "linkedin":
+        m = re.search(r'class="[^"]*show-more-less-html__markup[^"]*"[^>]*>([\s\S]*?)</div>', h)
+        if m:
+            h = m.group(1)
+    elif src == "hellowork":
+        a = h.find("Les missions du poste")
+        a = a if a >= 0 else h.find("Le profil recherché")
+        z = h.find("Recherches similaires")
+        if a >= 0:
+            h = h[a:z if z > a else None]
+    return clean(re.sub(r"</(p|li|div|h\d|br)>|<br\s*/?>", ".\n", h))
+
+
+def ft_detail(idd: str) -> dict | None:
+    """Détail structuré d'une annonce France Travail (celui qu'affiche le site)."""
+    r = requests.get(f"https://candidat.francetravail.fr/api-descriptifoffre/offre/{idd}", timeout=30,
+                     headers={"User-Agent": UA, "Accept": "application/json", "Referer": f"https://candidat.francetravail.fr/offres/recherche/detail/{idd}"})
+    return r.json() if r.status_code == 200 else None
+
+
+def ft_xp(o: dict, j: dict):
+    """France Travail précise lui-même si l'expérience est indispensable : on suit ce champ."""
+    xp_set(o, str(j.get("descriptif") or "").replace("\\n", "\n"))
+    ep = j.get("experienceProfil") or {}
+    m = re.search(r"(\d+)\s*(an|mois)", str(ep.get("experience") or ""), re.I)
+    if m:
+        n = int(m.group(1)) // (12 if m.group(2).lower() == "mois" else 1)
+        if ep.get("estUneExperienceIndispensable"):
+            o["xpmin"] = n
+            o["xpTxt"] = f"France Travail : {ep.get('experience')} d'expérience, indispensable"
+        else:
+            o["xpmin"] = 0
+            o.pop("xpTxt", None)
+            o["xpsoft"] = max(n, o.get("xpsoft") or 0)
+
+
+def enrich(found: list[dict]):
+    """Lit la page de chaque nouvelle annonce pour connaître l'expérience exigée.
+    Les annonces déjà lues lors d'une récolte précédente gardent leur résultat."""
+    todo = [o for o in found if not o.get("xpChk")]
+    prior = {}
+    ids = list({oid(o["url"]) for o in todo})
+    for k in range(0, len(ids), 80):
+        try:
+            rows = rest("GET", "raw_offers?select=id,xpChk:data->xpChk,xpmin:data->xpmin,xpsoft:data->xpsoft,xpTxt:data->>xpTxt&id=in.(" + ",".join(ids[k:k + 80]) + ")")
+            prior.update({r["id"]: r for r in rows if r.get("xpChk")})
+        except Exception as e:
+            log("Lecture des résultats précédents impossible :", e)
+    fresh = []
+    for o in todo:
+        r = prior.get(oid(o["url"]))
+        if r:
+            o.update({k: r[k] for k in ("xpChk", "xpmin", "xpsoft", "xpTxt") if r.get(k) is not None})
+        else:
+            fresh.append(o)
+    t0, n, hard = time.time(), 0, 0
+    for o in [o for o in fresh if o["src"] == "francetravail"][:150]:
+        if time.time() - t0 > 300:
+            break
+        try:
+            j = ft_detail(o["url"].rsplit("/", 1)[-1])
+            if j:
+                ft_xp(o, j); n += 1; hard += o["xpmin"] > 0
+        except Exception:
+            pass
+        time.sleep(random.uniform(0.3, 0.7))
+    for o in [o for o in fresh if o["src"] in ("linkedin", "hellowork")][:150]:
+        if time.time() - t0 > 600:
+            break
+        u = o["url"]
+        if o["src"] == "linkedin":
+            m = re.search(r"(\d{8,})", u)
+            if not m:
+                continue
+            u = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{m.group(1)}"
+        try:
+            r = get(u)
+            if r.status_code == 200:
+                t = page_text(o["src"], r.text)
+                if len(t) > 150:
+                    xp_set(o, t); n += 1; hard += o["xpmin"] > 0
+            elif r.status_code == 429:
+                break
+        except Exception:
+            pass
+        time.sleep(random.uniform(0.4, 1.0))
+    log(f"Expérience : {len(prior)} annonces déjà lues, {n} nouvelles lues ({hard} avec une expérience exigée), en {time.time() - t0:.0f} s")
 
 
 # ---------------------------------------------------------------- Orchestration
@@ -466,6 +586,10 @@ def main():
                 found = src_meteojob(C)
             else:
                 raise RuntimeError("source inconnue")
+            try:
+                enrich(found)
+            except Exception as e:
+                log("  Lecture des annonces incomplète :", str(e)[:150])
             n = save(found)
             total += n
             state[s] = {"ok": True, "n": n, "at": int(time.time() * 1000), "lastOk": int(time.time() * 1000), "err": ""}

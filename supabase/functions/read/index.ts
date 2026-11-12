@@ -137,6 +137,35 @@ Deno.serve(async (req) => {
   let url = String(body.url ?? "").trim();
   if (!/^https?:\/\//i.test(url)) return json({ error: "adresse invalide" }, 400);
 
+  // France Travail : la page d'une annonce affiche son détail avec du JavaScript ; on lit ce détail à la source.
+  const ft = /candidat\.francetravail\.fr\/offres\/recherche\/detail\/([A-Za-z0-9]+)/.exec(url);
+  if (ft) {
+    try {
+      const r = await fetch(`https://candidat.francetravail.fr/api-descriptifoffre/offre/${ft[1]}`, {
+        headers: { "User-Agent": UA, Accept: "application/json", Referer: url }, signal: AbortSignal.timeout(15000),
+      });
+      if (r.status === 404 || r.status === 410) return json({ statusCode: 410, gone: true, title: "", markdown: "", via: "francetravail" });
+      if (r.ok) {
+        const j: any = await r.json();
+        const ep = j.experienceProfil ?? {};
+        const parts = [
+          j.intituleOffre, j.etablissement?.nom ?? j.etablissement?.raisonSociale, j.libelleCodeLieuTravail ?? j.lieuTravail?.libelle,
+          j.syntheseContrat, j.syntheseHoraire, j.salaire?.libelle ?? (typeof j.salaire === "string" ? j.salaire : ""),
+          j.descriptif,
+          ep.experience ? `Expérience : ${ep.experience}${ep.estUneExperienceIndispensable ? " - Expérience exigée (indispensable)" : " - Expérience souhaitée"}` : "",
+          ...(j.listeFormation ?? []).map((f: any) => "Formation : " + (f.libelle ?? f.niveauLibelle ?? JSON.stringify(f))),
+          ...(j.listeCompetence ?? []).map((c: any) => "Compétence : " + (c.libelle ?? JSON.stringify(c))),
+          ...(j.listeLangue ?? []).map((c: any) => "Langue : " + (c.libelle ?? JSON.stringify(c))),
+          j.descriptionEntreprise,
+        ].filter((x) => x && String(x).trim()).map((x) => String(x).replace(/\\n/g, "\n"));
+        const text = parts.join("\n\n");
+        await bumpUsage("lecture", "francetravail", text.length >= 200);
+        if (body.check) return json({ statusCode: 200, gone: false, blocked: false, via: "francetravail" });
+        return json({ statusCode: 200, title: String(j.intituleOffre ?? ""), markdown: text.slice(0, 30000), via: "francetravail", blocked: false });
+      }
+    } catch (_) { /* lecture classique plus bas */ }
+  }
+
   const li = linkedinId(url);
   if (li) url = `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/${li}`;
 

@@ -23,6 +23,8 @@
         try { await sb().from("raw_offers").update({ evaluated_at: at }).in("id", ids.slice(i, i + 100)); } catch (e) {}
       }
     }
+    // Annonces déjà affichées dont l'expérience demandée n'a pas encore été lue sur la page complète.
+    try { if (window.CE_xpBackfill) await window.CE_xpBackfill(25); } catch (e) {}
     window.CE_LAST_RUN = { done: true, ok: !!ok, msg: String(msg || ""), nouvelles: +nouvelles || 0, triees: ids.length };
     try { window.CE_srcUI(); } catch (e) {}
   };
