@@ -1548,6 +1548,8 @@ window.CE_autoPrep=async function(){if(BUSY||!window.CE_doc)return 0;var now=Dat
 var list=OFF.filter(function(o){var iv=o.iv||{};return o.st===2&&!o.ir&&!isArch(o)&&!o.prep&&(iv.at?iv.at>now-3*3600e3&&iv.at<now+21*864e5:!!iv.day)&&!(tries[o.id]&&now-tries[o.id]<6*3600e3)}).slice(0,2),n=0;
 for(var i=0;i<list.length;i++){var o=list[i];tries[o.id]=now;try{await CE_doc.set("autoprep",tries)}catch(e){}try{await prepGen(o)}catch(e){}
 if(o.prep){n++;try{CE_EV("entretien","Fiche d'entretien prête",mlOffLabel(o)+(o.iv&&o.iv.at?" ("+ivTxt(o.iv)+")":"")+" : questions probables, tes atouts et quoi leur demander.","./?v=list&o="+o.id)}catch(e){}}}return n};
+window.CE_critAudit=async function(h){var sb=window.CE&&window.CE.supabase;if(!sb)return {};var r=await sb.from("raw_offers").select("data").gte("last_seen",new Date(Date.now()-(h||24)*3600e3).toISOString()).limit(2000);var st={n:(r.data||[]).length};
+(r.data||[]).forEach(function(x){var d=x.data,w=ceOut(d);var k=(w||"gardée")+" / "+(d.src||"?")+(w==="lieu"?" / "+(d.lieu&&geoOf(d.lieu)?(geoOf(d.lieu).cc||(geoOf(d.lieu).fr?"FR":"?")):"inconnu, pays "+(d.cc||"?")):"");st[k]=(st[k]||0)+1});return st};
 window.CE_openOffer=function(id){var o=find(String(id));if(o)ofOpen(o)};
 window.CE_xpBackfill=async function(max){if(BUSY||!window.CE_AI)return 0;var list=sgKeep().filter(function(x){return x.xpmin==null&&!x.web&&!x.xpTry}).slice(0,max||20),n=0;
 for(var i=0;i<list.length;i++){if(BUSY)break;var x=list[i];try{var t=await ceReadAd(x,null);if(t&&t.length>200&&!GONE.test(t.slice(0,3000))){xpSet(x,t);n++}else x.xpTry=1}catch(e){x.xpTry=1}}

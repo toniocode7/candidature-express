@@ -78,6 +78,13 @@ def main():
                 print("Résultat du tri :", res.get("msg"))
                 print("Nouvelles offres retenues :", res.get("nouvelles"))
                 print("Hors critères, par motif / source / pays :", page.evaluate("() => window.CE_crStat || {}"))
+                try:
+                    audit = page.evaluate("async () => window.CE_critAudit ? await window.CE_critAudit(24) : {}")
+                    print("Contrôle des critères sur les offres récoltées en 24 h :")
+                    for k, v in sorted(audit.items(), key=lambda x: -x[1] if isinstance(x[1], int) else 0):
+                        print(f"   {v:5}  {k}")
+                except Exception as e:
+                    print("Contrôle des critères impossible :", str(e)[:150])
                 if res.get("nouvelles"):
                     top = page.evaluate("""() => { const s = JSON.parse(localStorage.getItem('candexp.sugg')||'{}'); const it = s.items||[];
                         const f = Math.max(0, ...it.map(x => x.fd||0)); return it.filter(x => x.fd === f).sort((a,b) => (b.pertinence||0)-(a.pertinence||0))
