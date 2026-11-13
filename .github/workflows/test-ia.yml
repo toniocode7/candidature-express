@@ -61,6 +61,13 @@ jobs:
           URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
         run: |
           curl -s "$URL/rest/v1/usage?select=provider,model,ok,fail,exhausted&order=provider" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -m json.tool
+      - name: Sauvegarde pour Google Drive (taille seulement)
+        env:
+          MK: ${{ secrets.CE_MAIL_KEY }}
+        run: |
+          curl -s -X POST "$FN/mailin" -H "x-ce-mail-key: $MK" -H "Content-Type: application/json" -d '{"action":"backup"}' > b.json
+          python3 -c "import json; d=json.load(open('b.json')); print('Erreur :', d.get('error'), d.get('detail')) if 'error' in d else print('Sauvegarde OK :', len(d['docs']), 'éléments,', d['candidatures'], 'candidatures,', round(len(open('b.json').read())/1e6, 2), 'Mo')"
+          rm -f b.json
       - name: Lecture d'une vraie annonce
         run: |
           U="$URL_IN"
