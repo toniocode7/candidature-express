@@ -12,6 +12,8 @@
     var r = await c.from("raw_offers").select("id,data,last_seen").is("evaluated_at", null).gte("last_seen", since).order("last_seen", { ascending: false }).limit(600);
     if (r.error) throw Object.assign(new Error(r.error.message), { code: "base" });
     PENDING = (r.data || []).map(function (x) { return x.id; });
+    window.CE_RAW_N = PENDING.length;
+    try { var d = await c.from("docs").select("data").eq("col", "ce").eq("id", "sources").maybeSingle(); window.CE_LAST_AUTO = d.data && d.data.data && d.data.data._run ? d.data.data._run.at : 0; } catch (e) {}
     return (r.data || []).map(function (x) { return JSON.parse(JSON.stringify(x.data)); });
   };
 
@@ -37,6 +39,16 @@
     try { if (window.CE_xpBackfill) await window.CE_xpBackfill(25); } catch (e) {}
     window.CE_LAST_RUN = { done: true, ok: !!ok, msg: String(msg || ""), nouvelles: +nouvelles || 0, triees: ids.length };
     try { window.CE_srcUI(); } catch (e) {}
+  };
+
+  // Message quand la recherche lancée à la main ne trouve rien à trier : la recherche automatique est passée juste avant.
+  window.CE_noNewMsg = function () {
+    if (!window.CE_RAW || window.CE_RAW_N !== 0) return "";
+    var t = window.CE_LAST_AUTO, now = new Date(), h = now.getHours();
+    var ago = t ? Math.max(1, Math.round((Date.now() - t) / 60000)) : 0;
+    var next = h >= 22 || h < 6 ? "demain vers 6 h" : "dans moins d'une heure";
+    return "Rien de neuf à trier : la recherche automatique" + (ago ? " d'il y a " + (ago < 60 ? ago + " min" : Math.round(ago / 60) + " h") : "") +
+      " a déjà récolté et trié toutes les offres disponibles (elle passe toutes les heures, de 6 h à 22 h). Prochain passage " + next + ".";
   };
 
   var LABEL = { francetravail: "France Travail", indeed: "Indeed", linkedin: "LinkedIn", hellowork: "HelloWork", wttj: "Welcome to the Jungle", apec: "Apec", meteojob: "Meteojob", carrieres: "Sites carrières" };
