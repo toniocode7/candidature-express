@@ -795,7 +795,7 @@ def main():
     state = get_doc(uid, "ce", "sources") or {}
     for k in [k for k in state if k not in SOURCES and not k.startswith("_")]:
         del state[k]
-    last_run = (state.get("_run") or {}).get("at") or 0
+    last_run = max((state.get("_run") or {}).get("at") or 0, int((get_doc(uid, "ce", "evalall") or {}).get("at") or 0))
     changed = C["critAt"] > last_run
     if changed:
         log("Critères modifiés depuis la dernière recherche : toutes les sources sont interrogées, et les offres récentes seront retriées.")

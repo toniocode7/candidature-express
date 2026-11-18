@@ -9,11 +9,22 @@
   window.CE_RAW = async function () {
     var c = sb(); if (!c) throw Object.assign(new Error("hors connexion"), { code: "hors connexion" });
     var since = new Date(Date.now() - 45 * 864e5).toISOString();
-    var r = await c.from("raw_offers").select("id,data,last_seen").is("evaluated_at", null).gte("last_seen", since).order("last_seen", { ascending: false }).limit(600);
+    var lastAuto = 0, lastAll = 0;
+    try { var d = await c.from("docs").select("data").eq("col", "ce").eq("id", "sources").maybeSingle(); lastAuto = d.data && d.data.data && d.data.data._run ? d.data.data._run.at : 0; } catch (e) {}
+    try { lastAll = (window.CE_doc && ((await window.CE_doc.get("evalall")) || {}).at) || 0; } catch (e) {}
+    window.CE_LAST_AUTO = lastAuto;
+    // Critères changés depuis le dernier tri complet : toutes les offres récentes repassent au tri, pas seulement les inédites.
+    var crit = 0; try { crit = +(window.CE_crit && window.CE_crit.SG().critAt) || 0; } catch (e) {}
+    var all = crit > Math.max(lastAuto, lastAll), win = 14;
+    try { win = Math.max(7, +window.CE_crit.SETV().win || 14); } catch (e) {}
+    var q = c.from("raw_offers").select("id,data,last_seen");
+    q = all ? q.gte("last_seen", new Date(Date.now() - win * 864e5).toISOString()).limit(1000) : q.is("evaluated_at", null).gte("last_seen", since).limit(600);
+    var r = await q.order("last_seen", { ascending: false });
     if (r.error) throw Object.assign(new Error(r.error.message), { code: "base" });
     PENDING = (r.data || []).map(function (x) { return x.id; });
     window.CE_RAW_N = PENDING.length;
-    try { var d = await c.from("docs").select("data").eq("col", "ce").eq("id", "sources").maybeSingle(); window.CE_LAST_AUTO = d.data && d.data.data && d.data.data._run ? d.data.data._run.at : 0; } catch (e) {}
+    window.CE_RAW_ALL = all;
+    if (all) { try { await window.CE_doc.set("evalall", { at: Date.now() }); } catch (e) {} }
     return (r.data || []).map(function (x) { return JSON.parse(JSON.stringify(x.data)); });
   };
 
