@@ -81,7 +81,7 @@
         args = args || {};
         if (server === "Firecrawl" && tool === "firecrawl_scrape" && (args.formats || ["markdown"]).indexOf("json") < 0) {
           var j = await call("read", { url: args.url });
-          return { payload: { data: { markdown: j.markdown || "", metadata: { title: j.title || "", statusCode: j.statusCode || 200, via: j.via } } } };
+          return { payload: { data: { markdown: j.markdown || "", metadata: { title: j.title || "", statusCode: j.statusCode || 200, via: j.via, gone: !!j.gone, blocked: !!j.blocked } } } };
         }
         if (server === "Firecrawl" && tool === "firecrawl_search") {
           var w = await call("read", { search: String(args.query || "") });

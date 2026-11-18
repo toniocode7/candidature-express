@@ -80,7 +80,8 @@ function linkedinId(url: string): string | null {
   return m ? m[1] : null;
 }
 
-const GONE = /(offre (n'est plus|a été|est) (disponible|pourvue|expirée|clôturée)|annonce (a expiré|n'est plus en ligne|n'existe plus)|no longer (available|accepting)|job (has )?expired|this job is closed|n'accepte plus de candidatures)/i;
+// Phrases qui disent clairement qu'une annonce est close (négations seulement : « offre disponible » ne compte pas).
+const GONE = /(offre (n'est plus (disponible|en ligne|active)|a été pourvue|a expiré|est (expirée|clôturée|pourvue|désactivée))|annonce (a expiré|n'est plus (en ligne|disponible|active)|n'existe plus|est expirée)|no longer (available|accepting applications|active)|(this )?job (posting )?(has )?expired|this job is (closed|no longer)|n'accepte plus de candidatures|candidatures? (sont |est )?clôturée|position has been filled|(erreur|error) 404)/i;
 const BLOCKED = /(captcha|cloudflare|access denied|are you a robot|vérification de sécurité|enable javascript|unusual traffic|just a moment)/i;
 
 async function viaGemini(req: Request, url: string): Promise<string> {
@@ -185,12 +186,12 @@ Deno.serve(async (req) => {
   }
   await bumpUsage("lecture", via, !blocked && text.length >= 400);
 
-  const gone = status === 404 || status === 410 || (!blocked && GONE.test(text.slice(0, 5000)));
+  const gone = !blocked && (status === 404 || status === 410 || GONE.test(text.slice(0, 3000)));
   if (body.check) return json({ statusCode: gone ? 410 : status, gone, blocked, via });
 
   if (!gone && (blocked || text.replace(/\s+/g, " ").length < 400) && !body.noAi) {
     const t = await viaGemini(req, String(body.url));
     if (t.length >= 300) { text = t; via = "gemini"; blocked = false; }
   }
-  return json({ statusCode: gone ? 410 : (blocked ? 403 : status), title, markdown: text.slice(0, 30000), via, blocked });
+  return json({ statusCode: gone ? 410 : (blocked ? 403 : status), title, markdown: text.slice(0, 30000), via, blocked, gone });
 });
