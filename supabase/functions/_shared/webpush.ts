@@ -2,6 +2,9 @@
 // Aucune dépendance ni service tiers payant : la notification passe par le service
 // de notifications d'Apple (iPhone, Mac) ou de Google (autres navigateurs), gratuit.
 
+// Octets adossés à un ArrayBuffer (exigé par WebCrypto et fetch depuis TypeScript 5.7).
+type Bytes = Uint8Array<ArrayBuffer>;
+
 const enc = new TextEncoder();
 
 export function b64u(buf: ArrayBuffer | Uint8Array): string {
@@ -11,7 +14,7 @@ export function b64u(buf: ArrayBuffer | Uint8Array): string {
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-export function unb64u(s: string): Uint8Array {
+export function unb64u(s: string): Bytes {
   const t = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
   const bin = atob(t);
   const out = new Uint8Array(bin.length);
@@ -19,14 +22,14 @@ export function unb64u(s: string): Uint8Array {
   return out;
 }
 
-function concat(...parts: Uint8Array[]): Uint8Array {
+function concat(...parts: Bytes[]): Bytes {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let o = 0;
   for (const p of parts) { out.set(p, o); o += p.length; }
   return out;
 }
 
-async function hmac(key: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
+async function hmac(key: Bytes, data: Bytes): Promise<Bytes> {
   const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return new Uint8Array(await crypto.subtle.sign("HMAC", k, data));
 }
@@ -50,7 +53,7 @@ async function vapidHeader(endpoint: string, v: Vapid, subject: string): Promise
 }
 
 /** Chiffre le contenu pour un abonnement (aes128gcm, RFC 8291). */
-export async function encrypt(p256dh: string, auth: string, payload: Uint8Array, salt?: Uint8Array, asKeys?: CryptoKeyPair): Promise<Uint8Array> {
+export async function encrypt(p256dh: string, auth: string, payload: Bytes, salt?: Bytes, asKeys?: CryptoKeyPair): Promise<Bytes> {
   const uaPublic = unb64u(p256dh);
   const authSecret = unb64u(auth);
   const as = asKeys ?? await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
