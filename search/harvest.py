@@ -779,10 +779,10 @@ def save(found: list[dict]) -> int:
         full = o.pop("full", None)
         r = {"id": i, "source": o["src"], "data": o, "last_seen": NOW.isoformat()}
         if full:
-            r["full"] = full
+            r["full_text"] = full
         rows.append(r)
     # Les lignes sans texte complet gardent celui d'une récolte précédente (colonne non envoyée).
-    for grp in ([r for r in rows if "full" in r], [r for r in rows if "full" not in r]):
+    for grp in ([r for r in rows if "full_text" in r], [r for r in rows if "full_text" not in r]):
         for k in range(0, len(grp), 100):
             rest("POST", "raw_offers?on_conflict=id", headers={"Prefer": "resolution=merge-duplicates,return=minimal"}, data=json.dumps(grp[k:k + 100]))
     return len(rows)

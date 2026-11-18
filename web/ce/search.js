@@ -18,11 +18,11 @@
   // Texte complet d'une annonce, gardé lors de la récolte (utile quand le site bloque la lecture, comme Indeed).
   window.CE_storedAd = async function (url) {
     var c = sb(); if (!c || !url) return "";
-    var r = await c.from("raw_offers").select("data,full").eq("data->>url", url).not("full", "is", null).limit(1);
-    var x = r.data && r.data[0]; if (!x || !x.full || x.full.length < 300) return "";
+    var r = await c.from("raw_offers").select("data,full_text").eq("data->>url", url).not("full_text", "is", null).limit(1);
+    var x = r.data && r.data[0]; if (!x || !x.full_text || x.full_text.length < 300) return "";
     var d = x.data || {};
     var head = [d.titre, d.entreprise, d.lieu, d.contrat, d.salaire].filter(Boolean).join(" · ");
-    return (head ? head + "\n\n" : "") + x.full;
+    return (head ? head + "\n\n" : "") + x.full_text;
   };
 
   window.CE_RAW_DONE = async function (ok, msg, nouvelles) {
