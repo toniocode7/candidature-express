@@ -2,7 +2,7 @@ name: Publier l'app (GitHub Pages)
 on:
   push:
     branches: [main]
-    paths: ["web/**", ".github/workflows/pages.yml"]
+    paths: ["web/**", "tests/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -10,7 +10,10 @@ permissions:
   id-token: write
 concurrency: { group: pages, cancel-in-progress: true }
 jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
   deploy:
+    needs: tests
     runs-on: ubuntu-latest
     environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
     steps:

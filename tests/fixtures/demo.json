@@ -1,0 +1,17 @@
+{
+ "app": "Candidature Express",
+ "v": 1,
+ "at": "2026-11-18T00:00:00Z",
+ "perso": {
+  "prenom": "Camille",
+  "nom": "Exemple",
+  "aff": {}
+ },
+ "ls": {
+  "off": "[{\"id\": \"t1\", \"txt\": \"Acheteur chez B\\u00eata Logistique. Annonce fictive pour les tests.\", \"url\": \"https://exemple.test/offre/1\", \"src\": \"texte\", \"an\": {\"poste\": \"Acheteur\", \"entreprise\": \"B\\u00eata Logistique\", \"lieu\": \"Brest\", \"contrat\": \"CDI\", \"score\": 80, \"resume\": \"Annonce fictive.\"}, \"st\": 1, \"sentAt\": 1794767666667.0, \"ct\": 1794681266667.0, \"mt\": 1794767666667.0, \"hist\": [{\"t\": 1794767666667.0, \"s\": 1}], \"key\": \"acheteur\"}, {\"id\": \"t2\", \"txt\": \"Approvisionneur chez Gamma. Annonce fictive pour les tests.\", \"url\": \"https://exemple.test/offre/2\", \"src\": \"texte\", \"an\": {\"poste\": \"Approvisionneur\", \"entreprise\": \"Gamma\", \"lieu\": \"Brest\", \"contrat\": \"CDI\", \"score\": 80, \"resume\": \"Annonce fictive.\"}, \"st\": 2, \"sentAt\": 1794162866667.0, \"ct\": 1794076466667.0, \"mt\": 1794162866667.0, \"hist\": [{\"t\": 1794162866667.0, \"s\": 2}], \"key\": \"approvisionneur\"}]",
+  "cvs": "{\"list\": [{\"at\": 1795026866667, \"id\": \"cv1\", \"lang\": \"fr\", \"name\": \"CV test\", \"text\": \"Camille Exemple. Master supply chain et achats. Assistant logistique 2 ans. Anglais courant.\"}], \"mt\": 1795026866667}",
+  "pf": "{\"nom\": \"Camille Exemple\", \"mail\": \"camille@exemple.test\", \"set\": {\"minsc\": 60, \"win\": 10, \"age\": 30, \"cap\": 50}, \"mt\": 1795026866667}",
+  "sugg": "{\"kw\": \"supply chain, achats, approvisionnement\", \"kwen\": \"supply chain, procurement\", \"lieux\": \"Brest, Paris\", \"drom\": \"La R\\u00e9union\", \"etr\": \"Canada, Amsterdam\", \"ent\": \"Alpha Industrie\", \"zf\": true, \"zd\": true, \"ze\": true, \"zc\": true, \"ct\": [\"CDI\", \"CDD\", \"Int\\u00e9rim\"], \"items\": [], \"hidden\": [], \"at\": 1795026866667, \"mt\": 1795026866667, \"excl\": \"magasinier, cariste\"}",
+  "guide": "1"
+ }
+}

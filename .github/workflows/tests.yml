@@ -1,0 +1,33 @@
+name: Tests
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["search/**", "tests/**", "supabase/**", ".github/workflows/tests.yml"]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Recherche automatique (Python)
+        run: |
+          pip install -q requests pyflakes
+          python -m pyflakes search/*.py
+          python search/xp.py | tail -1
+          python tests/test_search.py
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Règles de l'app et app en démo (iPhone)
+        working-directory: tests
+        run: |
+          npm install --no-audit --no-fund --silent
+          npx playwright install --with-deps chromium > /dev/null
+          npm test
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - name: Fonctions serveur (vérification des types)
+        run: deno check supabase/functions/*/index.ts

@@ -9,7 +9,6 @@ Aucune donnée personnelle n'est écrite dans ce fichier : tout est lu dans la b
 """
 from __future__ import annotations
 
-import asyncio
 import email.utils
 import hashlib
 import html
@@ -372,6 +371,8 @@ def src_meteojob(C: dict) -> list[dict]:
         known = {r.get("url") for r in rows}
     except Exception:
         pass
+    # Les annonces jamais vues d'abord : ce sont elles qu'il faut lire en priorité.
+    ids = [j for j in ids if f"https://www.meteojob.com/jobs/{j}" not in known] + [j for j in ids if f"https://www.meteojob.com/jobs/{j}" in known]
     for jid in ids[:80]:
         u = f"https://www.meteojob.com/jobs/{jid}"
         try:
@@ -750,8 +751,8 @@ def enrich(found: list[dict]):
 # illisible sans navigateur complet, le second bloque les robots (DataDome). On respecte ces blocages.
 SOURCES = ["francetravail", "indeed", "linkedin", "hellowork", "meteojob", "carrieres"]
 LABEL = {"francetravail": "France Travail", "indeed": "Indeed", "linkedin": "LinkedIn", "hellowork": "HelloWork",
-         "wttj": "Welcome to the Jungle", "apec": "Apec", "meteojob": "Meteojob", "carrieres": "Sites carrières"}
-EVERY_H = {"francetravail": 3, "indeed": 3, "linkedin": 4, "hellowork": 3, "wttj": 6, "apec": 6, "meteojob": 6, "carrieres": 6}
+         "meteojob": "Meteojob", "carrieres": "Sites carrières"}
+EVERY_H = {"francetravail": 3, "indeed": 3, "linkedin": 4, "hellowork": 3, "meteojob": 6, "carrieres": 6}
 
 
 def criteria(uid: str) -> dict:

@@ -62,7 +62,7 @@
       " a déjà récolté et trié toutes les offres disponibles (elle passe toutes les heures, de 6 h à 22 h). Prochain passage " + next + ".";
   };
 
-  var LABEL = { francetravail: "France Travail", indeed: "Indeed", linkedin: "LinkedIn", hellowork: "HelloWork", wttj: "Welcome to the Jungle", apec: "Apec", meteojob: "Meteojob", carrieres: "Sites carrières" };
+  var LABEL = { francetravail: "France Travail", indeed: "Indeed", linkedin: "LinkedIn", hellowork: "HelloWork", meteojob: "Meteojob", carrieres: "Sites carrières" };
   function ago(t) {
     var m = Math.round((Date.now() - t) / 60000);
     if (m < 60) return "il y a " + Math.max(1, m) + " min";
