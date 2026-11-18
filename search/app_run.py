@@ -72,6 +72,10 @@ def main():
             n = page.evaluate("() => JSON.parse(localStorage.getItem('candexp.off')||'[]').length")
             print(f"App ouverte en arrière-plan, {n} candidatures chargées.")
             if MODE == "search":
+                try:
+                    print("Offres suggérées avant la recherche :", page.evaluate("() => window.CE_sgAudit ? window.CE_sgAudit() : {}"))
+                except Exception as e:
+                    print("Décompte impossible :", str(e)[:150])
                 page.evaluate("() => { window.CE_LAST_RUN = null; document.getElementById('sggo').click(); }")
                 page.wait_for_function("() => window.CE_LAST_RUN && window.CE_LAST_RUN.done", timeout=20 * 60000, polling=2000)
                 res = page.evaluate("() => window.CE_LAST_RUN")
