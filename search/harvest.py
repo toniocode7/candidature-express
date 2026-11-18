@@ -144,6 +144,7 @@ def offer(src: str, site: str, url: str, titre: str, entreprise="", lieu="", con
         o["web"] = 1
     if full and len(str(full)) > 150:
         xp_set(o, str(full))
+        o["full"] = clean(full)[:15000]
     return o
 
 
@@ -712,6 +713,11 @@ def enrich(found: list[dict]):
             j = ft_detail(o["url"].rsplit("/", 1)[-1])
             if j:
                 ft_xp(o, j); n += 1; hard += o["xpmin"] > 0
+                ep = j.get("experienceProfil") or {}
+                o["full"] = "\n\n".join(str(x) for x in [j.get("intituleOffre"), j.get("syntheseContrat"), o.get("salaire"),
+                    str(j.get("descriptif") or "").replace("\\n", "\n"),
+                    f"Expérience : {ep.get('experience')}" + (" (exigée)" if ep.get("estUneExperienceIndispensable") else " (souhaitée)") if ep.get("experience") else "",
+                    j.get("descriptionEntreprise")] if x)[:15000]
         except Exception:
             pass
         time.sleep(random.uniform(0.3, 0.7))
@@ -730,6 +736,7 @@ def enrich(found: list[dict]):
                 t = page_text(o["src"], r.text)
                 if len(t) > 150:
                     xp_set(o, t); n += 1; hard += o["xpmin"] > 0
+                    o["full"] = t[:15000]
             elif r.status_code == 429:
                 break
         except Exception:
@@ -769,9 +776,15 @@ def save(found: list[dict]) -> int:
         if i in ids:
             continue
         ids.add(i)
-        rows.append({"id": i, "source": o["src"], "data": o, "last_seen": NOW.isoformat()})
-    for k in range(0, len(rows), 200):
-        rest("POST", "raw_offers?on_conflict=id", headers={"Prefer": "resolution=merge-duplicates,return=minimal"}, data=json.dumps(rows[k:k + 200]))
+        full = o.pop("full", None)
+        r = {"id": i, "source": o["src"], "data": o, "last_seen": NOW.isoformat()}
+        if full:
+            r["full"] = full
+        rows.append(r)
+    # Les lignes sans texte complet gardent celui d'une récolte précédente (colonne non envoyée).
+    for grp in ([r for r in rows if "full" in r], [r for r in rows if "full" not in r]):
+        for k in range(0, len(grp), 100):
+            rest("POST", "raw_offers?on_conflict=id", headers={"Prefer": "resolution=merge-duplicates,return=minimal"}, data=json.dumps(grp[k:k + 100]))
     return len(rows)
 
 

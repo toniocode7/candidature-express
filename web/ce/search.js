@@ -15,6 +15,16 @@
     return (r.data || []).map(function (x) { return JSON.parse(JSON.stringify(x.data)); });
   };
 
+  // Texte complet d'une annonce, gardé lors de la récolte (utile quand le site bloque la lecture, comme Indeed).
+  window.CE_storedAd = async function (url) {
+    var c = sb(); if (!c || !url) return "";
+    var r = await c.from("raw_offers").select("data,full").eq("data->>url", url).not("full", "is", null).limit(1);
+    var x = r.data && r.data[0]; if (!x || !x.full || x.full.length < 300) return "";
+    var d = x.data || {};
+    var head = [d.titre, d.entreprise, d.lieu, d.contrat, d.salaire].filter(Boolean).join(" · ");
+    return (head ? head + "\n\n" : "") + x.full;
+  };
+
   window.CE_RAW_DONE = async function (ok, msg, nouvelles) {
     var ids = PENDING; PENDING = [];
     if (ok && ids.length && sb()) {

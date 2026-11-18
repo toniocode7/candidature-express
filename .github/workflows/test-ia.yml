@@ -61,6 +61,14 @@ jobs:
           URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
         run: |
           curl -s "$URL/rest/v1/usage?select=provider,model,ok,fail,exhausted&order=provider" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -m json.tool
+      - name: Textes complets gardés pour l'analyse (par source)
+        env:
+          URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+        run: |
+          for src in indeed linkedin hellowork francetravail meteojob carrieres; do
+            n=$(curl -s -o /dev/null -D - "$URL/rest/v1/raw_offers?select=id&source=eq.$src&full=not.is.null" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Prefer: count=exact" -H "Range: 0-0" | grep -i content-range | tr -d '\r')
+            echo "$src : $n"
+          done
       - name: Sauvegarde pour Google Drive (taille seulement)
         env:
           MK: ${{ secrets.CE_MAIL_KEY }}
