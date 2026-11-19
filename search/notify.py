@@ -68,6 +68,7 @@ def main():
                 print(f"Objectif atteint : {sent}/{goal}")
 
     bilan(now, offers)
+    sante(now)
 
 
 def bilan(now, offers):
@@ -102,6 +103,52 @@ def bilan(now, offers):
         parts.append(f"{top} offre{'s' if top > 1 else ''} notée{'s' if top > 1 else ''} 80 ou plus repérée{'s' if top > 1 else ''} cette semaine")
     push("bilan", f"Ta semaine : {sent} candidature{'s' if sent > 1 else ''} envoyée{'s' if sent > 1 else ''}", " · ".join(parts) + ".",
          f"bilan:{monday.date()}", "./?v=stats")
+
+
+LABELS = {"francetravail": "France Travail", "indeed": "Indeed", "linkedin": "LinkedIn", "hellowork": "HelloWork",
+          "meteojob": "Meteojob", "carrieres": "Sites carrières"}
+
+
+def rows(q):
+    r = requests.get(f"{SB_URL}/rest/v1/{q}", headers=H, timeout=60)
+    r.raise_for_status()
+    return r.json()
+
+
+def sante(now):
+    """Surveillance : prévient (une fois par jour et par problème) quand une automatisation s'arrête en silence."""
+    if now.hour < 9 or now.hour > 21:
+        return
+    jour, t = now.date().isoformat(), now.timestamp() * 1000
+    alertes = []
+    st = (docs("select=data&col=eq.ce&id=eq.sources") or [{}])[0]
+    for k, lab in LABELS.items():
+        x = st.get(k) or {}
+        if x and x.get("ok") is False and t - (x.get("lastOk") or 0) > 24 * 3600e3:
+            alertes.append((f"src-{k}", f"{lab} ne répond plus depuis plus de 24 h",
+                            f"Erreur : {str(x.get('err') or '')[:90]}. Les autres sites continuent ; nouvel essai automatique chaque heure."))
+    run = (st.get("_run") or {}).get("at") or 0
+    if run and t - run > 6 * 3600e3:
+        alertes.append(("recherche", "La recherche automatique ne tourne plus",
+                        "Aucun passage depuis plus de 6 h. Ouvre GitHub, onglet Actions : la recherche a peut-être été désactivée."))
+    depuis = (now - timedelta(days=2)).date().isoformat()
+    u = rows(f"usage?select=provider,model,ok,fail&day=gte.{depuis}")
+    if not any(x["provider"] == "gmail" for x in u):
+        alertes.append(("gmail", "Le script Gmail ne transmet plus tes mails",
+                        "Rien reçu depuis 2 jours. Ouvre script.google.com, projet Candidature Express Gmail, et relance « installer »."))
+    today = [x for x in u if x["provider"] in ("gemini", "groq")]
+    ok, ko = sum(x["ok"] for x in today), sum(x["fail"] for x in today)
+    if ko >= 15 and ok == 0:
+        alertes.append(("ia", "Les IA gratuites échouent en ce moment",
+                        "Aucune réponse réussie depuis 2 jours. Les analyses et le tri reprendront dès leur retour ; « Envoyer à Claude » marche toujours."))
+    backup = rows("usage?select=day&provider=eq.sauvegarde&order=day.desc&limit=1")
+    if backup and (now.date() - datetime.fromisoformat(backup[0]["day"]).date()).days > 8:
+        alertes.append(("sauvegarde", "La sauvegarde du dimanche n'a pas eu lieu",
+                        "Ouvre script.google.com, fichier Sauvegarde, et relance « installerSauvegarde »."))
+    for key, titre, corps in alertes:
+        push("alerte", titre, corps, f"alerte:{key}:{jour}", "./?v=accueil")
+    if not alertes:
+        print("Surveillance : tout fonctionne.")
 
 
 if __name__ == "__main__":

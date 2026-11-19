@@ -9,7 +9,8 @@
     ["statut", "Statut changé automatiquement"],
     ["entretien", "Rappel la veille et le jour d'un entretien"],
     ["objectif", "Objectif de la semaine pas atteint"],
-    ["bilan", "Bilan de la semaine, le dimanche soir"]
+    ["bilan", "Bilan de la semaine, le dimanche soir"],
+    ["alerte", "Une automatisation s'est arrêtée (site, Gmail, IA, sauvegarde)"]
   ];
   function sb() { return window.CE && window.CE.supabase; }
   function uid() { return window.CE && window.CE.user && window.CE.user.id; }
@@ -71,7 +72,7 @@
     var devs = (c.data || []).map(function (x) { return x.device || "appareil"; });
     G("cenon").textContent = on ? "Réactiver sur cet appareil" : "Activer sur cet appareil";
     if (!n.dataset.busy) n.textContent = (on ? "Activées sur cet appareil. " : "Pas encore activées sur cet appareil. ") + (devs.length ? "Appareils abonnés : " + devs.join(", ") + "." : "");
-    var p = Object.assign({ offres: true, recruteur: true, statut: true, entretien: true, objectif: true, bilan: true }, (await getDoc("notifs")) || {});
+    var p = Object.assign({ offres: true, recruteur: true, statut: true, entretien: true, objectif: true, bilan: true, alerte: true }, (await getDoc("notifs")) || {});
     document.querySelectorAll("[data-nf]").forEach(function (x) { x.checked = p[x.getAttribute("data-nf")] !== false; });
     calUI();
   }

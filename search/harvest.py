@@ -173,6 +173,15 @@ def fp_of(text: str) -> list[int]:
     return sorted(seen)[:80]
 
 
+def resume(text: str) -> str:
+    """Début utile de l'annonce (missions, profil) pour l'IA qui trie les offres : sans formules d'accueil."""
+    t = clean(text)
+    m = re.search(r"(missions?|vos missions|le poste|description du poste|responsibilities|what you.ll do|rattach|au sein)", t, re.I)
+    if m and m.start() < 1500:
+        t = t[m.start():]
+    return t[:350]
+
+
 def xp_set(o: dict, text: str):
     """Expérience demandée, lue sur le texte complet de l'annonce (voir xp.py)."""
     r = xp_scan(text)
@@ -732,6 +741,8 @@ def enrich(found: list[dict]):
             o.update({k: r[k] for k in ("xpChk", "xpmin", "xpsoft", "xpTxt", "fpFull") if r.get(k) is not None})
             if not o.get("fpFull") and r.get("full_text"):
                 o["fpFull"] = fp_of(r["full_text"])
+            if r.get("full_text"):
+                o["resume"] = resume(r["full_text"])
         else:
             fresh.append(o)
     t0, n, hard = time.time(), 0, 0
@@ -808,6 +819,8 @@ def save(found: list[dict]) -> int:
             continue
         ids.add(i)
         full = o.pop("full", None)
+        if full and not o.get("resume"):
+            o["resume"] = resume(full)
         r = {"id": i, "source": o["src"], "data": o, "last_seen": NOW.isoformat()}
         if full:
             r["full_text"] = full
