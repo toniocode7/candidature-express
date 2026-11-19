@@ -6,8 +6,24 @@
   var PENDING = [];
   function sb() { return window.CE && window.CE.supabase; }
 
+  // « Nouvelle recherche » touchée par toi : lance aussi tout de suite une récolte complète sur tous les sites.
+  // Jamais depuis la recherche automatique elle-même (window.CE_BG), sinon elle se relancerait sans fin.
+  async function runNow() {
+    window.CE_RUN_MSG = "";
+    if (window.CE_BG || !window.CE_AI) return;
+    try {
+      var j = await window.CE_AI.call("run", {});
+      window.CE_RUN_MSG = j.deja ? "Une récolte complète est déjà en cours (lancée il y a " + (j.depuis || 1) + " min) : les nouvelles offres arriveront avec une notification."
+        : "Récolte complète lancée sur tous les sites : les nouvelles offres arriveront d'ici 5 à 15 minutes, avec une notification.";
+    } catch (e) {
+      // Clé GitHub absente : le tri habituel suffit. Clé refusée (expirée, supprimée) : on le dit.
+      if (e && e.code === "github") window.CE_RUN_MSG = "La récolte complète n'a pas pu être lancée : la clé GitHub a sans doute expiré. Les offres seront récoltées à la prochaine recherche automatique ; refais la clé quand tu peux (guide, section « Recherche à la demande »).";
+    }
+  }
+
   window.CE_RAW = async function () {
     var c = sb(); if (!c) throw Object.assign(new Error("hors connexion"), { code: "hors connexion" });
+    await runNow();
     var since = new Date(Date.now() - 45 * 864e5).toISOString();
     var lastAuto = 0, lastAll = 0;
     try { var d = await c.from("docs").select("data").eq("col", "ce").eq("id", "sources").maybeSingle(); lastAuto = d.data && d.data.data && d.data.data._run ? d.data.data._run.at : 0; } catch (e) {}
@@ -49,6 +65,7 @@
     // Annonces déjà affichées dont l'expérience demandée n'a pas encore été lue sur la page complète.
     try { if (window.CE_fpBackfill) await window.CE_fpBackfill(); } catch (e) {}
     try { if (window.CE_xpBackfill) await window.CE_xpBackfill(25); } catch (e) {}
+    if (window.CE_RUN_MSG) { var el = document.getElementById("sgn"); if (el) el.textContent = (el.textContent ? el.textContent + " " : "") + window.CE_RUN_MSG; window.CE_RUN_MSG = ""; }
     window.CE_LAST_RUN = { done: true, ok: !!ok, msg: String(msg || ""), nouvelles: +nouvelles || 0, triees: ids.length };
     try { window.CE_srcUI(); } catch (e) {}
   };
