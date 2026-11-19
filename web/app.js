@@ -1103,7 +1103,7 @@ function sgRank(x){var h=sgHost(x);if(/linkedin\./.test(h))return 3;if(x.src==="
 function sgSiteName(x){var h=sgHost(x);if(/indeed\./.test(h))return "Indeed";if(/hellowork\./.test(h))return "HelloWork";if(/linkedin\./.test(h))return "LinkedIn";if(/welcometothejungle\./.test(h))return "Welcome to the Jungle";if(/apec\./.test(h))return "Apec";if(/francetravail\./.test(h))return "France Travail";return h}
 var SGSTOP={h:1,f:1,hf:1,fh:1,cdi:1,cdd:1,interim:1,alternance:1,de:1,du:1,des:1,la:1,le:1,les:1,en:1,et:1,a:1,au:1,aux:1,d:1,l:1,un:1,une:1,poste:1,offre:1,emploi:1,job:1,the:1,of:1,and:1,m:1,w:1,x:1,e:1};
 function sgToks(t){return norm(t).split(" ").filter(function(w){return w&&!SGSTOP[w]&&!/^\d+$/.test(w)})}
-function sgCity(x){return norm(String(x.lieu||"").split(/[,(\-]/)[0]).split(" ")[0]||""}
+function sgCity(x){var l=String(x.lieu||"");if(!l)return "";var g=geoOf(l);if(g&&g.nm&&!g.ctry&&!g.dep)return norm(g.nm);return norm(l).split(" ").filter(function(w){return w.length>1&&!/^\d+$/.test(w)&&w!=="cedex"})[0]||""}
 function sgSame(a,b){var ea=norm(a.entreprise),eb=norm(b.entreprise);if(!ea||!eb)return false;if(ea!==eb&&ea.indexOf(eb)<0&&eb.indexOf(ea)<0)return false;var ca=sgCity(a),cb=sgCity(b);if(ca&&cb&&ca!==cb)return false;
 var ta=sgToks(a.titre),tb=sgToks(b.titre);if(!ta.length||!tb.length)return false;var sb={},i=0;tb.forEach(function(w){sb[w]=1});ta.forEach(function(w){if(sb[w])i++});var u=ta.length+tb.length-i;return i/u>=0.6}
 function ceSim(a,b){var A=norm(a).split(" ").filter(function(w){return w.length>2}),B=" "+norm(b)+" ";if(!A.length)return 0;var k=0;A.forEach(function(w){if(B.indexOf(" "+w+" ")>=0)k++});return k/A.length}
@@ -1137,7 +1137,7 @@ function sigFp(h){return (h.fp||[]).map(function(v){return parseInt(v,36)})}
 function sgTitleSim(a,b){var ta=sgToks(a),tb=sgToks(b);if(!ta.length||!tb.length)return 0;var sb={},i=0;tb.forEach(function(w){sb[w]=1});ta.forEach(function(w){if(sb[w])i++});return i/(ta.length+tb.length-i)}
 function sgCoMatch(a,b){var ea=norm(a.entreprise),eb=norm(b.entreprise);if(!ea||!eb)return null;return ea===eb||ea.indexOf(eb)>=0||eb.indexOf(ea)>=0}
 function sgCityMatch(a,b){var ca=sgCity(a),cb=sgCity(b);if(!ca||!cb)return null;return ca===cb}
-function sgLike(x,h){if(sgSame(x,h))return true;var co=sgCoMatch(x,h),ci=sgCityMatch(x,h);if(co===false&&ci===false)return false;var ts=sgTitleSim(x.titre,h.titre),fs=fpSim(sgFp(x),h.fpArr||sgFp(h));
+function sgLike(x,h){if(sgSame(x,h))return true;var fs0=x.fpFull&&h.full?fpSim(x.fpFull,h.fpArr):null;if(fs0!=null&&fs0>=0.7)return true;var co=sgCoMatch(x,h),ci=sgCityMatch(x,h);if(co===false&&ci===false)return false;var ts=sgTitleSim(x.titre,h.titre),fs=fpSim(sgFp(x),h.fpArr||sgFp(h));
 if(fs!=null&&fs>=0.6&&co!==false)return true;
 if(fs!=null&&fs>=0.4&&co===true&&ts>=0.3)return true;
 if(fs!=null&&fs>=0.75)return true;
@@ -1181,7 +1181,14 @@ function extPub(t,base){var m=/(?:publi[ée]e?s?|mise? en ligne|posted|date de p
 function pubOf(x){if(x.pub)return x.pub;var p=pubParse(x.date,x.fd)||extPub(x.extrait,x.fd);if(p)x.pub=p;return p}
 function sgStale(x){var p=pubOf(x);return !!p&&(Date.now()-p)>SGMAXAGE*864e5}
 function mineList(){return OFF.filter(function(o){var a=o.an||o.meta;return a&&a.poste}).map(function(o){var a=o.an||o.meta;return{titre:a.poste,entreprise:a.entreprise||"",lieu:a.lieu||"",contrat:a.contrat||"",url:o.url||"",_mine:1,ct:o.ct}})}
-function sgIsMine(x,mine){mine=mine||mineList();return mine.some(function(m){return (m.url&&sgUrls(x).indexOf(m.url)>=0)||sgSame(x,m)})}
+var FPC={};
+function fpAll(text){var w=norm(text).split(" ").filter(function(x){return x.length>2&&!FPSTOP[x]}),m={};for(var i=0;i+2<w.length;i++)m[fpHash(w[i]+" "+w[i+1]+" "+w[i+2])]=1;return m}
+function offFp(o){var t=String(o.txt||"");if(t.length<300)return null;var c=FPC[o.id];if(!c||c.n!==t.length)c=FPC[o.id]={n:t.length,m:fpAll(t)};return c.m}
+/* Même offre publiée sur un autre site : le texte de l'annonce est presque identique, même si l'entreprise
+   (agence, nom abrégé) ou l'intitulé sont écrits autrement. On mesure la part du texte de l'offre déjà vue. */
+function fpInside(fp,m){if(!fp||fp.length<15||!m)return 0;var k=0;fp.forEach(function(h){if(m[h])k++});return k/fp.length}
+function sgIsMine(x,mine){mine=mine||mineList();if(mine.some(function(m){return (m.url&&sgUrls(x).indexOf(m.url)>=0)||sgSame(x,m)}))return true;
+var fp=x.fpFull;if(!fp||fp.length<15)return false;return OFF.some(function(o){if(fpInside(fp,offFp(o))>=0.6)return true;var sf=o.sug&&o.sug.fp;return !!(sf&&fpSim(fp,sf)>=0.6)})}
 
 
 function sgKey(x){return x.entreprise?norm(x.titre+"|"+x.entreprise+"|"+String(x.lieu||"").split(/[,(]/)[0]):""}
@@ -1241,7 +1248,7 @@ SOFT=/(souhait|ideal|prefer|de preference|apprecie|un plus|a plus|nice to have|a
 var ss=t.split(/(?<=[.!?;•\n|])/),prev="",pos=0;ss.forEach(function(s){var m;YR.lastIndex=0;while((m=YR.exec(s))){var n=/^\d+$/.test(m[1])?+m[1]:XPN[m[1]];if(!n||n>20)continue;var ctx=prev.slice(-60)+" "+s;if(!EXPW.test(ctx))continue;
 if(/(moins de|age|agee?s? de|creee? (il y a|en)|depuis|fondee?)\s*$/.test(s.slice(Math.max(0,m.index-25),m.index)))continue;
 var near=s.slice(Math.max(0,m.index-50),m.index+m[0].length+30);if(SOFT.test(near)&&!STRONG.test(near)){if(n>soft)soft=n;continue}if(HARD.test(ctx)){if(n>hard){hard=n;why=raw.slice(pos,pos+s.length).trim().slice(0,220)}}else if(n>soft)soft=n}prev=s;pos+=s.length});return {hard:hard,soft:soft,txt:why}}
-function xpSet(x,t){var r=xpScan(t);x.xpChk=1;x.xpmin=r.hard;x.xpsoft=r.soft;if(r.txt)x.xpTxt=r.txt;else delete x.xpTxt}
+function xpSet(x,t){if(!x.fpFull&&String(t||"").length>300)x.fpFull=fpOf(t);var r=xpScan(t);x.xpChk=1;x.xpmin=r.hard;x.xpsoft=r.soft;if(r.txt)x.xpTxt=r.txt;else delete x.xpTxt}
 function xpLine(x){var h=+x.xpmin||0,so=+x.xpsoft||0,y=function(n){return n+" an"+(n>1?"s":"")};return h?'<div class="m">Expérience exigée : '+y(h)+'</div>':so?'<div class="m">Expérience souhaitée : '+y(so)+', non exigée</div>':""}
 function xpOut(x){return x.xpmin!=null?+x.xpmin>=EXPMAX:!!x.xpReq}
 function expReq(t){return xpScan(t).hard>=EXPMAX}
@@ -1292,7 +1299,7 @@ L.innerHTML=items.map(function(x){var c=scoreCls(x.pertinence||0);return '<artic
 function sgArm(b){if(b.dataset.ok)return true;L.querySelectorAll(".sb.armed").forEach(function(o){if(o!==b&&o._reset)o._reset()});b.dataset.ok="1";var h=b.innerHTML;b.classList.add("armed");b.innerHTML=(b.getAttribute("data-a")==="sent"?'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+"Confirmer":'<svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>'+"Confirmer");b._reset=function(){clearTimeout(b._t);delete b.dataset.ok;b.classList.remove("armed");b.innerHTML=h};b._t=setTimeout(function(){if(b.isConnected)b._reset()},4000);return false}
 L.querySelectorAll("[data-a]").forEach(function(b){b.onclick=async function(){var u=b.getAttribute("data-u");var ac=b.getAttribute("data-a");if(ac==="sent"&&!sgArm(b))return;if(ac==="hide"&&!b.dataset.r){sgWhyAsk(b,u);return}if(b.getAttribute("data-a")==="hide"){var it0=(SG.items||[]).filter(function(y){return y.url===u})[0];SG.hidden=(SG.hidden||[]).concat(it0?sgUrls(it0):[u]).slice(-2000);if(it0&&it0.titre){SG.hidSig=sgUnionSig(SG.hidSig,[sgSig(it0)]);if(it0.src==="indeed")sgFullFp(it0).then(function(ok){if(ok){SG.hidSig=sgUnionSig(SG.hidSig,[sgSig(it0)]);sgSave()}})}SG.items=(SG.items||[]).filter(function(y){return y.url!==u});sgSave();sgUI();return}
 if(b.getAttribute("data-a")==="sent"){var x0=(SG.items||[]).filter(function(y){return y.url===u})[0];if(!x0)return;var now0=Date.now();
-var o0={id:uid(),txt:[x0.titre,x0.entreprise,x0.lieu,x0.contrat,x0.salaire,x0.extrait,x0.raison].filter(Boolean).join("\n"),url:x0.url,src:"direct",an:null,meta:{poste:x0.titre||"",entreprise:x0.entreprise||"",lieu:x0.lieu||"",contrat:x0.contrat||""},sug:{url:x0.url,src:x0.src||"",site:x0.site||"",pert:x0.pertinence||0,jid:x0.jid||"",cc:x0.cc||"",otitre:x0.otitre||"",vurl:x0.vurl||"",titre:x0.titre||"",entreprise:x0.entreprise||"",lieu:x0.lieu||""},st:1,sentAt:now0,ct:now0,mt:now0,key:norm([x0.titre,x0.entreprise,x0.lieu].join(" "))};
+var o0={id:uid(),txt:[x0.titre,x0.entreprise,x0.lieu,x0.contrat,x0.salaire,x0.extrait,x0.raison].filter(Boolean).join("\n"),url:x0.url,src:"direct",an:null,meta:{poste:x0.titre||"",entreprise:x0.entreprise||"",lieu:x0.lieu||"",contrat:x0.contrat||""},sug:{url:x0.url,src:x0.src||"",site:x0.site||"",pert:x0.pertinence||0,jid:x0.jid||"",cc:x0.cc||"",otitre:x0.otitre||"",vurl:x0.vurl||"",fp:x0.fpFull||null,titre:x0.titre||"",entreprise:x0.entreprise||"",lieu:x0.lieu||""},st:1,sentAt:now0,ct:now0,mt:now0,key:norm([x0.titre,x0.entreprise,x0.lieu].join(" "))};
 touch(o0);OFF.unshift(o0);saveOff();mark("o_"+o0.id,1);sgUI();renderList();G("sgn").textContent="« "+(x0.titre||"Offre")+" » ajoutée à « Mes candidatures » comme Envoyée.";return}
 if(BUSY)return;var n=G("sgn");if(needCv(n))return;b.disabled=true;b.textContent="Lecture...";BUSY=true;var txt=null,err=null,it=(SG.items||[]).filter(function(y){return y.url===u})[0];var stored=async function(){try{return window.CE_storedAd?await CE_storedAd(u):""}catch(e){return ""}};
 try{if(it&&it.src==="indeed"){txt=await stored();if(!txt){var mc=await MCP();if(!mc)throw{why:"app"};txt=await readIndeedAny(mc,it,u)}}else txt=await readPage(u)}catch(e){err=e||{}}
@@ -1507,6 +1514,10 @@ if(o.prep){n++;try{CE_EV("entretien","Fiche d'entretien prête",mlOffLabel(o)+(o
 window.CE_critAudit=async function(h){var sb=window.CE&&window.CE.supabase;if(!sb)return {};var r=await sb.from("raw_offers").select("data").gte("last_seen",new Date(Date.now()-(h||24)*3600e3).toISOString()).limit(2000);var st={n:(r.data||[]).length};
 (r.data||[]).forEach(function(x){var d=x.data,w=ceOut(d);var k=(w||"gardée")+" / "+(d.src||"?")+(w==="lieu"?" / "+(d.lieu&&geoOf(d.lieu)?(geoOf(d.lieu).cc||(geoOf(d.lieu).fr?"FR":"?")):"inconnu, pays "+(d.cc||"?")):"");st[k]=(st[k]||0)+1});return st};
 window.CE_openOffer=function(id){var o=find(String(id));if(o)ofOpen(o)};
+/* Empreinte du texte des offres déjà affichées (calculée à la récolte) : sert à reconnaître la même offre vue ailleurs. */
+window.CE_fpBackfill=async function(){var sb=window.CE&&window.CE.supabase;if(!sb||BUSY)return 0;var it=(SG.items||[]).filter(function(x){return !x.fpFull&&x.url}).slice(0,150);if(!it.length)return 0;
+var r=await sb.from("raw_offers").select("url:data->>url,fp:data->fpFull").in("data->>url",it.map(function(x){return x.url}));if(r.error||!r.data)return 0;var by={},n=0;r.data.forEach(function(y){if(y.fp&&y.fp.length)by[y.url]=y.fp});
+it.forEach(function(x){if(by[x.url]){x.fpFull=by[x.url];n++}});if(n&&!BUSY){sgSave();try{sgUI()}catch(e){}}return n};
 window.CE_xpBackfill=async function(max){if(BUSY||!window.CE_AI)return 0;var list=sgKeep().filter(function(x){return x.xpmin==null&&!x.web&&!x.xpTry}).slice(0,max||20),n=0;
 for(var i=0;i<list.length;i++){if(BUSY)break;var x=list[i];try{var t=await ceReadAd(x,null);if(t&&t.length>200&&!GONE.test(t.slice(0,3000))){xpSet(x,t);n++}else x.xpTry=1}catch(e){x.xpTry=1}}
 if(list.length&&!BUSY){sgSave();try{sgUI()}catch(e){}}return n};

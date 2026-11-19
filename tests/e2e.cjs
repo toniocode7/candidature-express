@@ -1,7 +1,9 @@
 // Test de bout en bout : l'app ouverte en mode démo (format iPhone) avec des données fictives.
 const http = require("http"), fs = require("fs"), path = require("path");
 const { chromium, devices } = require("playwright");
-const { eq, done } = require("./lib.cjs");
+const { eq, done, pick } = require("./lib.cjs");
+const FIXTXT = JSON.parse(JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures/demo.json"), "utf8")).ls.off)[0].txt;
+const DUPFP = pick(["norm", "fpHash", "FPSTOP", "fpOf"]).fpOf("Annonce publiée par Intérim Plus pour son client. " + FIXTXT.split(". ").slice(1).join(". "));
 const WEB = path.join(__dirname, "../web"), FIX = path.join(__dirname, "fixtures/demo.json");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json" };
 const server = http.createServer((q, r) => {
@@ -24,7 +26,7 @@ const server = http.createServer((q, r) => {
   await p.waitForTimeout(1200);
 
   // Offres suggérées fictives couvrant chaque critère
-  await p.evaluate(() => {
+  await p.evaluate((dupfp) => {
     const s = JSON.parse(localStorage.getItem("candexp.sugg")), now = Date.now();
     const mk = (t, lieu, x) => Object.assign({ titre: t, entreprise: "Société " + t, lieu, contrat: "CDI", url: "https://exemple.test/s/" + encodeURIComponent(t), site: "Test", src: "test", pertinence: 70, raison: "Test.", fd: now, pub: now }, x || {});
     s.items = [
@@ -33,9 +35,10 @@ const server = http.createServer((q, r) => {
       mk("Analyst Amsterdam", "Amsterdam, Netherlands"), mk("Stage achats", "Brest", { contrat: "Stage" }),
       mk("Acheteur exigé 5 ans", "Brest", { xpChk: 1, xpmin: 5, xpsoft: 0 }), mk("Appro souhaité 5 ans", "Brest", { xpChk: 1, xpmin: 0, xpsoft: 5 }),
       mk("Appro bas salaire", "Brest", { salaire: "24 - 26 k€" }), mk("Acheteur Alpha", "Toulouse", { entreprise: "Alpha Industrie" }),
+      mk("Gestionnaire achats fournisseurs", "29 - Brest", { entreprise: "Intérim Plus", fpFull: dupfp }),
     ];
     s.at = now; s.mt = now + 1e9; localStorage.setItem("candexp.sugg", JSON.stringify(s));
-  });
+  }, DUPFP);
   await p.goto(base + "/?demo&v=sugg"); await p.waitForTimeout(3000);
   const shown = () => p.$$eval("#sgl .sgc h3", (h) => h.map((x) => x.textContent.replace(/^(Nouvelle|Rattrapée)\s*/, "").trim()).sort());
   eq("lien de notification : onglet Suggérées", await p.$eval(".bnav button[aria-current=page], .bnav button.on", (e) => /Suggérées/.test(e.textContent)).catch(() => false), true);
@@ -49,7 +52,8 @@ const server = http.createServer((q, r) => {
   eq("tri par note", (await p.$eval("#sgl .sgc h3", (h) => h.textContent)).includes("Approvisionneur Brest"), true);
   await p.click("#cesortdir"); await p.waitForTimeout(300);
   eq("tri inversé", (await p.$eval("#sgl .sgc h3", (h) => h.textContent)).includes("Approvisionneur Brest"), false);
-  eq("décompte des motifs", (await p.evaluate(() => window.CE_sgAudit())).total, 10);
+  eq("même offre déjà candidatée via un autre site : masquée", (await p.evaluate(() => window.CE_sgAudit()))["déjà candidatée (même offre)"], 1);
+  eq("décompte des motifs", (await p.evaluate(() => window.CE_sgAudit())).total, 11);
 
   // Chaque onglet s'ouvre, sans débordement horizontal
   for (let i = 0; i < 5; i++) {

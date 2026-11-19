@@ -33,5 +33,8 @@ h.ft_xp(o, {"descriptif": "", "experienceProfil": {"experience": "5 An(s)", "est
 eq("France Travail : expérience indispensable", o.get("xpmin"), 5)
 eq("France Travail : salaire repris", o.get("salaire"), "32 - 48 k€ brut annuel")
 eq("entreprise connue (Workday)", (h.known_ats("Thales") or {}).get("ats"), "workday")
-print(f"Recherche automatique : {13 - fails}/13 réussis")
+import json  # noqa: E402
+ref = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "fp_ref.json")))
+eq("empreinte identique à l'app", h.fp_of(ref["text"]), ref["fp"])
+print(f"Recherche automatique : {14 - fails}/14 réussis")
 sys.exit(1 if fails else 0)

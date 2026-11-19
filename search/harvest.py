@@ -144,7 +144,33 @@ def offer(src: str, site: str, url: str, titre: str, entreprise="", lieu="", con
     if full and len(str(full)) > 150:
         xp_set(o, str(full))
         o["full"] = clean(full)[:15000]
+        o["fpFull"] = fp_of(full)
     return o
+
+
+FPSTOP = set("les des une pour avec dans sur par est vous nous votre vos nos notre qui que aux the and for with you your our are will this that".split())
+
+
+def fp_norm(s: str) -> str:
+    s = unicodedata.normalize("NFD", str(s or "").lower())
+    s = "".join(c for c in s if not ("\u0300" <= c <= "\u036f"))
+    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
+def fp_hash(t: str) -> int:
+    h = 2166136261
+    for ch in t:
+        h ^= ord(ch)
+        h = (h * 16777619) & 0xFFFFFFFF
+    return h
+
+
+def fp_of(text: str) -> list[int]:
+    """Empreinte du texte d'une annonce (identique à fpOf dans web/app.js) : reconnaît la même offre
+    publiée sur plusieurs sites, même quand l'entreprise ou l'intitulé y sont écrits autrement."""
+    w = [x for x in fp_norm(text).split(" ") if len(x) > 2 and x not in FPSTOP]
+    seen = {fp_hash(" ".join(w[i:i + 3])) for i in range(len(w) - 2)}
+    return sorted(seen)[:80]
 
 
 def xp_set(o: dict, text: str):
@@ -695,7 +721,7 @@ def enrich(found: list[dict]):
     ids = list({oid(o["url"]) for o in todo})
     for k in range(0, len(ids), 80):
         try:
-            rows = rest("GET", "raw_offers?select=id,xpChk:data->xpChk,xpmin:data->xpmin,xpsoft:data->xpsoft,xpTxt:data->>xpTxt&id=in.(" + ",".join(ids[k:k + 80]) + ")")
+            rows = rest("GET", "raw_offers?select=id,full_text,fpFull:data->fpFull,xpChk:data->xpChk,xpmin:data->xpmin,xpsoft:data->xpsoft,xpTxt:data->>xpTxt&id=in.(" + ",".join(ids[k:k + 80]) + ")")
             prior.update({r["id"]: r for r in rows if r.get("xpChk")})
         except Exception as e:
             log("Lecture des résultats précédents impossible :", e)
@@ -703,7 +729,9 @@ def enrich(found: list[dict]):
     for o in todo:
         r = prior.get(oid(o["url"]))
         if r:
-            o.update({k: r[k] for k in ("xpChk", "xpmin", "xpsoft", "xpTxt") if r.get(k) is not None})
+            o.update({k: r[k] for k in ("xpChk", "xpmin", "xpsoft", "xpTxt", "fpFull") if r.get(k) is not None})
+            if not o.get("fpFull") and r.get("full_text"):
+                o["fpFull"] = fp_of(r["full_text"])
         else:
             fresh.append(o)
     t0, n, hard = time.time(), 0, 0
@@ -714,6 +742,7 @@ def enrich(found: list[dict]):
             j = ft_detail(o["url"].rsplit("/", 1)[-1])
             if j:
                 ft_xp(o, j); n += 1; hard += o["xpmin"] > 0
+                o["fpFull"] = fp_of(str(j.get("descriptif") or "").replace("\\n", "\n"))
                 ep = j.get("experienceProfil") or {}
                 o["full"] = "\n\n".join(str(x) for x in [j.get("intituleOffre"), j.get("syntheseContrat"), o.get("salaire"),
                     str(j.get("descriptif") or "").replace("\\n", "\n"),
@@ -738,6 +767,7 @@ def enrich(found: list[dict]):
                 if len(t) > 150:
                     xp_set(o, t); n += 1; hard += o["xpmin"] > 0
                     o["full"] = t[:15000]
+                    o["fpFull"] = fp_of(t)
             elif r.status_code == 429:
                 break
         except Exception:

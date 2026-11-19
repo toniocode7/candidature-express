@@ -1,6 +1,6 @@
 // Tests des règles de l'app : expérience exigée, salaire, annonces closes, preuves des mails.
 const { pick, eq, done } = require("./lib.cjs");
-const F = pick(["XPN", "xpScan", "salOf", "GONE", "norm", "mlProof", "ML_ACK"]);
+const F = pick(["XPN", "xpScan", "salOf", "GONE", "norm", "mlProof", "ML_ACK", "fpHash", "FPSTOP", "fpOf", "fpAll", "fpInside", "fpSim"]);
 
 // Expérience : exigée écarte, souhaitée non
 for (const [t, h, s] of [
@@ -37,4 +37,10 @@ eq("accusé de réception reconnu", F.ML_ACK.test(F.norm(ack.subj + " " + ack.bo
 eq("vrai refus non pris pour un accusé", F.ML_ACK.test(F.norm(ref.subj + " " + ref.body)), false);
 for (const t of ["Confirmation de votre candidature - Acheteur", "Your application was sent to Alpha", "Merci pour votre candidature"])
   eq("accusé de réception : " + t, F.ML_ACK.test(F.norm(t)), true);
+// Même offre sur deux sites : reconnue par le texte ; deux offres différentes : jamais confondues
+const A = "Rattaché au responsable achats, vous pilotez un portefeuille de fournisseurs industriels : consultation, négociation des prix et des délais, suivi des commandes et relance des retards. Vous participez à la sélection de nouveaux fournisseurs et mettez à jour les tableaux de bord. Profil : Bac+5 achats, anglais professionnel, SAP.";
+const B = "Au sein du service logistique, vous organisez les expéditions internationales : choix des transporteurs, préparation des documents douaniers, suivi des livraisons et gestion des litiges. Vous travaillez avec les commerciaux et le service client. Profil : Bac+3 transport, anglais courant.";
+eq("même texte, autre site", F.fpInside(F.fpOf("Offre publiée par une agence pour son client. " + A), F.fpAll(A)) >= 0.6, true);
+eq("annonces différentes", F.fpInside(F.fpOf(B), F.fpAll(A)) < 0.2, true);
+eq("empreinte identique à la récolte (référence)", JSON.stringify(F.fpOf(require("./fixtures/fp_ref.json").text)), JSON.stringify(require("./fixtures/fp_ref.json").fp));
 done("Règles de l'app");
