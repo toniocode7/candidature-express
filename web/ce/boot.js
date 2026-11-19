@@ -187,7 +187,10 @@
   /* ---------- Lancement de l'app ---------- */
   async function startApp() {
     var p = PERSO || {};
+    // Données de la carte (villes et pays) dans un fichier à part : il ne change jamais, il reste en cache.
+    var geo = fetch("geo.json").then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; });
     var src = await (await fetch("app.js", { cache: "no-cache" })).text();
+    window.CE_GEODATA = await geo;
     src = src.replace(/\{\{PRENOM\}\}/g, jsStr(p.prenom || "toi"))
       .replace(/\{\{NOM\}\}/g, jsStr(p.nom || ""))
       .replace(/\{\{AFF\}\}/g, JSON.stringify(p.aff || {}));

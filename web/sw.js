@@ -1,5 +1,7 @@
 /* Service worker : app utilisable hors ligne, mises à jour récupérées au lancement. */
 const VERSION = "ce-v1";
+// Données de la carte : elles ne changent pas d'une version à l'autre, elles gardent leur propre cache.
+const GEO_CACHE = "ce-geo-v1";
 const CORE = ["./", "index.html", "app.js", "config.js", "ce/boot.js", "ce/ai.js", "ce/search.js", "ce/notify.js", "ce/criteria.js", "ce/ce.css", "manifest.webmanifest",
   "vendor/supabase.js", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 const LAZY = /\/vendor\/|fonts\.(googleapis|gstatic)\.com/;
@@ -8,7 +10,7 @@ self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k))))
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== GEO_CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 self.addEventListener("fetch", e => {
@@ -17,6 +19,13 @@ self.addEventListener("fetch", e => {
   const url = new URL(req.url);
   const same = url.origin === self.location.origin;
   if (!same && !LAZY.test(req.url)) return;
+  if (same && /\/geo\.json$/.test(url.pathname)) {
+    e.respondWith(caches.open(GEO_CACHE).then(c => c.match(req).then(hit => hit || fetch(req).then(res => {
+      if (res.ok) c.put(req, res.clone());
+      return res;
+    }))));
+    return;
+  }
   if (LAZY.test(req.url)) {
     // Bibliothèques et polices : le cache d'abord.
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {

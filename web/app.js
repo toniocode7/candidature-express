@@ -657,7 +657,7 @@ setTimeout(function(){try{expCheck()}catch(e){}},9000);
 
 /* ---------- Carte ---------- */
 var MGR=[],MCLK="",MCL=[],GEO=null,MV={x:0,y:0,w:4000,h:3000},MLAY={off:true,sug:false,zone:false},MSEL=null,MPREV="histbox",MAPW=4000;
-function geoLoad(){if(GEO)return GEO;var d=JSON.parse(G("geodata").textContent),idx=function(str,f){var m={};String(str||"").split(";").forEach(function(r){var a=r.split("|");if(a.length>=3)f(m,a)});return m};
+function geoLoad(){if(GEO)return GEO;var d={};try{d=JSON.parse(window.CE_GEODATA||(G("geodata")||{}).textContent||"{}")}catch(e){}var idx=function(str,f){var m={};String(str||"").split(";").forEach(function(r){var a=r.split("|");if(a.length>=3)f(m,a)});return m};
 GEO={W:d.W,fr:d.fr,eu:d.eu,rest:d.rest,frc:idx(d.frc,function(m,a){m[a[0]]=[+a[1],+a[2],a[3]]}),dep:idx(d.dep,function(m,a){m[a[0]]=[+a[1],+a[2],a[3]]}),wc:idx(d.wc,function(m,a){m[a[0]]=[+a[1],+a[2],a[3]]}),ctry:idx(d.ctry,function(m,a){m[a[0]]=[+a[1],+a[2],a[3]]}),alt:{}};
 String(d.alt||"").split(";").forEach(function(x){var a=x.split(">");if(a[1])GEO.alt[a[0]]=a[1]});MAPW=GEO.W;
 var OM={"la reunion":[55.45,-20.88,"RE"],"reunion":[55.45,-20.88,"RE"],"martinique":[-61.07,14.6,"MQ"],"guadeloupe":[-61.53,16.24,"GP"],"guyane":[-52.33,4.94,"GF"],"mayotte":[45.23,-12.78,"YT"],"nouvelle caledonie":[166.46,-22.27,"NC"],"polynesie":[-149.57,-17.53,"PF"],"tahiti":[-149.57,-17.53,"PF"],"saint pierre et miquelon":[-56.18,46.78,"PM"]};for(var k in OM)GEO.ctry[k]=OM[k];
