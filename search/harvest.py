@@ -13,6 +13,7 @@ import email.utils
 import hashlib
 import html
 import json
+import logging
 import os
 import random
 import re
@@ -212,10 +213,28 @@ CC = {"usa": "US", "canada": "CA", "switzerland": "CH", "uk": "GB", "netherlands
       "luxembourg": "LU", "portugal": "PT"}
 
 
+class _Blocked(logging.Handler):
+    """JobSpy signale un blocage (429) dans son journal sans lever d'erreur : on le capte pour le compter."""
+    def __init__(self):
+        super().__init__()
+        self.hits = 0
+
+    def emit(self, record):
+        if "429" in record.getMessage() or "blocked" in record.getMessage().lower():
+            self.hits += 1
+
+
+BLOCKED = _Blocked()
+logging.getLogger("jobspy").addHandler(BLOCKED)
+
+
 def jobspy_rows(site: str, term: str, location: str, country: str, hours: int, n: int, km: int = 30):
     from jobspy import scrape_jobs
+    before = BLOCKED.hits
     df = scrape_jobs(site_name=[site], search_term=term, location=location, country_indeed=country, distance=max(5, round(km / 1.609)),
                      results_wanted=n, hours_old=hours, linkedin_fetch_description=False, verbose=0)
+    if BLOCKED.hits > before:
+        raise RuntimeError("429 : le site limite les requêtes (blocage temporaire)")
     return [] if df is None else df.to_dict("records")
 
 
