@@ -117,12 +117,55 @@
     }
   };
   function store() { return DEMO ? demoDb() : remoteDb; }
+
+  /* Synchronisation économe : la liste des identifiants (quelques Ko), puis le contenu des seuls éléments modifiés
+     depuis la dernière fois. Les éléments inchangés sont signalés « same » à l'app, qui garde sa copie locale.
+     Un téléchargement complet est refait une fois par jour, par prudence. */
+  async function syncGet(col) {
+    var key = LS + "syncw." + col, w = {};
+    try { w = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) {}
+    var full = !w.at || !w.full || Date.now() - w.full > 864e5 || !localStorage.getItem(LS + "off");
+    var docs = [], maxAt = w.at || "";
+    function keep(r) { if (r.updated_at && r.updated_at > maxAt) maxAt = r.updated_at; }
+    if (full) {
+      for (var from = 0; ; from += 500) {
+        var r = await sb.from("docs").select("id,data,updated_at").eq("col", col).order("id").range(from, from + 499);
+        if (r.error) throw err("db", r.error.message);
+        (r.data || []).forEach(function (x) { keep(x); docs.push({ id: x.id, data: function () { return x.data; } }); });
+        if (!r.data || r.data.length < 500) break;
+      }
+      w.full = Date.now();
+    } else {
+      // Deux minutes de recouvrement : rien n'est manqué si deux appareils écrivent presque en même temps.
+      var t0 = new Date(String(w.at).replace(/(\.\d{3})\d+/, "$1")).getTime(), since = new Date((isFinite(t0) ? t0 : 0) - 120000).toISOString(), ids = [];
+      for (var f2 = 0; ; f2 += 1000) {
+        var r1 = await sb.from("docs").select("id").eq("col", col).order("id").range(f2, f2 + 999);
+        if (r1.error) throw err("db", r1.error.message);
+        ids = ids.concat((r1.data || []).map(function (x) { return x.id; }));
+        if (!r1.data || r1.data.length < 1000) break;
+      }
+      var r2 = await sb.from("docs").select("id,data,updated_at").eq("col", col).gt("updated_at", since);
+      if (r2.error) throw err("db", r2.error.message);
+      var changed = {};
+      (r2.data || []).forEach(function (x) { keep(x); changed[x.id] = x; });
+      ids.forEach(function (id) {
+        var x = changed[id];
+        docs.push(x ? { id: id, data: function () { return x.data; } } : { id: id, same: true, data: function () { return null; } });
+      });
+    }
+    w.at = maxAt;
+    try { localStorage.setItem(key, JSON.stringify(w)); } catch (e) {}
+    return { docs: docs };
+  }
   function collection(path) {
     var col = String(path).replace(/^data\/users\/[^/]+$/, "app");
     return {
       get: async function () {
-        var rows = await store().list(col);
-        return { docs: rows.map(function (r) { return { id: r.id, data: function () { return r.data; } }; }) };
+        if (DEMO) {
+          var rows = await store().list(col);
+          return { docs: rows.map(function (r) { return { id: r.id, data: function () { return r.data; } }; }) };
+        }
+        return syncGet(col);
       },
       doc: function (id) {
         return {

@@ -863,7 +863,7 @@ var err=null;try{for(var i=0;i<keys.length;i++){if(i&&Object.keys(SY.pri).length
 saveOff();setSyn("Synchronisé sur ton compte");SY.fail=0}catch(e){err=e;keys.forEach(function(k){if(!done[k]){SY.dirty[k]=1;if(pri[k])SY.pri[k]=1}});SY.fail=(SY.fail||0)+1;setSyn("Synchronisation en pause")}SY.fly={};SY.busy=false;if(Object.keys(SY.dirty).length){clearTimeout(SY.t);SY.t=setTimeout(push,err?Math.min(60000,3000*Math.pow(2,SY.fail-1)):Object.keys(SY.pri).length?100:1200)}}
 function newer(a,b){var x=a.rv||0,y=b.rv||0;if(x!==y)return x>y?1:-1;x=a.mt||0;y=b.mt||0;return x===y?0:x>y?1:-1}
 async function pull(){if(!SY.col)return;try{var snap=await SY.col.get(),seen={},ch=false;
-snap.docs.forEach(function(d){var v=d.data();if(!v)return;
+snap.docs.forEach(function(d){if(d.same){if(d.id.indexOf("o_")===0)seen[d.id.slice(2)]=1;return}var v=d.data();if(!v)return;
 if(d.id==="profil"&&v.p){if(pfMerge(v))ch=true}
 else if(d.id==="mail"&&v.seen){mlMerge(v)}
 else if(d.id==="fc"&&v.m){if(!FC||v.m!==FC.m?(v.m===fcMonth()):((+v.u||0)>(+FC.u||0))){FC={m:v.m,u:+v.u||0,t:v.t||0};lss("fc",FC);try{fcUI()}catch(e){}}else if(FC&&FC.m===v.m&&(+FC.u||0)>(+v.u||0))SY.dirty.fc=1}
@@ -1535,8 +1535,6 @@ window.CE_autoPrep=async function(){if(BUSY||!window.CE_doc)return 0;var now=Dat
 var list=OFF.filter(function(o){var iv=o.iv||{};return o.st===2&&!o.ir&&!isArch(o)&&!o.prep&&(iv.at?iv.at>now-3*3600e3&&iv.at<now+21*864e5:!!iv.day)&&!(tries[o.id]&&now-tries[o.id]<6*3600e3)}).slice(0,2),n=0;
 for(var i=0;i<list.length;i++){var o=list[i];tries[o.id]=now;try{await CE_doc.set("autoprep",tries)}catch(e){}try{await prepGen(o)}catch(e){}
 if(o.prep){n++;try{CE_EV("entretien","Fiche d'entretien prête",mlOffLabel(o)+(o.iv&&o.iv.at?" ("+ivTxt(o.iv)+")":"")+" : questions probables, tes atouts et quoi leur demander.","./?v=list&o="+o.id)}catch(e){}}}return n};
-window.CE_critAudit=async function(h){var sb=window.CE&&window.CE.supabase;if(!sb)return {};var r=await sb.from("raw_offers").select("data").gte("last_seen",new Date(Date.now()-(h||24)*3600e3).toISOString()).limit(2000);var st={n:(r.data||[]).length};
-(r.data||[]).forEach(function(x){var d=x.data,w=ceOut(d);var k=(w||"gardée")+" / "+(d.src||"?")+(w==="lieu"?" / "+(d.lieu&&geoOf(d.lieu)?(geoOf(d.lieu).cc||(geoOf(d.lieu).fr?"FR":"?")):"inconnu, pays "+(d.cc||"?")):"");st[k]=(st[k]||0)+1});return st};
 window.CE_openOffer=function(id){var o=find(String(id));if(o)ofOpen(o)};
 /* Empreinte du texte des offres déjà affichées (calculée à la récolte) : sert à reconnaître la même offre vue ailleurs. */
 window.CE_fpBackfill=async function(){var sb=window.CE&&window.CE.supabase;if(!sb||BUSY)return 0;var it=(SG.items||[]).filter(function(x){return !x.fpFull&&x.url}).slice(0,150);if(!it.length)return 0;

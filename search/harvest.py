@@ -753,7 +753,7 @@ def enrich(found: list[dict]):
     ids = list({oid(o["url"]) for o in todo})
     for k in range(0, len(ids), 80):
         try:
-            rows = rest("GET", "raw_offers?select=id,full_text,fpFull:data->fpFull,xpChk:data->xpChk,xpmin:data->xpmin,xpsoft:data->xpsoft,xpTxt:data->>xpTxt&id=in.(" + ",".join(ids[k:k + 80]) + ")")
+            rows = rest("GET", "raw_offers?select=id,fpFull:data->fpFull,resume:data->>resume,xpChk:data->xpChk,xpmin:data->xpmin,xpsoft:data->xpsoft,xpTxt:data->>xpTxt&id=in.(" + ",".join(ids[k:k + 80]) + ")")
             prior.update({r["id"]: r for r in rows if r.get("xpChk")})
         except Exception as e:
             log("Lecture des résultats précédents impossible :", e)
@@ -762,10 +762,8 @@ def enrich(found: list[dict]):
         r = prior.get(oid(o["url"]))
         if r:
             o.update({k: r[k] for k in ("xpChk", "xpmin", "xpsoft", "xpTxt", "fpFull") if r.get(k) is not None})
-            if not o.get("fpFull") and r.get("full_text"):
-                o["fpFull"] = fp_of(r["full_text"])
-            if r.get("full_text"):
-                o["resume"] = resume(r["full_text"])
+            if r.get("resume"):
+                o["resume"] = r["resume"]
         else:
             fresh.append(o)
     t0, n, hard = time.time(), 0, 0

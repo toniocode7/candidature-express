@@ -1,1 +1,1 @@
-{ "private": true, "scripts": { "test": "node unit.cjs && node e2e.cjs" }, "devDependencies": { "acorn": "8.14.0", "playwright": "1.49.1" } }
+{ "private": true, "scripts": { "test": "node unit.cjs && node sync.cjs && node e2e.cjs" }, "devDependencies": { "acorn": "8.14.0", "playwright": "1.49.1" } }
