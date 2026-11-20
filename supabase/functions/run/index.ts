@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   const st = await db("docs?select=data&col=eq.ce&id=eq.sources");
   const s = st?.[0]?.data ?? {};
   const last = Math.max(s._run?.at ?? 0, s._asked ?? 0);
-  if (Date.now() - last < (cron ? 40 : 10) * 60e3) return json({ ok: true, deja: true, depuis: Math.round((Date.now() - last) / 60e3) });
+  if (Date.now() - last < (cron ? 25 : 10) * 60e3) return json({ ok: true, deja: true, depuis: Math.round((Date.now() - last) / 60e3) });
   const err = await dispatch("recherche.yml", { force: cron ? "false" : "true", only: "" });
   if (err) return err;
   if (st?.[0]) {
