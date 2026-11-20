@@ -44,12 +44,15 @@ Deno.serve(async (req) => {
   }
   // Noms des entreprises et agences de tes candidatures : le script Gmail transmet aussi leurs mails sans mot-clé.
   if (b.action === "senders") {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/docs?select=a:data->an->>entreprise,m:data->meta->>entreprise,g:data->sug->>entreprise,st:data->st&col=eq.app&id=like.o_*`, { headers: H });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/docs?select=a:data->an->>entreprise,m:data->meta->>entreprise,g:data->sug->>entreprise,st:data->st,ir:data->ir,t:data->sentAt,ct:data->ct&col=eq.app&id=like.o_*`, { headers: H });
     const rows: any[] = r.ok ? await r.json() : [];
     const HEAD = /^(groupe?|group|the)$/i; // en début : « Groupe Léon Vincent » → « Léon Vincent »
     const TAIL = /^(sas|sa|sarl|sasu|eurl|ltd|limited|inc|gmbh|france|emploi|interim|intérim|recrutement|services?)$/i; // en fin seulement
     const STOP = /^(de|du|des|d|la|le|les|et|&)$/i;
     const noms = new Set<string>();
+    // Priorité : candidatures en cours (envoyée, entretien, premier contact) puis les plus récentes ; refusées en dernier.
+    const actif = (x: any) => (x.st === 3 || (x.st === 2 && x.ir)) ? 0 : 1;
+    rows.sort((p: any, q: any) => (actif(q) - actif(p)) || ((+q.t || +q.ct || 0) - (+p.t || +p.ct || 0)));
     for (const x of rows) {
       if (x.st == null) continue;
       for (const raw of [x.a, x.m, x.g]) {
@@ -66,7 +69,7 @@ Deno.serve(async (req) => {
         }
       }
     }
-    return json({ noms: [...noms].slice(0, 120) });
+    return json({ noms: [...noms].slice(0, 250), total: noms.size });
   }
 
   // Sauvegarde complète (déposée chaque semaine dans ton Google Drive par le script Google).

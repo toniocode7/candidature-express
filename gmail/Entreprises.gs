@@ -11,7 +11,8 @@
  */
 
 function synchroniserEntreprises() {
-  const noms = (appeler_({ action: "senders" }).noms || []).filter(function (n) { return n && n.length >= 3; });
+  const rep = appeler_({ action: "senders" });
+  const noms = (rep.noms || []).filter(function (n) { return n && n.length >= 3; });
   if (!noms.length) return;
   const prop = PropertiesService.getScriptProperties();
   const dernier = +prop.getProperty("dernierEntreprises") || (Date.now() - 30 * 864e5);
@@ -33,7 +34,7 @@ function synchroniserEntreprises() {
   }
   for (let i = 0; i < envoi.length; i += 50) appeler_({ action: "mails", mails: envoi.slice(i, i + 50) });
   prop.setProperty("dernierEntreprises", String(Date.now()));
-  console.log(noms.length + " entreprises surveillées, " + envoi.length + " mail(s) transmis.");
+  console.log(noms.length + " entreprises surveillées" + (rep.total > noms.length ? " (sur " + rep.total + ", les plus récentes en priorité)" : "") + ", " + envoi.length + " mail(s) transmis.");
 }
 
 /** À lancer une seule fois : première lecture, puis toutes les 15 minutes. */
