@@ -19,7 +19,7 @@
 
 ## Ce qui tourne tout seul
 - **Toutes les 15 min** : le script Google transmet les mails de recruteurs. L'IA lit chaque mail en entier et cite la phrase qui prouve un refus ou un entretien ; le statut change seul seulement si elle est sûre, sinon tu valides.
-- **Toutes les heures (6 h à 22 h)** : recherche d'offres (France Travail, Indeed, LinkedIn, HelloWork, Meteojob, sites carrières de tes entreprises surveillées). Chaque annonce est lue en entier : expérience exigée, salaire, doublons publiés sur plusieurs sites. Puis tri selon tes critères et ton profil, et notification.
+- **Chaque heure pile (6 h à 22 h)** : recherche d'offres (France Travail, Indeed, LinkedIn, HelloWork, Meteojob, sites carrières de tes entreprises surveillées). Chaque annonce est lue en entier : expérience exigée, salaire, doublons publiés sur plusieurs sites. Puis tri selon tes critères et ton profil, et notification.
 - **Entretien fixé** : la fiche de préparation est faite en arrière-plan, rappel la veille (18 h) et le jour (7 h).
 - **Chaque jour** : vérification que les annonces de tes candidatures sont encore en ligne (une annonce retirée est signalée, jamais passée en Refusée toute seule) ; surveillance des automatisations, avec une notification si l'une s'arrête (site muet depuis 24 h, script Gmail, IA, sauvegarde).
 - **Le dimanche** : sauvegarde complète dans ton Google Drive (4 h), bilan de la semaine (18 h). Objectif de la semaine le vendredi et le dimanche à 17 h.

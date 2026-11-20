@@ -1,7 +1,9 @@
 name: Recherche d'offres automatique
 on:
   schedule:
-    - cron: "17 5-21 * * *"   # toutes les heures de 6 h à 22 h (heure de Paris en hiver) ; chaque source a son propre rythme
+    # Secours seulement : l'horloge de Supabase lance la recherche chaque heure pile (6 h - 22 h).
+    # GitHub saute souvent ses tâches programmées ; celle-ci ne fait rien si une recherche a eu lieu il y a moins de 50 min.
+    - cron: "30 5-21 * * *"
   workflow_dispatch:
     inputs:
       force:
@@ -14,7 +16,25 @@ on:
         default: ""
 concurrency: { group: recherche, cancel-in-progress: false }
 jobs:
+  verif:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.v.outputs.go }}
+    steps:
+      - id: v
+        name: Une recherche a-t-elle déjà eu lieu récemment ?
+        env:
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          AT=$(curl -s "https://$REF.supabase.co/rest/v1/docs?select=data&col=eq.ce&id=eq.sources" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "import json,sys; d=json.load(sys.stdin); s=d[0]['data'] if d else {}; print(max((s.get('_run') or {}).get('at') or 0, s.get('_asked') or 0))")
+          AGE=$(( ( $(date +%s) * 1000 - AT ) / 60000 ))
+          echo "Dernière recherche il y a $AGE min"
+          if [ "$AGE" -lt 50 ]; then echo "go=false" >> "$GITHUB_OUTPUT"; echo "Déjà faite : rien à faire."; else echo "go=true" >> "$GITHUB_OUTPUT"; fi
   recherche:
+    needs: verif
+    if: needs.verif.outputs.go == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 55
     env:
