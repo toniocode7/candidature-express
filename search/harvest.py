@@ -329,6 +329,8 @@ def src_francetravail(C: dict) -> list[dict]:
                 r = get(url)
                 if r.status_code != 200:
                     raise RuntimeError(f"HTTP {r.status_code}")
+                if "secours" in r.url or "maintenance" in r.text[:3000].lower():
+                    raise RuntimeError("site France Travail en maintenance (incident de leur côté), nouvel essai à l'heure suivante")
                 items = re.findall(r'<li[^>]*data-id-offre="([^"]+)"[^>]*>([\s\S]*?)</li>', r.text)
                 for idd, block in items:
                     t = re.search(r'class="media-heading-title"[^>]*>([\s\S]*?)<', block)
@@ -347,6 +349,8 @@ def src_francetravail(C: dict) -> list[dict]:
                     errs.append(f"page sans offres lisibles ({kw}, {label})")
             except Exception as e:
                 errs.append(f"{kw} / {label} : {str(e)[:100]}")
+                if "maintenance" in str(e):
+                    raise
             time.sleep(random.uniform(1, 2))
     if not out and errs:
         raise RuntimeError(errs[0])

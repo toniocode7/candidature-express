@@ -1,9 +1,0 @@
-name: Diagnostic France Travail
-on: workflow_dispatch
-jobs:
-  diag:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v5
-      - run: pip install -q requests && python search/debug_ft.py
