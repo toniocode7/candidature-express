@@ -2,7 +2,12 @@ name: Mails des recruteurs
 on:
   schedule:
     - cron: "4,19,34,49 * * * *"   # toutes les 15 minutes
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      auto:
+        description: "Lancé par l'horloge Supabase (seulement les mails des 30 dernières minutes)"
+        required: false
+        default: "false"
 concurrency: { group: mails, cancel-in-progress: false }
 jobs:
   mails:
@@ -18,6 +23,7 @@ jobs:
         run: |
           SINCE=$(date -u -d '-20 minutes' +%Y-%m-%dT%H:%M:%SZ)
           [ "${{ github.event_name }}" = "workflow_dispatch" ] && SINCE=$(date -u -d '-3 days' +%Y-%m-%dT%H:%M:%SZ)
+          [ "${{ inputs.auto }}" = "true" ] && SINCE=$(date -u -d '-30 minutes' +%Y-%m-%dT%H:%M:%SZ)
           N=$(curl -s "https://$SUPABASE_PROJECT_REF.supabase.co/rest/v1/mails?select=id&created_at=gte.$SINCE" -H "apikey: $SUPABASE_SECRET_KEY" -H "Authorization: Bearer $SUPABASE_SECRET_KEY" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
           echo "Nouveaux mails transmis par Gmail : $N"
           echo "n=$N" >> "$GITHUB_OUTPUT"
