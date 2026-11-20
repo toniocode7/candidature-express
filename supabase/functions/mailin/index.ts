@@ -42,6 +42,33 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true });
   }
+  // Noms des entreprises et agences de tes candidatures : le script Gmail transmet aussi leurs mails sans mot-clé.
+  if (b.action === "senders") {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/docs?select=a:data->an->>entreprise,m:data->meta->>entreprise,g:data->sug->>entreprise,st:data->st&col=eq.app&id=like.o_*`, { headers: H });
+    const rows: any[] = r.ok ? await r.json() : [];
+    const HEAD = /^(groupe?|group|the)$/i; // en début : « Groupe Léon Vincent » → « Léon Vincent »
+    const TAIL = /^(sas|sa|sarl|sasu|eurl|ltd|limited|inc|gmbh|france|emploi|interim|intérim|recrutement|services?)$/i; // en fin seulement
+    const STOP = /^(de|du|des|d|la|le|les|et|&)$/i;
+    const noms = new Set<string>();
+    for (const x of rows) {
+      if (x.st == null) continue;
+      for (const raw of [x.a, x.m, x.g]) {
+        for (const part of String(raw ?? "").split(/[()\/–—,;]| - | pour | via /)) {
+          // Mots génériques retirés seulement en début ou en fin de nom (« Naval Group » reste entier).
+          let words = part.trim().split(/\s+/).filter(Boolean);
+          while (words.length && HEAD.test(words[0])) words.shift();
+          while (words.length && (TAIL.test(words[words.length - 1]) || STOP.test(words[words.length - 1]))) words.pop();
+          words = words.slice(0, 4);
+          while (words.length && STOP.test(words[words.length - 1])) words.pop();
+          const n = words.join(" ").replace(/["']/g, "").trim();
+          if (words.length === 1 && n.length < 4) continue; // sigle trop court seul (ex. « TER ») : trop de faux résultats
+          if (n.length >= 3 && !/^(confidentiel|non communiqué|entreprise|client|anonyme)/i.test(n)) noms.add(n);
+        }
+      }
+    }
+    return json({ noms: [...noms].slice(0, 120) });
+  }
+
   // Sauvegarde complète (déposée chaque semaine dans ton Google Drive par le script Google).
   if (b.action === "backup") {
     const docs: any[] = [];

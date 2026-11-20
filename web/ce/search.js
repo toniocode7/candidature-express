@@ -73,11 +73,10 @@
   // Message quand la recherche lancée à la main ne trouve rien à trier : la recherche automatique est passée juste avant.
   window.CE_noNewMsg = function () {
     if (!window.CE_RAW || window.CE_RAW_N !== 0) return "";
-    var t = window.CE_LAST_AUTO, now = new Date(), h = now.getHours();
-    var ago = t ? Math.max(1, Math.round((Date.now() - t) / 60000)) : 0;
-    var next = h >= 22 || h < 6 ? "demain vers 6 h" : "dans moins d'une heure";
+    var t = window.CE_LAST_AUTO, h = +new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "numeric", hourCycle: "h23" }).format(new Date());
+    var ago = t ? Math.max(1, Math.round((Date.now() - t) / 60000)) : 0, next = (Math.floor(h / 6) + 1) * 6 % 24;
     return "Rien de neuf à trier : la recherche automatique" + (ago ? " d'il y a " + (ago < 60 ? ago + " min" : Math.round(ago / 60) + " h") : "") +
-      " a déjà récolté et trié toutes les offres disponibles (elle passe toutes les heures, de 6 h à 22 h). Prochain passage " + next + ".";
+      " a déjà récolté et trié toutes les offres disponibles (elle passe à 0 h, 6 h, 12 h et 18 h). Prochain passage à " + next + " h.";
   };
 
   var LABEL = { francetravail: "France Travail", indeed: "Indeed", linkedin: "LinkedIn", hellowork: "HelloWork", meteojob: "Meteojob", carrieres: "Sites carrières" };
@@ -93,7 +92,7 @@
     var st = r.data && r.data.data; if (!st) { el.hidden = true; return; }
     var parts = Object.keys(LABEL).filter(function (k) { return st[k]; }).map(function (k) {
       var s = st[k], okc = s.ok ? "ok" : "ko";
-      return '<span class="cesr ' + okc + '" title="' + (s.ok ? (s.n || 0) + " offres, " + ago(s.at) : "En pause : " + String(s.err || "").replace(/"/g, "") + ". Nouvel essai automatique dans l'heure.") + '"><i></i>' + LABEL[k] + "</span>";
+      return '<span class="cesr ' + okc + '" title="' + (s.ok ? (s.n || 0) + " offres, " + ago(s.at) : "En pause : " + String(s.err || "").replace(/"/g, "") + ". Nouvel essai automatique au prochain passage.") + '"><i></i>' + LABEL[k] + "</span>";
     });
     var run = st._run && st._run.at ? "Dernière recherche automatique " + ago(st._run.at) + ". " : "";
     el.innerHTML = run + '<span class="cesrl">' + parts.join("") + "</span>";

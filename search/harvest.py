@@ -330,7 +330,7 @@ def src_francetravail(C: dict) -> list[dict]:
                 if r.status_code != 200:
                     raise RuntimeError(f"HTTP {r.status_code}")
                 if "secours" in r.url or "maintenance" in r.text[:3000].lower():
-                    raise RuntimeError("site France Travail en maintenance (incident de leur côté), nouvel essai à l'heure suivante")
+                    raise RuntimeError("site France Travail en maintenance (incident de leur côté), nouvel essai au prochain passage")
                 items = re.findall(r'<li[^>]*data-id-offre="([^"]+)"[^>]*>([\s\S]*?)</li>', r.text)
                 for idd, block in items:
                     t = re.search(r'class="media-heading-title"[^>]*>([\s\S]*?)<', block)
@@ -921,6 +921,16 @@ def main():
         rest("DELETE", "raw_offers?last_seen=lt." + quote((NOW - timedelta(days=45)).isoformat()))
     except Exception as e:
         log("Ménage impossible :", e)
+    # Textes complets des offres écartées par le tri : inutiles (jamais analysées), on garde ceux des offres suggérées.
+    try:
+        sg = get_doc(uid, "app", "sugg") or {}
+        keep = [u for x in (sg.get("items") or []) for u in [x.get("url")] + [a.get("url") for a in (x.get("alts") or [])] if u]
+        n = rest("POST", "rpc/ce_trim_texts", data=json.dumps({"keep_urls": keep}))
+        size = rest("POST", "rpc/ce_db_size", data="{}") or {}
+        log(f"Espace : {n} textes d'annonces inutiles effacés ; base {round((size.get('total') or 0) / 1e6)} Mo sur 500 "
+            f"(offres récoltées {round((size.get('raw_offers') or 0) / 1e6)} Mo, tes données {round((size.get('docs') or 0) / 1e6)} Mo)")
+    except Exception as e:
+        log("Ménage des textes impossible :", e)
     log(f"\nTotal : {total} offres récoltées (avant tri).")
 
 

@@ -32,6 +32,10 @@ Deno.serve(async (req) => {
   let b: { wf?: string } = {};
   try { b = await req.json(); } catch (_) { /* corps vide : recherche */ }
 
+  if (b.wf === "rappels") {
+    return (await dispatch("rappels.yml", {})) ?? json({ ok: true });
+  }
+
   if (b.wf === "mails") {
     // Seulement s'il y a de nouveaux mails transmis par le script Gmail (sinon rien à faire).
     const since = new Date(Date.now() - 20 * 60e3).toISOString();
@@ -40,17 +44,24 @@ Deno.serve(async (req) => {
     return (await dispatch("mails.yml", { auto: "true" })) ?? json({ ok: true });
   }
 
-  // Recherche : pas plus d'une toutes les 10 minutes (une récolte complète dure de 5 à 15 minutes).
+  // Recherche automatique : à 0 h, 6 h, 12 h et 18 h (heure de Paris), sauf si tu en as lancé une toi-même il y a moins d'une heure.
+  // Recherche manuelle : toujours, sauf si une autre vient d'être lancée il y a moins de 10 minutes (double toucher).
   const st = await db("docs?select=data&col=eq.ce&id=eq.sources");
   const s = st?.[0]?.data ?? {};
-  const last = Math.max(s._run?.at ?? 0, s._asked ?? 0);
-  if (Date.now() - last < (cron ? 25 : 10) * 60e3) return json({ ok: true, deja: true, depuis: Math.round((Date.now() - last) / 60e3) });
+  const now = Date.now();
+  if (cron) {
+    const heure = +new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "numeric", hourCycle: "h23" }).format(new Date());
+    if (heure % 6 !== 0) return json({ ok: true, horsCreneau: heure });
+    if (now - (s._manual ?? 0) < 60 * 60e3) return json({ ok: true, deja: true, manuelle: Math.round((now - s._manual) / 60e3) });
+  } else if (now - (s._asked ?? 0) < 10 * 60e3) {
+    return json({ ok: true, deja: true, depuis: Math.round((now - s._asked) / 60e3) });
+  }
   const err = await dispatch("recherche.yml", { force: cron ? "false" : "true", only: "" });
   if (err) return err;
   if (st?.[0]) {
     await fetch(`${SUPABASE_URL}/rest/v1/docs?col=eq.ce&id=eq.sources`, {
       method: "PATCH", headers: { ...H, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({ data: { ...s, _asked: Date.now() } }),
+      body: JSON.stringify({ data: { ...s, _asked: now, ...(cron ? {} : { _manual: now }) } }),
     });
   }
   return json({ ok: true });

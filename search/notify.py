@@ -1,5 +1,5 @@
 """Rappels d'entretien (la veille et le jour) et objectif de la semaine.
-Lancé à chaque passage de la recherche automatique (toutes les heures de 6 h à 22 h).
+Lancé chaque heure par l'horloge de Supabase (action « Rappels et alertes »).
 Chaque rappel n'est envoyé qu'une fois (journal notif_log côté serveur)."""
 import os
 from datetime import datetime, timedelta
@@ -26,6 +26,21 @@ def docs(q):
     return [x["data"] for x in r.json()]
 
 
+def light_offers():
+    """Seulement les champs utiles aux rappels (pas le texte des annonces ni les analyses) : peu de données transférées."""
+    f = ("id:data->>id,st:data->st,ir:data->ir,iv:data->iv,sentAt:data->sentAt,hist:data->hist,autoRef:data->autoRef,"
+         "ap:data->an->>poste,ae:data->an->>entreprise,mp:data->meta->>poste,me:data->meta->>entreprise,gp:data->sug->>titre,ge:data->sug->>entreprise")
+    r = requests.get(f"{SB_URL}/rest/v1/docs?select={f}&col=eq.app&id=like.o_*", headers=H, timeout=60)
+    r.raise_for_status()
+    out = []
+    for x in r.json():
+        x["an"] = {"poste": x.pop("ap", None), "entreprise": x.pop("ae", None)}
+        x["meta"] = {"poste": x.pop("mp", None), "entreprise": x.pop("me", None)}
+        x["sug"] = {"titre": x.pop("gp", None), "entreprise": x.pop("ge", None)}
+        out.append(x)
+    return out
+
+
 def label(o):
     a, m, g = o.get("an") or {}, o.get("meta") or {}, o.get("sug") or {}
     poste = a.get("poste") or m.get("poste") or g.get("titre") or "un poste"
@@ -35,7 +50,7 @@ def label(o):
 
 def main():
     now = datetime.now(PARIS)
-    offers = docs("select=data&col=eq.app&id=like.o_*")
+    offers = light_offers()
     # Rappels d'entretien
     for o in offers:
         iv = o.get("iv") or {}
@@ -128,9 +143,9 @@ def sante(now):
             alertes.append((f"src-{k}", f"{lab} ne répond plus depuis plus de 24 h",
                             f"Erreur : {str(x.get('err') or '')[:90]}. Les autres sites continuent ; nouvel essai automatique chaque heure."))
     run = (st.get("_run") or {}).get("at") or 0
-    if run and t - run > 6 * 3600e3:
+    if run and t - run > 7 * 3600e3:
         alertes.append(("recherche", "La recherche automatique ne tourne plus",
-                        "Aucun passage depuis plus de 6 h. Ouvre GitHub, onglet Actions : la recherche a peut-être été désactivée."))
+                        "Aucun passage depuis plus de 7 h (elle tourne à 0 h, 6 h, 12 h et 18 h). Ouvre GitHub, onglet Actions : la recherche a peut-être été désactivée."))
     depuis = (now - timedelta(days=2)).date().isoformat()
     u = rows(f"usage?select=provider,model,ok,fail&day=gte.{depuis}")
     if not any(x["provider"] == "gmail" for x in u):
@@ -145,6 +160,14 @@ def sante(now):
     if backup and (now.date() - datetime.fromisoformat(backup[0]["day"]).date()).days > 8:
         alertes.append(("sauvegarde", "La sauvegarde du dimanche n'a pas eu lieu",
                         "Ouvre script.google.com, fichier Sauvegarde, et relance « installerSauvegarde »."))
+    try:
+        size = requests.post(f"{SB_URL}/rest/v1/rpc/ce_db_size", headers={**H, "Content-Type": "application/json"}, data="{}", timeout=30).json()
+        mo = round((size.get("total") or 0) / 1e6)
+        if mo > 400:
+            alertes.append(("espace", f"La base approche de sa limite gratuite ({mo} Mo sur 500)",
+                            "Transmets cette alerte à Claude : il faudra alléger les données gardées."))
+    except Exception:
+        pass
     for key, titre, corps in alertes:
         push("alerte", titre, corps, f"alerte:{key}:{jour}", "./?v=accueil")
     if not alertes:

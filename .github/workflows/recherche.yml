@@ -1,9 +1,9 @@
 name: Recherche d'offres automatique
 on:
   schedule:
-    # Secours seulement : l'horloge de Supabase lance la recherche chaque heure pile (6 h - 22 h).
-    # GitHub saute souvent ses tâches programmées ; celle-ci ne fait rien si une recherche a eu lieu il y a moins de 50 min.
-    - cron: "30 5-21 * * *"
+    # Secours seulement : l'horloge de Supabase lance la recherche à 0 h, 6 h, 12 h et 18 h (heure de Paris).
+    # GitHub saute souvent ses tâches programmées ; celle-ci ne fait rien si une recherche a eu lieu il y a moins de 2 h.
+    - cron: "40 4,5,10,11,16,17,22,23 * * *"
   workflow_dispatch:
     inputs:
       force:
@@ -31,7 +31,7 @@ jobs:
           AT=$(curl -s "https://$REF.supabase.co/rest/v1/docs?select=data&col=eq.ce&id=eq.sources" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "import json,sys; d=json.load(sys.stdin); s=d[0]['data'] if d else {}; print(max((s.get('_run') or {}).get('at') or 0, s.get('_asked') or 0))")
           AGE=$(( ( $(date +%s) * 1000 - AT ) / 60000 ))
           echo "Dernière recherche il y a $AGE min"
-          if [ "$AGE" -lt 50 ]; then echo "go=false" >> "$GITHUB_OUTPUT"; echo "Déjà faite : rien à faire."; else echo "go=true" >> "$GITHUB_OUTPUT"; fi
+          if [ "$AGE" -lt 120 ]; then echo "go=false" >> "$GITHUB_OUTPUT"; echo "Déjà faite : rien à faire."; else echo "go=true" >> "$GITHUB_OUTPUT"; fi
   recherche:
     needs: verif
     if: needs.verif.outputs.go == 'true'
@@ -49,8 +49,6 @@ jobs:
         run: |
           pip install -q -r search/requirements.txt
           python -m playwright install --with-deps chromium > /dev/null
-      - name: Rappels d'entretien et objectif de la semaine
-        run: python search/notify.py || echo "Rappels indisponibles pour ce passage"
       - name: Récolter les offres sur chaque source
         run: |
           ARGS=""

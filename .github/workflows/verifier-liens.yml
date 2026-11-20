@@ -1,5 +1,7 @@
 name: Vérifier les liens des offres suggérées
 on:
+  schedule:
+    - cron: "20 5 * * 0"   # chaque dimanche matin : liens vérifiés et corrigés automatiquement
   workflow_dispatch:
     inputs:
       reparer:
@@ -18,5 +20,5 @@ jobs:
         with: { python-version: "3.12" }
       - run: |
           pip install -q requests
-          if [ "${{ inputs.reparer }}" = "true" ]; then python search/fix_suggestions.py; fi
+          if [ "${{ inputs.reparer }}" = "true" ] || [ "${{ github.event_name }}" = "schedule" ]; then python search/fix_suggestions.py; fi
           python search/check_links.py

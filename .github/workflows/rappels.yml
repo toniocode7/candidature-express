@@ -1,0 +1,19 @@
+name: Rappels et alertes
+on:
+  workflow_dispatch: {}
+concurrency: { group: rappels, cancel-in-progress: true }
+jobs:
+  rappels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Rappels d'entretien, objectif, bilan du dimanche, surveillance
+        run: |
+          pip install -q requests
+          python search/notify.py
