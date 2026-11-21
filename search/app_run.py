@@ -37,10 +37,10 @@ def session() -> dict:
     return s
 
 
-def push(kind: str, title: str, body: str, url: str = "./", once: str | None = None) -> None:
+def push(kind: str, title: str, body: str, url: str = "./", once: str | None = None, badge: int | None = None) -> None:
     try:
         r = requests.post(f"{SB_URL}/functions/v1/push", headers={"x-ce-key": SB_KEY, "Content-Type": "application/json"},
-                          json={"action": "send", "kind": kind, "title": title, "body": body, "url": url, "once": once}, timeout=60)
+                          json={"action": "send", "kind": kind, "title": title, "body": body, "url": url, "once": once, "badge": badge}, timeout=60)
         print(f"Notification « {title} » :", r.json())
     except Exception as e:
         print("Notification impossible :", e)
@@ -87,7 +87,11 @@ def main():
                         const f = Math.max(0, ...it.map(x => x.fd||0)); return it.filter(x => x.fd === f).sort((a,b) => (b.pertinence||0)-(a.pertinence||0))
                         .slice(0,2).map(x => `${x.titre}${x.entreprise ? ' chez ' + x.entreprise : ''} (${x.pertinence}/100)`); }""")
                     n = int(res.get("nouvelles"))
-                    push("offres", f"{n} nouvelle{'s' if n > 1 else ''} offre{'s' if n > 1 else ''} pour toi", " ; ".join(top), "./?v=sugg")
+                    try:
+                        badge = int(page.evaluate("() => window.CE_badgeN ? window.CE_badgeN() : 0"))
+                    except Exception:
+                        badge = None
+                    push("offres", f"{n} nouvelle{'s' if n > 1 else ''} offre{'s' if n > 1 else ''} pour toi", " ; ".join(top), "./?v=sugg", badge=badge)
             if MODE == "mail":
                 page.evaluate("() => { window.CE_ML_DONE = null; window.CE_mlCheck(true); }")
                 page.wait_for_function("() => window.CE_ML_DONE", timeout=10 * 60000, polling=2000)

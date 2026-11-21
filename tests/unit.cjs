@@ -66,4 +66,11 @@ h = S.salHtml(off("", { bas: 30, haut: 36, explication: "Marché réunionnais" }
 eq("outre-mer : estimation affichée", /30 k€ à 36 k€/.test(h), true);
 h = S.salHtml(off("38 - 42 k€", { bas: 34, haut: 40, explication: "" }, "Approvisionneur", "Brest"));
 eq("offre dans le marché : prétentions dans leur fourchette", pret(h) >= 38 && pret(h) <= 42, true);
+// Offre ancienne : mention à partir de 3 semaines en ligne, rien avant ni sans date
+const AG = pick(["ageLine"]);
+global.pubOf = (x) => x.pub;
+eq("offre de 40 jours : mention", /En ligne depuis 40 jours/.test(AG.ageLine({ pub: Date.now() - 40 * 864e5 })), true);
+eq("offre de 3 mois : plus de 2 mois", /plus de 2 mois/.test(AG.ageLine({ pub: Date.now() - 95 * 864e5 })), true);
+eq("offre récente : rien", AG.ageLine({ pub: Date.now() - 5 * 864e5 }), "");
+eq("date inconnue : rien", AG.ageLine({}), "");
 done("Règles de l'app");

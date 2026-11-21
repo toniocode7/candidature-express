@@ -13,6 +13,7 @@ const VER = (process.argv[3] || "local").slice(0, 8);
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.cpSync(SRC, OUT, { recursive: true });
+fs.rmSync(path.join(OUT, "app"), { recursive: true, force: true }); // sources par thème : seul leur assemblage app.js est publié
 
 const rd = f => fs.readFileSync(path.join(OUT, f), "utf8");
 const wr = (f, s) => fs.writeFileSync(path.join(OUT, f), s);

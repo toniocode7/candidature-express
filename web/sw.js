@@ -65,6 +65,10 @@ self.addEventListener("fetch", e => {
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { title: "Candidature Express", body: e.data ? e.data.text() : "" }; }
+  // Pastille sur l'icône : mise à jour même app fermée quand la notification en donne le nombre.
+  if (typeof d.badge === "number" && self.navigator && self.navigator.setAppBadge) {
+    try { (d.badge > 0 ? self.navigator.setAppBadge(d.badge) : self.navigator.clearAppBadge()).catch(() => {}); } catch (_) {}
+  }
   e.waitUntil(self.registration.showNotification(d.title || "Candidature Express", {
     body: d.body || "", tag: d.tag || undefined, icon: "icons/icon-192.png", badge: "icons/icon-192.png", data: { url: d.url || "./" }
   }));

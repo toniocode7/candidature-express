@@ -26,7 +26,7 @@ async function prefs(): Promise<Record<string, boolean>> {
   return { offres: true, recruteur: true, statut: true, entretien: true, objectif: true, bilan: true, alerte: true, ...(rows[0]?.data ?? {}), test: true };
 }
 
-async function broadcast(kind: string, title: string, body: string, url: string, tag?: string) {
+async function broadcast(kind: string, title: string, body: string, url: string, tag?: string, badge?: number) {
   const p = await prefs();
   if (!p[kind]) return { envoye: 0, raison: "désactivée dans les réglages" };
   const v = await vapid();
@@ -35,7 +35,7 @@ async function broadcast(kind: string, title: string, body: string, url: string,
   const dead: string[] = [];
   for (const s of subs) {
     try {
-      const st = await sendPush({ endpoint: s.endpoint, keys: s.keys }, { title, body, url: url || "./", tag: tag || kind }, v, SUBJECT);
+      const st = await sendPush({ endpoint: s.endpoint, keys: s.keys }, { title, body, url: url || "./", tag: tag || kind, ...(typeof badge === "number" ? { badge } : {}) }, v, SUBJECT);
       if (st === 404 || st === 410) dead.push(s.endpoint); else if (st < 300) ok++;
       console.log(`[push] ${kind} -> ${new URL(s.endpoint).host} : ${st}`);
     } catch (e) { console.log("[push] échec", String(e).slice(0, 200)); }
@@ -61,7 +61,9 @@ Deno.serve(async (req) => {
     }
     const title = b.action === "test" ? "Candidature Express" : String(b.title || "Candidature Express").slice(0, 120);
     const body = b.action === "test" ? "Les notifications fonctionnent sur cet appareil." : String(b.body || "").slice(0, 400);
-    return json(await broadcast(kind, title, body, String(b.url || "./"), b.tag));
+    // badge : nombre affiché sur l'icône de l'app (facultatif ; absent = pastille inchangée).
+    const badge = Number.isFinite(Number(b.badge)) && b.badge !== null && b.badge !== undefined ? Math.max(0, Math.min(999, Math.round(Number(b.badge)))) : undefined;
+    return json(await broadcast(kind, title, body, String(b.url || "./"), b.tag, badge));
   }
   return json({ error: "action inconnue" }, 400);
 });
