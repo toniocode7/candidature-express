@@ -72,10 +72,18 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&VIE
 (function(){var _rl=renderList;renderList=function(){_rl.apply(this,arguments);try{todoUI();homeUI()}catch(e){}};var _ml=mlUI;mlUI=function(){_ml.apply(this,arguments);try{todoUI()}catch(e){}};var _ss=sgSave;sgSave=function(){_ss.apply(this,arguments);try{todoUI()}catch(e){}}})();
 setInterval(function(){try{todoUI();homeUI()}catch(e){}},5000);
 document.querySelectorAll("dialog.sheet [data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
-document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d)d.close()})});
-function shOpen(d){if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}}}
+document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d&&Date.now()-(+d.dataset.opened||0)>600)d.close()})});
+function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}}}
 /* statut rapide */
-function stSheet(o){var d=G("stsh"),L=G("stshl");G("stshn").textContent=mlOffLabel(o);
+/* Appui long sur une candidature : actions rapides + changement de statut (le toucher simple ouvre toujours la fiche). */
+function qmOpen(o){buzz();stSheet(o,true);
+/* Le doigt qui se lève après l'appui long produit un « toucher » : on l'ignore pour qu'il n'actionne pas un bouton du menu. */
+var k=function(e){e.stopPropagation();e.preventDefault();document.removeEventListener("click",k,true)};document.addEventListener("click",k,true);setTimeout(function(){document.removeEventListener("click",k,true)},800)}
+function stSheet(o,quick){var d=G("stsh"),L=G("stshl");G("stshn").textContent=mlOffLabel(o);G("stsht").textContent=quick?"Actions rapides":"Changer le statut";
+var A=G("stsha");if(A){A.hidden=!quick;if(quick){var u=o.url?viewUrl(o.sug&&o.sug.src==="indeed"?Object.assign({},o.sug,{entreprise:o.sug.entreprise||(o.an||o.meta||{}).entreprise,lieu:o.sug.lieu||(o.an||o.meta||{}).lieu}):null,o.url):"";
+A.innerHTML=(u?'<a class="sb sec" href="'+esc(u)+'" target="_blank" rel="noopener">Voir l\'annonce</a>':'')+(o.st===2||o.st===4?'<button type="button" class="sb sec" data-q="prep">Préparer l\'entretien</button>':'')+'<button type="button" class="sb sec" data-q="open">Ouvrir la fiche</button><button type="button" class="sb no" data-q="del">Supprimer</button>';
+A.querySelectorAll("[data-q]").forEach(function(b){b.onclick=function(){var q=b.getAttribute("data-q");if(q==="prep"){d.close();prepOpen(o)}else if(q==="open"){d.close();ofOpen(o)}else if(q==="del"){if(!b.dataset.ok){b.dataset.ok="1";b.textContent="Confirmer la suppression";return}d.close();offDelUndo(o);OFF=OFF.filter(function(y){return y.id!==o.id});saveOff();mark("o_"+o.id);renderList()}}});var al=A.querySelector("a");if(al)al.onclick=function(){d.close()}}}
+
 L.innerHTML=STORD.map(function(i){var cur=o.st===i;return '<button type="button" data-v="'+i+'" aria-current="'+cur+'"><span>'+esc(ST[i])+'</span>'+(cur?'<span>Actuel</span>':'')+'</button>'+(i===2&&o.st===2?'<div class="sub"><button type="button" data-ir="0" aria-current="'+(!o.ir)+'">En cours</button><button type="button" data-ir="1" aria-current="'+(!!o.ir)+'">Non retenu</button></div>':'')}).join("");
 L.querySelectorAll("[data-v]").forEach(function(b){b.onclick=function(){var v=+b.getAttribute("data-v");if(v!==o.st){cmdApply(o.id,v,false);if(v===1)o.sentAt=Date.now()}d.close()}});
 L.querySelectorAll("[data-ir]").forEach(function(b){b.onclick=function(){cmdApply(o.id,2,b.getAttribute("data-ir")==="1");d.close()}});

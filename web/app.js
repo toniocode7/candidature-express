@@ -248,10 +248,18 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&VIE
 (function(){var _rl=renderList;renderList=function(){_rl.apply(this,arguments);try{todoUI();homeUI()}catch(e){}};var _ml=mlUI;mlUI=function(){_ml.apply(this,arguments);try{todoUI()}catch(e){}};var _ss=sgSave;sgSave=function(){_ss.apply(this,arguments);try{todoUI()}catch(e){}}})();
 setInterval(function(){try{todoUI();homeUI()}catch(e){}},5000);
 document.querySelectorAll("dialog.sheet [data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
-document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d)d.close()})});
-function shOpen(d){if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}}}
+document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d&&Date.now()-(+d.dataset.opened||0)>600)d.close()})});
+function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}}}
 /* statut rapide */
-function stSheet(o){var d=G("stsh"),L=G("stshl");G("stshn").textContent=mlOffLabel(o);
+/* Appui long sur une candidature : actions rapides + changement de statut (le toucher simple ouvre toujours la fiche). */
+function qmOpen(o){buzz();stSheet(o,true);
+/* Le doigt qui se lève après l'appui long produit un « toucher » : on l'ignore pour qu'il n'actionne pas un bouton du menu. */
+var k=function(e){e.stopPropagation();e.preventDefault();document.removeEventListener("click",k,true)};document.addEventListener("click",k,true);setTimeout(function(){document.removeEventListener("click",k,true)},800)}
+function stSheet(o,quick){var d=G("stsh"),L=G("stshl");G("stshn").textContent=mlOffLabel(o);G("stsht").textContent=quick?"Actions rapides":"Changer le statut";
+var A=G("stsha");if(A){A.hidden=!quick;if(quick){var u=o.url?viewUrl(o.sug&&o.sug.src==="indeed"?Object.assign({},o.sug,{entreprise:o.sug.entreprise||(o.an||o.meta||{}).entreprise,lieu:o.sug.lieu||(o.an||o.meta||{}).lieu}):null,o.url):"";
+A.innerHTML=(u?'<a class="sb sec" href="'+esc(u)+'" target="_blank" rel="noopener">Voir l\'annonce</a>':'')+(o.st===2||o.st===4?'<button type="button" class="sb sec" data-q="prep">Préparer l\'entretien</button>':'')+'<button type="button" class="sb sec" data-q="open">Ouvrir la fiche</button><button type="button" class="sb no" data-q="del">Supprimer</button>';
+A.querySelectorAll("[data-q]").forEach(function(b){b.onclick=function(){var q=b.getAttribute("data-q");if(q==="prep"){d.close();prepOpen(o)}else if(q==="open"){d.close();ofOpen(o)}else if(q==="del"){if(!b.dataset.ok){b.dataset.ok="1";b.textContent="Confirmer la suppression";return}d.close();offDelUndo(o);OFF=OFF.filter(function(y){return y.id!==o.id});saveOff();mark("o_"+o.id);renderList()}}});var al=A.querySelector("a");if(al)al.onclick=function(){d.close()}}}
+
 L.innerHTML=STORD.map(function(i){var cur=o.st===i;return '<button type="button" data-v="'+i+'" aria-current="'+cur+'"><span>'+esc(ST[i])+'</span>'+(cur?'<span>Actuel</span>':'')+'</button>'+(i===2&&o.st===2?'<div class="sub"><button type="button" data-ir="0" aria-current="'+(!o.ir)+'">En cours</button><button type="button" data-ir="1" aria-current="'+(!!o.ir)+'">Non retenu</button></div>':'')}).join("");
 L.querySelectorAll("[data-v]").forEach(function(b){b.onclick=function(){var v=+b.getAttribute("data-v");if(v!==o.st){cmdApply(o.id,v,false);if(v===1)o.sentAt=Date.now()}d.close()}});
 L.querySelectorAll("[data-ir]").forEach(function(b){b.onclick=function(){cmdApply(o.id,2,b.getAttribute("data-ir")==="1");d.close()}});
@@ -362,7 +370,7 @@ R.hidden=false;G("recapok").onclick=function(){lss("recap",key);R.hidden=true}}
 function goalUI(){var Gd=G("goal");if(!Gd)return;var g=+SETV().goal||0,ws=dWeekStart(Date.now()),n=OFF.filter(function(o){return o.st>=1&&dSent(o)>=ws}).length;
 if(!g){Gd.innerHTML='<h3>Objectif de la semaine</h3><p class="note" style="margin:0">'+n+' candidature'+(n>1?'s':'')+' envoyée'+(n>1?'s':'')+' depuis lundi.</p>'+(n?'<div class="glk"><button type="button" class="lk" id="goallist">Voir les '+n+' de la semaine</button>':'<div class="glk">')+'<button type="button" class="lk" id="goalset">Me fixer un objectif</button></div>'}
 else{var pc=Math.min(100,Math.round(n*100/g)),left=g-n,d=new Date().getDay(),days=d===0?1:8-d;
-Gd.innerHTML='<h3>Objectif de la semaine</h3><div class="gl"><b>'+n+' / '+g+'</b><small>'+(left<=0?'Objectif atteint, bravo !':'encore '+left+' · '+days+' jour'+(days>1?'s':'')+' restant'+(days>1?'s':''))+'</small></div><div class="gbar" role="progressbar" aria-valuemin="0" aria-valuemax="'+g+'" aria-valuenow="'+n+'"><i class="'+(left<=0?'done':'')+'" style="width:'+pc+'%"></i></div><div class="glk"><button type="button" class="lk" id="goallist">Voir les '+n+' de la semaine</button><button type="button" class="lk" id="goalset">Changer l\'objectif</button></div>'}
+var RC=2*Math.PI*19;Gd.innerHTML='<h3>Objectif de la semaine</h3><div class="gring"><div class="grg" role="progressbar" aria-valuemin="0" aria-valuemax="'+g+'" aria-valuenow="'+n+'"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="gtr" cx="22" cy="22" r="19"/><circle class="gpr'+(left<=0?' done':'')+'"'+(pc?'':' style="opacity:0"')+' cx="22" cy="22" r="19" stroke-dasharray="'+(RC*pc/100).toFixed(1)+' '+RC.toFixed(1)+'"/></svg><b>'+n+'<small>/'+g+'</small></b></div><div class="gl"><b>'+(left<=0?'Objectif atteint, bravo !':'Encore '+left+' candidature'+(left>1?'s':''))+'</b><small>'+(left<=0?'Tu peux continuer sur ta lancée.':days+' jour'+(days>1?'s':'')+' restant'+(days>1?'s':'')+' cette semaine')+'</small></div></div><div class="glk"><button type="button" class="lk" id="goallist">Voir les '+n+' de la semaine</button><button type="button" class="lk" id="goalset">Changer l\'objectif</button></div>'}
 G("goalset").onclick=function(){openSet();spGo("suivi")};var gl=G("goallist");if(gl)gl.onclick=wkOpen}
 (function(){var _h=homeUI;homeUI=function(){_h.apply(this,arguments);try{recapUI();goalUI()}catch(e){}}})();
 /* stats utiles */
@@ -1086,7 +1094,7 @@ catch(e){n.textContent=e&&e.code==="vide"?"Je n'ai pas trouvé d'annonce lisible
 BUSY=false;b.disabled=!SHOTS.length;b.textContent="Analyser les captures"};
 async function analyse(o,box){var sample=null;try{sample=await claude.use("sample")}catch(e){}
 if(!sample){CUR=o.id;renderRes();G("res").insertAdjacentHTML("afterbegin",'<p class="dup">L\'analyse n\'est pas disponible dans cette vue. Elle arrive dans une prochaine mise à jour.</p>');return}
-BUSY=true;G("go").disabled=true;var R=box||G("res");if(!box)R.hidden=false;R.innerHTML='<div class="loading"><span class="spin" aria-hidden="true"></span><span>Lecture de l\'annonce et comparaison avec ton CV...</span></div>';if(!box){setView("pastewrap");R.scrollIntoView({behavior:"smooth",block:"start"})}
+BUSY=true;G("go").disabled=true;var R=box||G("res");if(!box)R.hidden=false;anSteps(R);if(!box){setView("pastewrap");R.scrollIntoView({behavior:"smooth",block:"start"})}
 try{var cv=cvFor("fr");var home=pfLoc()||"inconnu";
 var a=await sample.json(RULES+"\nTu analyses une offre d'emploi classique (CDI, CDD, intérim, alternance...) pour le candidat dont voici le CV. Nous sommes le "+TODAY()+". Le candidat est prêt à déménager là où se trouve le poste : la localisation, la distance avec son domicile et le trajet ne sont jamais un critère, ni dans la note, ni dans les points faibles, ni dans le verdict. Réponds en JSON seulement :\n{\"poste\":\"intitulé du poste\",\"entreprise\":\"entreprise qui recrute ; pour l'intérim, l'agence et le client s'il est nommé (ex. Samsic Emploi pour un client industriel) ; vide si inconnue\",\"lieu\":\"ville et département ou pays\",\"contrat\":\"CDI, CDD, Intérim, Alternance, Stage, Freelance ou Autre\",\"duree\":\"durée ou dates si indiquées, sinon vide\",\"horaires\":\"horaires ou rythme si indiqués, sinon vide\",\"salaire\":\"tel qu'indiqué, sinon vide\",\"langue\":\"fr, en ou es : langue de l'annonce\",\"resume\":[\"4 à 6 points courts en français : missions, environnement, conditions\"],\"criteres\":[{\"id\":\"metier\",\"note\":0,\"na\":false,\"pourquoi\":\"\"}],\"bloquant\":\"\",\"verdict\":\"une phrase franche en français\",\"forts\":[\"3 à 5 points où le CV répond à l'offre, en citant ce que le candidat a fait\"],\"faibles\":[\"2 à 4 exigences non couvertes ou écarts\"],\"salaire_avis\":\"une phrase sur le salaire pour ce poste, ce niveau et cette région, ou dire qu'il n'est pas indiqué\",\"salaire_marche\":{\"bas\":0,\"haut\":0,\"explication\":\"\"},\"motscles\":[\"8 à 14 mots-clés de l'annonce utiles pour les filtres ATS\"],\"conseil\":\"un conseil concret pour réussir cette candidature\"}\nNOTATION, à suivre strictement : donne exactement 6 critères, dans cet ordre, avec ces id : metier (les missions principales du poste : le candidat les a-t-il déjà faites ?), experience (durée et niveau d'expérience demandés comparés aux siens : alternances et stages comptent, un emploi d'été ou d'intérim sans rapport ne compte pas), formation (niveau et domaine du diplôme demandé), outils (logiciels et savoir-faire techniques demandés : SAP, Excel, douane, Incoterms, TMS, CACES...), langues (langues demandées et niveau ; si l'annonce ne demande aucune langue, mets na à true : ne pénalise jamais le candidat pour une exigence que l'annonce ne formule pas), secteur (connaissance du secteur ou de l'environnement : industrie, transport, négoce...). Chaque note est un entier de 0 à 4 selon cette grille : 0 = rien dans le CV ne s'en approche ; 1 = lien lointain ou transposable seulement ; 2 = couvert en partie (certaines missions ou un niveau un peu en dessous) ; 3 = bien couvert, avec un petit écart ; 4 = couvert entièrement et prouvé par une expérience du CV. Mets na à true dès que l'annonce ne dit rien de ce critère (aucune langue, aucun outil, aucun secteur demandés...) : un critère absent de l'annonce ne doit ni baisser ni monter la note. pourquoi : une phrase courte qui cite l'exigence de l'annonce et le fait du CV. Note chaque critère indépendamment, sans viser un total, et ne donne jamais la même note par défaut. salaire_marche : la fourchette du MARCHÉ (pas celle de l'annonce), en k€ brut annuel, pour CE poste réel (ses missions, pas seulement son intitulé), ce secteur, ce lieu et TON profil (junior bac+5, avec l'expérience de ton CV) ; en outre-mer, droit du travail français mais usages locaux ; à l'étranger, marché local converti en euros ; explication : une phrase qui tutoie et dit sur quoi tu te fondes. bloquant : une exigence obligatoire et vérifiable que le candidat n'a clairement pas (diplôme réglementé, CACES, permis spécifique, nombre d'années explicitement exigé et très supérieur, langue imposée qu'il ne parle pas), sinon vide. Le verdict doit être cohérent avec ces notes. Le texte peut être une page web complète (menus, bandeau cookies, autres offres, pied de page) : ne tiens compte que de l'annonce principale. ADRESSE-TOI DIRECTEMENT AU CANDIDAT : tous les textes en français (resume, pourquoi, bloquant, verdict, forts, faibles, salaire_avis, conseil) parlent à la deuxième personne en le tutoyant (« tu as déjà géré... », « ton alternance chez... », « tes compétences »). N'écris jamais « le candidat », « il », « son », « sa » ou « ses » pour parler de lui.\n\nCV :\n"+cv.text+"\n\n"+offerTxt(o),{cache:false,modelTier:"default"});
 a.criteres=normCrit(a.criteres);critGuard(a,o.txt);a.score=calcScore(a);["resume","forts","faibles","motscles"].forEach(function(k){if(!Array.isArray(a[k]))a[k]=[]});
@@ -1168,12 +1176,17 @@ L.innerHTML=SPADD+CMPB+SHOW.map(function(o,ix){var _sp=ix===SEPI?SEPH:"";try{var
 if(G("cmpgo"))G("cmpgo").onclick=cmpOpen;if(G("spadd"))G("spadd").onclick=function(){spOpen(null)};
 L.querySelectorAll(".oi").forEach(function(el){var id=el.getAttribute("data-id"),o=find(id);var itb=el.querySelector(".it"),lpT=0,lpDone=false;
 itb.onclick=function(e){if(lpDone||itb.lpDone){lpDone=false;return}if(o&&e&&e.target&&e.target.closest&&e.target.closest(".pill")){stSheet(o);return}if(o)ofOpen(o)};try{swBind(el,o,itb)}catch(er){}
-itb.addEventListener("pointerdown",function(){clearTimeout(lpT);lpDone=false;lpT=setTimeout(function(){lpDone=true;if(o)stSheet(o)},550)});["pointerup","pointerleave","pointercancel","pointermove"].forEach(function(ev){itb.addEventListener(ev,function(e){if(ev==="pointermove"&&Math.abs(e.movementY||0)<3&&Math.abs(e.movementX||0)<3)return;clearTimeout(lpT)})});
+itb.addEventListener("pointerdown",function(){clearTimeout(lpT);lpDone=false;lpT=setTimeout(function(){lpDone=true;if(o)qmOpen(o)},550)});["pointerup","pointerleave","pointercancel","pointermove"].forEach(function(ev){itb.addEventListener(ev,function(e){if(ev==="pointermove"&&Math.abs(e.movementY||0)<3&&Math.abs(e.movementX||0)<3)return;clearTimeout(lpT)})});
 itb.addEventListener("contextmenu",function(e){e.preventDefault()});
 var pb=el.querySelector("[data-prep]");if(pb&&o)pb.onclick=function(){prepOpen(o)};var pob=el.querySelector("[data-post]");if(pob&&o)pob.onclick=function(){postOpen(o)};var ivb=el.querySelector("[data-iv]");if(ivb&&o)ivb.onclick=function(){ivOpen(o)};var icb=el.querySelector("[data-ics]");if(icb&&o)icb.onclick=function(ev){ev.stopPropagation();CE_ics(o.id)};
 el.querySelectorAll("[data-ir]").forEach(function(bt){bt.onclick=function(){var v=+bt.getAttribute("data-ir");if(!o||(o.ir||0)===v)return;o.ir=v;touch(o);saveOff();mark("o_"+o.id,1);renderList()}});
 var b=el.querySelector(".oib");if(b&&o){setTimeout(function(){try{salMount(b,o)}catch(e){}try{histMount(b,o)}catch(e){}},0)}if(b&&o){try{if(o.an)b.innerHTML=resInner(o,true);else b.innerHTML=noAn(o)}catch(e){b.innerHTML=noAn(o)}try{bindRes(b,o,true)}catch(e){}}})}
 
+/* Analyse en cours : les étapes s'affichent l'une après l'autre (estimation : l'IA fait tout en une seule réponse). */
+function anSteps(R){var S=["Lecture de l'annonce","Comparaison avec ton CV","Points forts et écarts","Salaire du marché","Note et verdict"],T=[0,2500,7000,12000,16500],t0=Date.now();
+R.innerHTML='<div class="loading ansteps" role="status"><ol>'+S.map(function(s,i){return '<li data-s="'+i+'"><i aria-hidden="true"></i><span>'+esc(s)+'</span></li>'}).join("")+'</ol></div>';
+function tick(){var box=R.querySelector(".ansteps");if(!box){clearInterval(iv);return}var e=Date.now()-t0;box.querySelectorAll("li").forEach(function(li,i){var on=e>=T[i],nx=i+1<T.length?e>=T[i+1]:false;li.className=nx?"ok":on?"cur":""})}
+var iv=setInterval(tick,250);tick()}
 /* ---------- Suggestions d'offres ---------- */
 var CTS=["CDI","CDD","Intérim"];
 var SG=Object.assign({kw:"supply chain, achats, approvisionnement, import export",kwen:"supply chain, procurement, purchasing, logistics, import export",lieux:"Brest, Paris, Marseille",drom:"La Réunion, Martinique, Guadeloupe, Guyane, Mayotte, Nouvelle-Calédonie, Polynésie française",etr:"États-Unis, Canada, Suisse, Londres, Amsterdam, Stockholm, Copenhague, Barcelone, Budapest, Bruxelles, Prague",ent:"Thales, Naval Group, Safran, Dassault Aviation, Airbus, MBDA, LVMH",zf:true,zd:true,ze:true,zc:true,ct:["CDI","CDD","Intérim"],items:[],hidden:[],at:0,mt:0},lsg("sugg",{}));
@@ -1489,6 +1502,79 @@ if(v>=90){setTimeout(function(){var b=art.querySelector('[data-a="an"]');if(b)b.
 art.addEventListener("pointerup",end);art.addEventListener("pointercancel",end);
 /* Un glissement ne doit pas compter comme un toucher sur le bouton où le doigt s'est posé. */
 art.addEventListener("click",function(e){if(e.isTrusted&&Date.now()-moved<350){e.preventDefault();e.stopPropagation()}},true)}
+
+/* ---------- Gestes, vibrations, transitions, fêtes et calendrier ---------- */
+var RMOT=false;try{RMOT=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
+
+/* Petite vibration quand un geste est validé. L'iPhone n'autorise pas les vibrations dans une app web : on utilise
+   l'interrupteur natif de Safari (iOS 18 et plus), qui fait vibrer quand il change d'état. Sans effet ailleurs. */
+var HAP=null;
+function buzz(){try{if(navigator.vibrate&&!/iPhone|iPad/.test(navigator.userAgent)){navigator.vibrate(10);return}
+if(!HAP){var l=document.createElement("label"),i=document.createElement("input");l.setAttribute("aria-hidden","true");l.style.cssText="position:fixed;left:-200px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none";i.type="checkbox";i.setAttribute("switch","");i.tabIndex=-1;l.appendChild(i);document.body.appendChild(l);HAP=l}
+HAP.click()}catch(e){}}
+
+/* Barre du bas : faire glisser le doigt d'un onglet à l'autre ; l'onglet sous le doigt s'allume, on y va au relâchement. */
+(function(){var N=G("bnav");if(!N)return;var act=false,cur=null,moved=false;
+function at(x,y){var e=document.elementFromPoint(x,y);return e&&e.closest?e.closest("#bnav [data-go]"):null}
+function clear(){N.querySelectorAll(".scrub").forEach(function(b){b.classList.remove("scrub")})}
+N.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse")return;act=true;moved=false;cur=at(e.clientX,e.clientY);try{N.setPointerCapture(e.pointerId)}catch(er){}});
+N.addEventListener("pointermove",function(e){if(!act)return;var b=at(e.clientX,Math.min(e.clientY,N.getBoundingClientRect().bottom-4));if(b&&b!==cur){cur=b;moved=true;clear();b.classList.add("scrub");buzz()}});
+function end(){if(!act)return;act=false;clear();if(moved&&cur){N.dataset.skip="1";goTo(cur.getAttribute("data-go"));setTimeout(function(){delete N.dataset.skip},450)}}
+N.addEventListener("pointerup",end);N.addEventListener("pointercancel",function(){act=false;clear()});
+N.addEventListener("click",function(e){if(N.dataset.skip){e.stopPropagation();e.preventDefault()}},true)})();
+
+/* Fenêtres du bas : les tirer vers le bas pour les fermer (depuis l'en-tête, ou n'importe où quand le contenu est en haut). */
+(function(){var S=null;
+document.addEventListener("touchstart",function(e){var d=e.target.closest&&e.target.closest("dialog.sheet[open]");S=null;if(!d||innerWidth>=700||e.touches.length>1)return;
+if(e.target.closest("input,textarea,select,.simrec,.mpbox,.calg"))return;if(d.scrollTop>2&&!e.target.closest(".shh"))return;
+S={d:d,y0:e.touches[0].clientY,x0:e.touches[0].clientX,dy:0,t0:Date.now(),on:false}},{passive:true});
+document.addEventListener("touchmove",function(e){if(!S)return;var dy=e.touches[0].clientY-S.y0,dx=e.touches[0].clientX-S.x0;
+if(!S.on){if(dy>10&&dy>Math.abs(dx)*1.3&&S.d.scrollTop<=2){S.on=true;S.d.style.transition="none"}else if(Math.abs(dx)>12||dy<-6){S=null;return}else return}
+e.preventDefault();S.dy=Math.max(0,dy);S.d.style.transform="translateY("+S.dy+"px)"},{passive:false});
+function end(){if(!S||!S.on){S=null;return}var d=S.d,v=S.dy/Math.max(1,Date.now()-S.t0);S=null;
+if(d.style.transform&&(parseFloat(d.style.transform.slice(11))>130||(v>0.7&&parseFloat(d.style.transform.slice(11))>45))){buzz();d.style.transition="transform .2s ease-in";d.style.transform="translateY(105%)";setTimeout(function(){d.close();d.style.transform="";d.style.transition=""},190)}
+else{d.style.transition="transform .22s cubic-bezier(.2,.8,.2,1)";d.style.transform="";setTimeout(function(){d.style.transition=""},230)}}
+document.addEventListener("touchend",end);document.addEventListener("touchcancel",end)})();
+
+/* Tirer l'écran vers le bas (en haut de page) : récupère les dernières données de ta base.
+   Ni recherche ni lecture de mails : ceux-là restent sur leurs boutons. */
+(function(){var P=null,ind=null,busy=false;
+function pill(t,on){if(!ind){ind=document.createElement("div");ind.className="ptr";ind.setAttribute("role","status");document.body.appendChild(ind)}ind.textContent=t;ind.classList.toggle("on",!!on)}
+document.addEventListener("touchstart",function(e){P=null;if(busy||window.scrollY>0||e.touches.length>1||document.querySelector("dialog[open]"))return;if(e.target.closest&&e.target.closest("#bnav,.mpbox,input,textarea,select"))return;P={y0:e.touches[0].clientY,x0:e.touches[0].clientX,dy:0}},{passive:true});
+document.addEventListener("touchmove",function(e){if(!P)return;var dy=e.touches[0].clientY-P.y0,dx=e.touches[0].clientX-P.x0;if(window.scrollY>0||Math.abs(dx)>Math.abs(dy)){if(P.dy<10){P=null;if(ind)ind.classList.remove("on")}return}
+P.dy=dy;if(dy>25){var r=dy>85;if(r&&!P.r)buzz();P.r=r;pill(r?"Relâche pour actualiser":"Tire pour actualiser",true);ind.style.transform="translate(-50%,"+Math.min(40,dy/3)+"px)"}},{passive:true});
+document.addEventListener("touchend",async function(){if(!P)return;var go=P.r;P=null;if(!ind)return;ind.style.transform="";if(!go){ind.classList.remove("on");return}
+busy=true;pill("Actualisation...",true);try{await pull();pill("À jour",true)}catch(e){pill("Pas de connexion pour l'instant",true)}busy=false;setTimeout(function(){if(ind)ind.classList.remove("on")},900)})})();
+
+/* Transitions : l'onglet qui arrive glisse légèrement depuis le côté d'où l'on vient. */
+(function(){var ORDER=["home","pastewrap","sugbox","histbox","dashbox"],_sv=setView;
+setView=function(v){var from=VIEW,r=_sv.apply(this,arguments);try{if(!RMOT&&!window.CE_BG&&from!==VIEW&&VIEWS[VIEW]){var c=ORDER.indexOf(VIEW)>=ORDER.indexOf(from)?"vin-n":"vin-p";
+VIEWS[VIEW].forEach(function(id){var e=G(id);if(!e)return;e.classList.remove("vin-n","vin-p");void e.offsetWidth;e.classList.add(c)});if(VIEW==="dashbox")calUI()}}catch(e){}return r}})();
+
+/* Fête : confettis quand une candidature passe en Entretien (une seule fois par candidature, sur chaque appareil). */
+function confetti(){if(RMOT)return;var c=document.createElement("canvas"),x=c.getContext("2d"),W=innerWidth,H=innerHeight,dpr=Math.min(2,devicePixelRatio||1);c.className="cnf";c.width=W*dpr;c.height=H*dpr;document.body.appendChild(c);x.scale(dpr,dpr);
+var col=["#4338CA","#8B85F8","#16A34A","#F59E0B","#EC4899","#06B6D4"],P=[];for(var i=0;i<140;i++)P.push({x:W/2+(Math.random()-.5)*W*.3,y:H*.35,vx:(Math.random()-.5)*9,vy:-Math.random()*11-4,s:4+Math.random()*5,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:col[i%col.length]});
+var t0=performance.now();(function f(t){var k=(t-t0)/1000;x.clearRect(0,0,W,H);P.forEach(function(p){p.vy+=.32;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;x.save();x.globalAlpha=Math.max(0,1-k/2.2);x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66);x.restore()});if(k<2.2)requestAnimationFrame(f);else c.remove()})(t0)}
+function celebCheck(){if(window.CE_BG)return;var C=lsg("celeb",null),cand=OFF.filter(function(o){return o.st===2&&!o.ir});if(C===null){lss("celeb",cand.map(function(o){return o.id}));return}
+var nw=cand.filter(function(o){return C.indexOf(o.id)<0});if(!nw.length)return;lss("celeb",C.concat(nw.map(function(o){return o.id})).slice(-500));setTimeout(function(){confetti();buzz()},250)}
+(function(){var _r=renderList;renderList=function(){_r.apply(this,arguments);try{celebCheck()}catch(e){}try{if(VIEW==="dashbox")calUI()}catch(e){}}})();
+
+/* ---------- Calendrier (onglet Stats) ---------- */
+var CALM=null,CALD=null;
+function calEvents(){var E={};function add(t,ev){var d=new Date(t),k=d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();(E[k]=E[k]||[]).push(ev)}
+OFF.forEach(function(o){if(o.iv&&o.iv.at&&(o.st===2||o.st===4)&&!o.ir)add(o.iv.at,{k:"iv",t:o.iv.at,o:o});if(o.st!=null&&o.st!==0){var s=dSent(o);if(s)add(s,{k:"sent",t:s,o:o})}});return E}
+function calUI(){var B=G("calbox");if(!B)return;var now=new Date();if(!CALM)CALM=new Date(now.getFullYear(),now.getMonth(),1);var E=calEvents(),y=CALM.getFullYear(),m=CALM.getMonth(),first=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+var h='<div class="calh"><button type="button" class="gear" data-cm="-1" aria-label="Mois précédent"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><h3>'+esc(CALM.toLocaleDateString("fr-FR",{month:"long",year:"numeric"}))+'</h3><button type="button" class="gear" data-cm="1" aria-label="Mois suivant"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div><div class="calg" role="grid">'+["L","M","M","J","V","S","D"].map(function(d){return '<span class="cwd">'+d+'</span>'}).join("");
+for(var i=0;i<first;i++)h+='<span></span>';
+for(var d=1;d<=days;d++){var k=y+"-"+(m+1)+"-"+d,ev=E[k]||[],iv=ev.filter(function(e){return e.k==="iv"}).length,sn=ev.filter(function(e){return e.k==="sent"}).length,today=now.getFullYear()===y&&now.getMonth()===m&&now.getDate()===d;
+h+='<button type="button" class="cday'+(today?' today':'')+(CALD===k?' sel':'')+(ev.length?' has':'')+'" data-k="'+k+'" aria-label="'+d+(iv?", "+iv+" entretien"+(iv>1?"s":""):"")+(sn?", "+sn+" envoyée"+(sn>1?"s":""):"")+'"><b>'+d+'</b><i>'+(iv?'<em class="civ"></em>':'')+(sn?'<em class="csn"></em>':'')+'</i></button>'}
+h+='</div><p class="note callg"><span><em class="civ"></em>Entretien ou appel prévu</span><span><em class="csn"></em>Candidature envoyée</span></p><div id="calday"></div>';
+B.innerHTML='<div class="dcard">'+h+'</div>';
+B.querySelectorAll("[data-cm]").forEach(function(b){b.onclick=function(){CALM=new Date(y,m+(+b.getAttribute("data-cm")),1);CALD=null;calUI()}});
+B.querySelectorAll("[data-k]").forEach(function(b){b.onclick=function(){CALD=CALD===b.getAttribute("data-k")?null:b.getAttribute("data-k");calUI()}});
+if(CALD){var L=(E[CALD]||[]).sort(function(a,b){return a.t-b.t}),p=CALD.split("-"),dd=new Date(+p[0],+p[1]-1,+p[2]);
+G("calday").innerHTML='<h4>'+esc(dd.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"}))+'</h4>'+(L.length?L.map(function(e,i){var o=e.o;return '<button type="button" class="cali" data-ci="'+i+'"><span class="'+(e.k==="iv"?"civ":"csn")+'"></span><span><b>'+esc(e.k==="iv"?(o.st===4?"Appel":"Entretien")+(o.iv.noh?"":" à "+new Date(e.t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})):"Candidature envoyée")+'</b><small>'+esc([dInfo(o).poste,coName(o)].filter(Boolean).join(" · "))+'</small></span></button>'}).join(""):'<p class="note">Rien ce jour-là.</p>');
+G("calday").querySelectorAll("[data-ci]").forEach(function(b){b.onclick=function(){var e=L[+b.getAttribute("data-ci")];if(e)ofOpen(e.o)}})}}
 
 /* ---------- Simulation d'entretien à la voix ---------- */
 /* Le recruteur pose ses questions à voix haute (voix de l'appareil), tu réponds en parlant : la réponse est enregistrée,

@@ -98,6 +98,44 @@ const server = http.createServer((q, r) => {
   eq("suppression : pas remise par la synchronisation", await p.evaluate((id) => JSON.parse(localStorage.getItem("candexp.off")).some((o) => o.id === id)), false);
   eq("suppression : effacée de la base", await p.evaluate((id) => !JSON.stringify(JSON.parse(localStorage.getItem("ce.demo.db") || "{}")).includes('"o_' + id + '"'), delId), true);
 
+  // --- Gestes ---
+  const tdrag = async (pts, holdMs = 0) => {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [pts[0]] });
+    if (holdMs) await p.waitForTimeout(holdMs);
+    for (const q of pts.slice(1)) { await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [q] }); await p.waitForTimeout(16); }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  };
+  // Barre du bas : glisser du premier onglet jusqu'à Candidatures
+  const nb = await p.$$eval("#bnav [data-go]", (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, go: b.getAttribute("data-go") }; }));
+  const hi = nb.findIndex((b) => b.go === "histbox");
+  await tdrag(Array.from({ length: 12 }, (_, k) => ({ x: nb[0].x + (nb[hi].x - nb[0].x) * k / 11, y: nb[0].y })));
+  await p.waitForTimeout(500);
+  eq("barre du bas : on arrive sur l'onglet où le doigt se lève", await p.evaluate(() => !document.getElementById("histbox").classList.contains("offv")), true);
+  // Appui long sur une candidature : actions rapides ; toucher la pastille de statut : changement de statut seul
+  const it = await p.$eval("#list .oi .it", (e) => { const r = e.getBoundingClientRect(); return { x: r.x + 60, y: r.y + 20 }; });
+  await tdrag([it, it], 800);
+  await p.waitForTimeout(300);
+  eq("appui long : actions rapides", await p.$eval("#stsh", (d) => d.open && !document.getElementById("stsha").hidden && /Actions rapides/.test(d.textContent) && /Supprimer/.test(d.textContent)), true);
+  // Tirer la fenêtre vers le bas depuis son en-tête : elle se ferme
+  const sh = await p.$eval("#stsh .shh", (e) => { const r = e.getBoundingClientRect(); return { x: r.x + 40, y: r.y + 12 }; });
+  await tdrag(Array.from({ length: 10 }, (_, k) => ({ x: sh.x, y: sh.y + k * 25 })));
+  await p.waitForTimeout(500);
+  eq("fenêtre tirée vers le bas : fermée", await p.$eval("#stsh", (d) => d.open), false);
+  // Tirer la page vers le bas tout en haut : actualisation (sans recherche ni mails)
+  await p.evaluate(() => window.scrollTo(0, 0));
+  await tdrag(Array.from({ length: 10 }, (_, k) => ({ x: 200, y: 200 + k * 14 })));
+  await p.waitForTimeout(300);
+  eq("tirer pour actualiser : indicateur affiché", await p.evaluate(() => { const e = document.querySelector(".ptr"); return !!e && /Actualisation|À jour/.test(e.textContent); }), true);
+  // Confettis quand une candidature passe en Entretien
+  const pill = async (v) => { await p.evaluate(() => document.querySelector("#list .oi .pill").click()); await p.waitForTimeout(700); await p.evaluate((v) => document.querySelector('#stshl [data-v="' + v + '"]').click(), v); await p.waitForTimeout(300); };
+  await pill(1); await p.evaluate(() => { localStorage.setItem("candexp.celeb", "[]"); document.querySelectorAll("canvas.cnf").forEach((c) => c.remove()); });
+  await pill(2);
+  await p.waitForTimeout(700);
+  eq("entretien obtenu : confettis", await p.evaluate(() => !!document.querySelector("canvas.cnf")), true);
+  // Calendrier dans Stats : l'entretien apparaît au bon jour
+  await p.evaluate(() => document.querySelector('#bnav [data-go="dashbox"]').click()); await p.waitForTimeout(600);
+  eq("calendrier affiché", await p.$$eval("#calbox .cday", (d) => d.length) >= 28, true);
+
   // Chaque onglet s'ouvre, sans débordement horizontal
   for (let i = 0; i < 5; i++) {
     await p.click(`.bnav button >> nth=${i}`); await p.waitForTimeout(500);

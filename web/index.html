@@ -615,6 +615,29 @@ dialog h3{font-size:1.2rem;margin-bottom:12px}
 .simrec{width:88px;height:88px;border-radius:50%;border:0;background:var(--brand);color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.18);cursor:pointer}.simrec svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.simrec.on{background:var(--bad,#dc2626);animation:simp 1.4s infinite}.simrec:disabled{opacity:.45}
 @keyframes simp{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--bad,#dc2626) 45%,transparent)}50%{box-shadow:0 0 0 14px transparent}}
 .simf{border:1px solid var(--line);border-radius:12px;padding:10px 12px}.simf p{margin:6px 0}.simnote{font-size:1.3rem;color:#f59e0b;letter-spacing:2px}.simnote span{color:var(--line)}.simex{background:color-mix(in srgb,var(--good,#16a34a) 8%,transparent);border-radius:8px;padding:8px}.sima summary{cursor:pointer;color:var(--mute);font-size:.88rem}
+.bnav{touch-action:none}.bnav button.scrub{background:var(--tint);color:var(--brand);transform:scale(1.06);transition:transform .12s}
+.ptr{position:fixed;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translate(-50%,0);z-index:60;background:var(--card);border:1px solid var(--line2);border-radius:999px;padding:7px 14px;font:600 .82rem var(--fb);color:var(--ink);box-shadow:var(--shh);opacity:0;pointer-events:none;transition:opacity .15s}.ptr.on{opacity:1}
+@keyframes vin-n{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}@keyframes vin-p{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+.vin-n{animation:vin-n .24s cubic-bezier(.2,.8,.2,1)}.vin-p{animation:vin-p .24s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){.vin-n,.vin-p{animation:none}}
+.cnf{position:fixed;inset:0;width:100vw;height:100vh;z-index:90;pointer-events:none}
+.gring{display:flex;align-items:center;gap:14px;margin:6px 0 4px}.grg{position:relative;width:64px;height:64px;flex:none}.grg svg{width:64px;height:64px;transform:rotate(-90deg)}
+.grg circle{fill:none;stroke-width:5;stroke-linecap:round}.grg .gtr{stroke:var(--track)}.grg .gpr{stroke:var(--brand);transition:stroke-dasharray .5s cubic-bezier(.2,.8,.2,1)}.grg .gpr.done{stroke:var(--good)}
+.grg>b{position:absolute;inset:0;display:flex;align-items:baseline;justify-content:center;padding-top:22px;font:700 1.1rem var(--fb);line-height:1}.grg>b small{font-size:.65rem;color:var(--mute);font-weight:600}
+.gring .gl{display:flex;flex-direction:column;gap:2px}.gring .gl small{color:var(--mute)}
+.calbox{margin:0 0 14px}.calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.calh h3{text-transform:capitalize;margin:0}
+.calg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cwd{text-align:center;font:600 .72rem var(--fb);color:var(--mute);padding:2px 0}
+.cday{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;border:0;border-radius:10px;background:transparent;color:var(--ink);font:500 .9rem var(--fb);cursor:pointer;min-width:0}
+.cday i{display:flex;gap:3px;height:6px}.cday.today b{color:var(--brand);font-weight:800}.cday.sel{background:var(--tint)}.cday.has:not(.sel){background:color-mix(in srgb,var(--tint) 45%,transparent)}
+.civ,.csn{display:inline-block;width:6px;height:6px;border-radius:50%}.civ{background:var(--good)}.csn{background:var(--brand)}
+.callg{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0}.callg span{display:inline-flex;align-items:center;gap:6px}
+#calday h4{margin:12px 0 6px;text-transform:capitalize}.cali{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-top:6px;background:transparent;color:var(--ink);cursor:pointer}
+.cali>span:last-child{display:flex;flex-direction:column;min-width:0}.cali small{color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ansteps ol{list-style:none;margin:0;padding:0;display:grid;gap:10px}.ansteps li{display:flex;align-items:center;gap:10px;color:var(--mute);transition:color .2s}
+.ansteps li i{width:18px;height:18px;border-radius:50%;border:2px solid var(--line2);flex:none;position:relative}
+.ansteps li.cur{color:var(--ink);font-weight:600}.ansteps li.cur i{border-color:var(--brand);border-top-color:transparent;animation:sp .8s linear infinite}
+.ansteps li.ok{color:var(--ink)}.ansteps li.ok i{border-color:var(--good);background:var(--good)}.ansteps li.ok i::after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.qma{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.qma .sb{flex:1 1 auto;justify-content:center}
 .rcl{display:grid;gap:8px;margin-top:10px}.rci{border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}.rci b{display:block}.rci .note{margin:2px 0 0;overflow-wrap:anywhere}.rci .row{margin-top:6px;gap:6px;flex-wrap:wrap}.rch{font:700 .8rem var(--fb);color:var(--mute);margin:12px 0 0;text-transform:uppercase;letter-spacing:.04em}
 #rcq{width:100%}
 .jpq{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -683,6 +706,7 @@ dialog.sheet.ofd{height:94dvh;max-height:94dvh}@media (min-width:700px){dialog.s
 <section class="dash sugin" aria-labelledby="dh2">
   <div class="recap" id="recap" hidden></div>
   <div class="goal" id="goal"></div>
+  <div class="calbox" id="calbox" aria-label="Calendrier"></div>
   <div class="dtop"><div class="dper" role="group" aria-label="Période"><button type="button" data-per="0">Tout</button><button type="button" data-per="90">3 mois</button><button type="button" data-per="30">30 jours</button><button type="button" data-per="7">Semaine</button></div><div class="dwnav" id="dwnav" hidden><button type="button" class="chev" id="dwp" aria-label="Semaine précédente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><span id="dwl"></span><button type="button" class="chev" id="dwn" aria-label="Semaine suivante"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div></div>
   <div id="dbody"></div>
 </section>
@@ -780,7 +804,7 @@ dialog.sheet.ofd{height:94dvh;max-height:94dvh}@media (min-width:700px){dialog.s
 <button type="button" data-go="dashbox"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-7"/></svg><span>Stats</span></button>
 </nav>
 
-<dialog class="sheet" id="stsh" aria-labelledby="stsht"><div class="shh"><h3 id="stsht">Changer le statut</h3><button type="button" class="gear" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><p class="note" id="stshn"></p><div class="shl" id="stshl"></div></dialog>
+<dialog class="sheet" id="stsh" aria-labelledby="stsht"><div class="shh"><h3 id="stsht">Changer le statut</h3><button type="button" class="gear" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><p class="note" id="stshn"></p><div class="qma" id="stsha" hidden></div><div class="shl" id="stshl"></div></dialog>
 
 <dialog class="sheet" id="ivd" aria-labelledby="ivt"><div class="shh"><h3 id="ivt">Date de l'entretien</h3><button type="button" class="gear" data-close aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><p class="note" id="ivo"></p>
 <div class="pfgrid" style="margin-top:10px"><div class="full"><label for="ivdt">Date et heure</label><input id="ivdt" type="datetime-local"></div><div><label for="ivdur">Durée</label><select id="ivdur"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>1 h</option><option value="90">1 h 30</option><option value="120">2 h</option></select></div><div><label for="ivkind">Format</label><select id="ivkind"><option value="Sur place">Sur place</option><option value="Visio">Visio</option><option value="Téléphone">Téléphone</option></select></div><div class="full"><label for="ivloc">Lieu, lien ou contact (facultatif)</label><input id="ivloc" placeholder="Adresse, lien Teams, nom du recruteur..."></div></div>
