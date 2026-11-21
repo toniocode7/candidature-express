@@ -20,8 +20,7 @@ var now=Date.now(),old=OFF.filter(function(o){return o.st===1&&now-dSent(o)>21*8
 if(!out.length)out.push("Rien de marquant pour l'instant : tes réponses se répartissent à peu près pareil partout. Continue, les tendances apparaîtront avec plus d'envois.");
 return '<div class="dcard learn"><h3>Ce qu\'il faut retenir</h3><ul>'+out.slice(0,5).map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>'}
 
-/* ---------- Raison d'écart d'une suggestion ---------- */
-var WHYS=[["xp","Expérience ou responsabilités trop élevées","Expérience / responsabilités"],["loin","Localisation"],["ctr","Contrat : date de début ou durée","Date ou durée du contrat"],["sal","Salaire trop faible"],["none","Autre"]];
+/* ---------- Raisons d'écart déjà données (gardées pour le tri ; la question n'est plus posée) ---------- */
 function sgWhyTxt(){var w=(SG.why||[]).filter(function(x){return x.r&&x.r!=="none"}).slice(-40);if(!w.length)return "";var L={loin:"localisation qui ne lui convient pas",bas:"poste trop bas pour son niveau",xp:"expérience ou responsabilités trop élevées pour lui",sect:"secteur qui ne lui plaît pas",ctr:"contrat qui ne lui convient pas (date de début ou durée)",sal:"salaire trop faible"};
 return "\nOffres qu'il a écartées récemment, avec sa raison : apprends de ses choix. Écarte les offres très semblables écartées pour « expérience ou responsabilités trop élevées » (même niveau de poste, même exigence) ; baisse nettement la pertinence des offres de la même ville ou de la même région écartées pour « localisation » (ces zones-là font exception à la règle sur la localisation), des offres au contrat semblable écarté pour « contrat » (même durée courte, même date de début trop proche ou trop lointaine), et des offres semblables au salaire du même ordre écartées pour « salaire trop faible ».\n"+w.map(function(x){return "- "+[x.t,x.e,x.l,x.c].filter(Boolean).join(" | ")+" : "+(L[x.r]||x.r)}).join("\n")+"\n"}
 

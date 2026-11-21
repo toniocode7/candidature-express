@@ -120,10 +120,6 @@ try{var r=await jpPdf(f,t);var d=await claude.use("downloads");if(!d)throw{code:
 catch(e){n.textContent=e&&e.code==="cancelled"?"Annulé.":"Le PDF n'a pas pu être créé ("+(e&&(e.code||e.message)||"erreur")+").";if(window.CE_err&&!(e&&e.code))CE_err(e,"justificatif")}}})();
 
 var PREPO=null;
-function sgWhyAsk(b,u){var art=b.closest("article")||b.parentNode.parentNode,ex=art.querySelector(".sgwhy");if(ex){ex.remove();return}
-art.insertAdjacentHTML("beforeend",'<div class="sgwhy"><p>Pourquoi tu l\'écartes ? Ça m\'aide à mieux choisir les prochaines offres.</p><div class="sgwc">'+WHYS.map(function(w){return '<button type="button" data-w="'+w[0]+'" title="'+w[1]+'">'+(w[2]||w[1])+'</button>'}).join("")+'</div><button type="button" class="lk" data-wx>Annuler</button></div>');
-var W=art.querySelector(".sgwhy");try{W.scrollIntoView({block:"center",behavior:"smooth"})}catch(e){}W.querySelector("[data-wx]").onclick=function(){W.remove()};
-W.querySelectorAll("[data-w]").forEach(function(c){c.onclick=function(){var r=c.getAttribute("data-w"),it=(SG.items||[]).filter(function(y){return y.url===u})[0]||{};SG.why=(SG.why||[]).concat([{t:it.titre||"",e:it.entreprise||"",l:it.lieu||"",c:it.contrat||"",r:r,d:Date.now()}]).slice(-120);b.dataset.r=r;b.click()}})}
 function irsegHtml(o){var past=o.st===2&&!o.ir&&o.iv&&o.iv.at&&o.iv.at<Date.now(),h='<div class="irseg">';
 if(o.st===2)h+='<div class="irst" role="group" aria-label="Suivi de cet entretien"><button type="button" data-ir="0" aria-pressed="'+(!o.ir)+'">En cours</button><button type="button" data-ir="1" class="no" aria-pressed="'+(!!o.ir)+'">Non retenu</button></div>';
 if(!(o.st===2&&o.ir)){var a=[];if(o.st===2&&!past)if(o.st===2&&!past&&o.iv&&o.iv.at)a.push('<button type="button" class="ivb" data-ics title="Ajouter au Calendrier">+ Calendrier</button>');a.push('<button type="button" class="ivb" data-iv><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>'+(o.iv&&o.iv.at?esc(o.iv.noh?'Heure ?':ivFmt(o.iv.at,1)):'Fixer la date')+'</button>');

@@ -55,7 +55,7 @@ const server = http.createServer((q, r) => {
   eq("même offre déjà candidatée via un autre site : masquée", (await p.evaluate(() => window.CE_sgAudit()))["déjà candidatée (même offre)"], 1);
   eq("décompte des motifs", (await p.evaluate(() => window.CE_sgAudit())).total, 11);
 
-  // Glisser une suggestion vers la gauche : la question « Pourquoi tu l'écartes ? » s'ouvre, l'offre reste là
+  // Glisser une suggestion vers la gauche : écartée tout de suite, « Annuler » la fait revenir
   const n0 = (await shown()).length;
   const box = await p.$eval("#sgl .sgc", (e) => { const r = e.getBoundingClientRect(); return { x: r.x + r.width * 0.75, y: r.y + 30 }; });
   const cdp = await ctx.newCDPSession(p);
@@ -65,17 +65,14 @@ const server = http.createServer((q, r) => {
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   };
   await touch(Array.from({ length: 9 }, (_, k) => ({ x: box.x - k * 18, y: box.y + k * 0.3 })));
-  await p.waitForTimeout(500);
-  eq("glisser à gauche : raison demandée", await p.$$eval("#sgl .sgwhy", (w) => w.length), 1);
-  eq("glisser à gauche : offre pas encore écartée", (await shown()).length, n0);
-  await p.click("#sgl .sgwhy [data-w=loin]"); await p.waitForTimeout(400);
-  eq("raison choisie : offre écartée", (await shown()).length, n0 - 1);
+  await p.waitForTimeout(600);
+  eq("glisser à gauche : offre écartée sans question", [(await shown()).length, await p.$$eval("#sgl .sgwhy", (w) => w.length)], [n0 - 1, 0]);
   eq("bandeau Annuler affiché", await p.$eval("#toast", (e) => !e.hidden && /écartée/.test(e.textContent)), true);
   await p.click("#toastu"); await p.waitForTimeout(400);
   eq("Annuler : l'offre revient", (await shown()).length, n0);
   // Un petit déplacement vertical (défilement) ne déclenche rien
   await touch(Array.from({ length: 6 }, (_, k) => ({ x: box.x + k * 0.5, y: box.y + k * 12 }))); await p.waitForTimeout(300);
-  eq("défilement : rien ne se déclenche", await p.$$eval("#sgl .sgwhy", (w) => w.length), 0);
+  eq("défilement : rien ne se déclenche", (await shown()).length, n0);
 
   // Pastille : les nouvelles suggestions ne comptent plus une fois l'onglet Suggérées ouvert
   eq("pastille : suggestions vues, plus comptées", await p.evaluate(() => { const s = JSON.parse(localStorage.getItem("candexp.sugg")); return s.seenAt === s.at && typeof window.CE_badgeN() === "number"; }), true);
