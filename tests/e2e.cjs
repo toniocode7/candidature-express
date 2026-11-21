@@ -43,7 +43,7 @@ const server = http.createServer((q, r) => {
   const shown = () => p.$$eval("#sgl .sgc h3", (h) => h.map((x) => x.textContent.replace(/^(Nouvelle|Rattrapée)\s*/, "").trim()).sort());
   eq("lien de notification : onglet Suggérées", await p.$eval(".bnav button[aria-current=page], .bnav button.on", (e) => /Suggérées/.test(e.textContent)).catch(() => false), true);
   eq("critères appliqués", await shown(), ["Acheteur Alpha", "Acheteur Paris", "Analyst Amsterdam", "Appro bas salaire", "Appro souhaité 5 ans", "Approvisionneur Brest"].sort());
-  eq("mention d'expérience souhaitée", await p.$$eval("#sgl .sgc .m", (m) => m.some((x) => /Expérience souhaitée : 5 ans, non exigée/.test(x.textContent))), true);
+  eq("mention d'expérience souhaitée", await p.$$eval("#sgl .sgc .sgmeta li.xps", (m) => m.some((x) => /5 ans d.expérience souhaités, non exigés/.test(x.textContent))), true);
   await p.evaluate(() => { const c = window.CE_crit; c.SG().salmin = 28; c.save(); }); await p.waitForTimeout(400);
   eq("salaire minimum 28 k€", (await shown()).includes("Appro bas salaire"), false);
   await p.evaluate(() => { const c = window.CE_crit; c.SG().xpmax = 6; c.save(); }); await p.waitForTimeout(400);
@@ -54,6 +54,11 @@ const server = http.createServer((q, r) => {
   eq("tri inversé", (await p.$eval("#sgl .sgc h3", (h) => h.textContent)).includes("Approvisionneur Brest"), false);
   eq("même offre déjà candidatée via un autre site : masquée", (await p.evaluate(() => window.CE_sgAudit()))["déjà candidatée (même offre)"], 1);
   eq("décompte des motifs", (await p.evaluate(() => window.CE_sgAudit())).total, 11);
+
+  // Carte d'offre : badge au-dessus du titre (le titre commence toujours au même endroit), résumé en lignes à icônes
+  eq("carte : titres alignés avec ou sans badge", await p.$$eval("#sgl .sgc h3", (hs) => new Set(hs.map((h) => Math.round(h.getBoundingClientRect().left - h.closest(".sgc").getBoundingClientRect().left))).size), 1);
+  eq("carte : pas de phrase d'ajustement de note", await p.$$eval("#sgl .sgc", (cs) => cs.some((c) => /d'après tes résultats/.test(c.textContent))), false);
+  eq("carte : lignes à icônes", await p.$$eval("#sgl .sgc .sgmeta li svg", (s) => s.length) >= 6, true);
 
   // Glisser une suggestion vers la gauche : écartée tout de suite, « Annuler » la fait revenir
   const n0 = (await shown()).length;

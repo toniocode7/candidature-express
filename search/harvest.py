@@ -138,13 +138,40 @@ def ms(d) -> int | None:
         return None
 
 
+def clean_title(t: str) -> str:
+    """Titre lisible : sans « Voir offre de », ni lieu, entreprise ou contrat recopiés (HelloWork), ni « ok » collé
+    à la fin (certaines annonces France Travail). Même règle que ofTitle dans l'app."""
+    o = t = (t or "").strip()
+    t = re.sub(r"^voir (l['’])?offre (de |d['’])", "", t, flags=re.I)
+    t = re.sub(r",\s*chez\s.*$", "", t, flags=re.I)
+    t = re.sub(r"\s+-\s+(CDI|CDD|Int[ée]rim|Stage|Alternance|Freelance|Ind[ée]pendant)\b.*$", "", t, flags=re.I)
+    t = re.sub(r"\s+à\s+[A-ZÀ-Ý][\wÀ-ÿ'’ .-]*?(\s*-\s*\d{2,3}[AB]?)?$", "", t)
+    t = re.sub(r"([a-zà-ÿ]{4,}[^o])ok$", r"\1", t)
+    t = re.sub(r"\s{2,}", " ", t).strip()
+    return t if len(t) >= 3 else o
+
+
+def clean_contract(contrat: str, titre: str) -> str:
+    """Contrat sans « Non renseigné » ; celui annoncé dans le titre l'emporte s'il diffère (même règle que l'app)."""
+    c = re.sub(r"\s*-\s*non renseign[ée].*$", "", contrat or "", flags=re.I)
+    c = re.sub(r"\s*-\s*temps plein\b", "", c, flags=re.I)
+    c = re.sub(r"\s*-\s*temps partiel\b", " · temps partiel", c, flags=re.I).strip()
+    m = re.search(r"\b(?:pour un |en )?(CDI|CDD|int[ée]rim|alternance|stage)\b", titre or "", flags=re.I)
+    if m:
+        k = {"cdi": "CDI", "cdd": "CDD", "interim": "Intérim", "intérim": "Intérim", "alternance": "Alternance", "stage": "Stage"}[m.group(1).lower()]
+        if c and norm(k) not in norm(c):
+            c = k
+        c = c or k
+    return c
+
+
 def offer(src: str, site: str, url: str, titre: str, entreprise="", lieu="", contrat="", salaire="", pub=None,
           extrait="", cc="FR", web=False, full="") -> dict | None:
     titre = clean(titre)
     if not url or not titre or len(titre) < 4:
         return None
-    o = {"titre": re.sub(r"\s*[\(\[]?\b[HFhf]\s*/\s*[HFhf]\b[\)\]]?", "", titre).strip(), "otitre": titre,
-         "entreprise": clean(entreprise), "lieu": clean(lieu), "contrat": clean(contrat), "salaire": clean(salaire),
+    o = {"titre": clean_title(re.sub(r"\s*[\(\[]?\b[HFhf]\s*/\s*[HFhf]\b[\)\]]?", "", titre).strip()), "otitre": titre,
+         "entreprise": clean(entreprise), "lieu": clean(lieu), "contrat": clean_contract(clean(contrat), titre), "salaire": clean(salaire),
          "url": url, "site": site, "src": src, "cc": cc}
     p = ms(pub)
     if p:

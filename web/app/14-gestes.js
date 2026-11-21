@@ -67,6 +67,12 @@ h+='</div><p class="note callg"><span><em class="civ"></em>Entretien ou appel pr
 B.innerHTML='<div class="dcard">'+h+'</div>';
 B.querySelectorAll("[data-cm]").forEach(function(b){b.onclick=function(){CALM=new Date(y,m+(+b.getAttribute("data-cm")),1);CALD=null;calUI()}});
 B.querySelectorAll("[data-k]").forEach(function(b){b.onclick=function(){CALD=CALD===b.getAttribute("data-k")?null:b.getAttribute("data-k");calUI()}});
-if(CALD){var L=(E[CALD]||[]).sort(function(a,b){return a.t-b.t}),p=CALD.split("-"),dd=new Date(+p[0],+p[1]-1,+p[2]);
-G("calday").innerHTML='<h4>'+esc(dd.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"}))+'</h4>'+(L.length?L.map(function(e,i){var o=e.o;return '<button type="button" class="cali" data-ci="'+i+'"><span class="'+(e.k==="iv"?"civ":"csn")+'"></span><span><b>'+esc(e.k==="iv"?(o.st===4?"Appel":"Entretien")+(o.iv.noh?"":" à "+new Date(e.t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})):"Candidature envoyée")+'</b><small>'+esc([dInfo(o).poste,coName(o)].filter(Boolean).join(" · "))+'</small></span></button>'}).join(""):'<p class="note">Rien ce jour-là.</p>');
-G("calday").querySelectorAll("[data-ci]").forEach(function(b){b.onclick=function(){var e=L[+b.getAttribute("data-ci")];if(e)ofOpen(e.o)}})}}
+if(CALD){var L=(E[CALD]||[]).sort(function(a,b){return a.t-b.t}),p=CALD.split("-"),dd=new Date(+p[0],+p[1]-1,+p[2]),IV=L.filter(function(e){return e.k==="iv"}),SN=L.filter(function(e){return e.k==="sent"});
+function nm(o){return [coName(o)||(o.an||o.meta||{}).entreprise||"",dInfo(o).poste].filter(Boolean).join(" · ")}
+var sum=[SN.length?SN.length+" candidature"+(SN.length>1?"s":"")+" envoyée"+(SN.length>1?"s":""):"",IV.length?IV.length+" "+(IV.length>1?"rendez-vous":"rendez-vous"):""].filter(Boolean).join(" · ");
+var h='<div class="caldh"><h4>'+esc(dd.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"}))+'</h4>'+(sum?'<span>'+esc(sum)+'</span>':'')+'</div>';
+if(!L.length)h+='<p class="note">Rien ce jour-là.</p>';
+h+=IV.map(function(e){var o=e.o,i=L.indexOf(e);return '<div class="cali iv" role="button" tabindex="0" data-ci="'+i+'"><span class="civ"></span><span class="calt"><b>'+esc((o.st===4?"Appel":"Entretien")+(o.iv.noh?"":" à "+new Date(e.t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})))+'</b><small>'+esc(nm(o))+'</small></span></div>'}).join("");
+if(SN.length)h+='<details class="calsn"'+(IV.length||SN.length<=3?'':'')+(SN.length<=3?' open':'')+'><summary><span class="csn"></span>'+(SN.length>3?'Voir les '+SN.length+' candidatures envoyées':SN.length>1?'Candidatures envoyées':'Candidature envoyée')+'</summary>'+SN.map(function(e){return '<div class="cals" role="button" tabindex="0" data-ci="'+L.indexOf(e)+'">'+esc(nm(e.o)||"Candidature")+'</div>'}).join("")+'</details>';
+G("calday").innerHTML=h;
+G("calday").querySelectorAll("[data-ci]").forEach(function(b){var go=function(){var e=L[+b.getAttribute("data-ci")];if(e)ofOpen(e.o)};b.onclick=go;b.onkeydown=function(k){if(k.key==="Enter"||k.key===" "){k.preventDefault();go()}}})}}

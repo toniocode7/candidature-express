@@ -65,5 +65,11 @@ import notify  # noqa: E402
 sc = notify.source_score([{"sug": {"src": "hellowork"}, "st": 2, "sentAt": 2e12}, {"sug": {"src": "indeed"}, "st": 3, "autoRef": 1, "sentAt": 2e12},
                           {"sug": {"src": "indeed"}, "st": 1, "sentAt": 1}], 1e12, {"hellowork": 300, "meteojob": 80})
 eq("sources : réponses comptées, refus automatique exclu", [(x["k"], x["sent"], x["rep"]) for x in sc], [("hellowork", 1, 1), ("indeed", 1, 0), ("meteojob", 0, 0)])
-print(f"Recherche automatique : {19 - fails}/19 réussis")
+# Nettoyage des titres et contrats à la récolte (mêmes règles que l'app)
+eq("titre HelloWork", h.clean_title("Voir offre de Ordonnanceur - CDD à Brest - 29, chez Thales, pour un CDD, en temps plein"), "Ordonnanceur")
+eq("« ok » collé", h.clean_title("Approvisionneurok"), "Approvisionneur")
+eq("titre intact", h.clean_title("Gestionnaire ADV Export SAP"), "Gestionnaire ADV Export SAP")
+eq("contrat Non renseigné", h.clean_contract("CDI - Non renseigné", "Gestionnaire ADV"), "CDI")
+eq("contrat du titre", h.clean_contract("CDD", "Voir offre de X à Saint-Louis - 974, chez Y, pour un CDI, en temps plein"), "CDI")
+print(f"Recherche automatique : {24 - fails}/24 réussis")
 sys.exit(1 if fails else 0)

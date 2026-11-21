@@ -91,4 +91,18 @@ eq("nom tiré de l'adresse", RCF.rcName({ mail: "claire.durand@naval-group.com" 
   eq("heure de Paris : minuit", heureParis(new Date("2026-11-20T23:00:10Z")), 0);
   eq("heure de Paris : 18 h en été", heureParis(new Date("2026-07-01T16:00:00Z")), 18);
 }
+// Cartes d'offres : titres, contrats et salaires lisibles (exemples réels)
+const OF = pick(["norm", "ofTitle", "ofContrat", "salFmt"]);
+eq("titre HelloWork nettoyé", OF.ofTitle("Voir offre de Ordonnanceur - CDD à Brest - 29, chez Thales, pour un CDD, en temps plein"), "Ordonnanceur");
+eq("titre HelloWork outre-mer", OF.ofTitle("Voir offre de Contrôleur·se de Gestion Achats Senior à Saint-Louis - 974, chez Emploi DomTom, pour un CDI, en temps plein"), "Contrôleur·se de Gestion Achats Senior");
+eq("« ok » collé retiré", OF.ofTitle("Approvisionneurok"), "Approvisionneur");
+eq("titre normal intact", OF.ofTitle("Gestionnaire ADV Export SAP"), "Gestionnaire ADV Export SAP");
+eq("mot finissant par ok intact", OF.ofTitle("Responsable Facebook"), "Responsable Facebook");
+eq("contrat : Non renseigné retiré", OF.ofContrat({ contrat: "CDI - Non renseigné", titre: "Gestionnaire ADV" }), "CDI");
+eq("contrat : temps plein retiré", OF.ofContrat({ contrat: "Intérim - Temps plein", titre: "Approvisionneur" }), "Intérim");
+eq("contrat du titre prioritaire", OF.ofContrat({ contrat: "CDD", otitre: "Voir offre de X à Saint-Louis - 974, chez Y, pour un CDI, en temps plein" }), "CDI");
+eq("salaire France Travail annuel", OF.salFmt("Annuel de 37000.0 Euros à 38000.0 Euros"), "37 à 38 k€ par an");
+eq("salaire France Travail mensuel", OF.salFmt("Mensuel de 2000.0 Euros à 2300.0 Euros sur 12.0 mois").replace(/[\s\u202f\u00a0]/g, " "), "2 000 à 2 300 € par mois");
+eq("salaire Indeed annuel", OF.salFmt("32000-36000 EUR / yearly"), "32 à 36 k€ par an");
+eq("salaire déjà lisible intact", OF.salFmt("32 - 36 k€"), "32 - 36 k€");
 done("Règles de l'app");
