@@ -249,7 +249,11 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&VIE
 setInterval(function(){try{todoUI();homeUI()}catch(e){}},5000);
 document.querySelectorAll("dialog.sheet [data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
 document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d&&Date.now()-(+d.dataset.opened||0)>600)d.close()})});
-function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}}}
+function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}}
+/* Au doigt, la fenêtre qui s'ouvre ne met pas en surbrillance son premier bouton (cercle violet parasite). */
+/* La fenêtre elle-même reçoit le focus à l'ouverture (et non son premier bouton) : pas de cercle de sélection parasite. */
+document.querySelectorAll("dialog").forEach(function(d){d.setAttribute("autofocus","")});
+function noAutoFocus(){try{if(matchMedia("(hover:none)").matches&&document.activeElement&&document.activeElement!==document.body)document.activeElement.blur()}catch(e){}}
 /* statut rapide */
 /* Appui long sur une candidature : actions rapides + changement de statut (le toucher simple ouvre toujours la fiche). */
 function qmOpen(o){buzz();stSheet(o,true);
@@ -876,7 +880,7 @@ var h='<div class="kpis">'+
 '<div class="kpi"><div class="kl">Entretiens obtenus</div><div class="kv">'+itv.length+'</div><div class="ks">'+pct(itv.length,list.length)+' % des candidatures envoyées'+(itv.length?' · '+(itv.length-refI)+' en cours, '+refI+' non retenu'+(refI>1?'s':''):'')+'</div></div>'+
 '<div class="kpi"><div class="kl">En attente de réponse</div><div class="kv">'+wait.length+'</div><div class="ks">'+(wait.length?'envoyée'+(wait.length>1?'s':'')+' il y a '+avgW+' jour'+(avgW>1?'s':'')+' en moyenne':'aucune candidature en attente')+'</div></div></div>';
 if(!list.length){B.innerHTML=h+(WK?dDays(list,from):'')+'<p class="empty" style="margin:0">Aucune candidature envoyée '+lbl+'.'+(WK?'':' Choisis « Tout » pour voir l\'ensemble.')+'</p>';return}
-if(list.length<10&&!WK)h+='<p class="note" style="margin:0">Avec '+list.length+' candidature'+(list.length>1?'s':'')+' sur la période, les pourcentages restent indicatifs : ils deviennent parlants à partir d\'une dizaine.</p>';
+if(list.length<10&&!WK)h+='<p class="note" style="margin:4px 2px">Avec '+list.length+' candidature'+(list.length>1?'s':'')+' sur la période, les pourcentages restent indicatifs : ils deviennent parlants à partir d\'une dizaine.</p>';
 h+=dLearn(list);h+=WK?dDays(list,from):dWeeks(list,from);
 h+='<details class="dmore" id="dmore"'+(lsg("dmore",0)?' open':'')+'><summary><span>Voir le détail</span><small>délais, métiers, lieux, contrats</small><span class="lchev" aria-hidden="true">'+CHEV+'</span></summary><div class="dmb">'+dInsights(list);h+='<div class="dsgrid">'+dBars("Par lieu","",dGroup(list,function(o){return dLieu(dInfo(o).lieu)}))+dBars("Par type de contrat","",dGroup(list,function(o){return dCtr(dInfo(o).contrat)}),["CDI","CDD","Intérim","Autre","Non précisé"])+
 dBars("Par métier","Classé d'après l'intitulé du poste.",dGroup(list,function(o){return dMet(dInfo(o).poste)}))+'</div></div></details>';
@@ -947,7 +951,7 @@ if(pfEmpty(PF.nom)&&pfEmpty(PF.mail)&&CV.list.length)pfFromCv(false);setSyn("Syn
 window.addEventListener("ce:remote",function(){pull()});document.addEventListener("visibilitychange",function(){if(!document.hidden)pull();else if(Object.keys(SY.dirty).length){clearTimeout(SY.t);push()}})}catch(e){}})();
 
 /* ---------- Paramètres ---------- */
-function openSet(){var d=G("pfbox");spGo("");if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}}setUI();spSum()}
+function openSet(){var d=G("pfbox");spGo("");if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}setUI();spSum()}
 var SPT={profil:"Mes coordonnées",cv:"Mes CV",parcours:"Mon parcours",docs:"CV, lettres et messages",suivi:"Suivi des candidatures",recherche:"Recherche d'offres",app:"Apparence",notifs:"Notifications et calendrier",aide:"Aide"};
 var PARBUSY=false;
 async function parFill(force){if(PARBUSY)return;var n=G("parn"),b=G("parfill"),c=cvFor("fr"),t=G("pnotes");

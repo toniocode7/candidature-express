@@ -73,7 +73,11 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&VIE
 setInterval(function(){try{todoUI();homeUI()}catch(e){}},5000);
 document.querySelectorAll("dialog.sheet [data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
 document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d&&Date.now()-(+d.dataset.opened||0)>600)d.close()})});
-function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}}}
+function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}}
+/* Au doigt, la fenêtre qui s'ouvre ne met pas en surbrillance son premier bouton (cercle violet parasite). */
+/* La fenêtre elle-même reçoit le focus à l'ouverture (et non son premier bouton) : pas de cercle de sélection parasite. */
+document.querySelectorAll("dialog").forEach(function(d){d.setAttribute("autofocus","")});
+function noAutoFocus(){try{if(matchMedia("(hover:none)").matches&&document.activeElement&&document.activeElement!==document.body)document.activeElement.blur()}catch(e){}}
 /* statut rapide */
 /* Appui long sur une candidature : actions rapides + changement de statut (le toucher simple ouvre toujours la fiche). */
 function qmOpen(o){buzz();stSheet(o,true);

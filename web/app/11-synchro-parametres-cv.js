@@ -56,7 +56,7 @@ if(pfEmpty(PF.nom)&&pfEmpty(PF.mail)&&CV.list.length)pfFromCv(false);setSyn("Syn
 window.addEventListener("ce:remote",function(){pull()});document.addEventListener("visibilitychange",function(){if(!document.hidden)pull();else if(Object.keys(SY.dirty).length){clearTimeout(SY.t);push()}})}catch(e){}})();
 
 /* ---------- Paramètres ---------- */
-function openSet(){var d=G("pfbox");spGo("");if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}}setUI();spSum()}
+function openSet(){var d=G("pfbox");spGo("");if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}setUI();spSum()}
 var SPT={profil:"Mes coordonnées",cv:"Mes CV",parcours:"Mon parcours",docs:"CV, lettres et messages",suivi:"Suivi des candidatures",recherche:"Recherche d'offres",app:"Apparence",notifs:"Notifications et calendrier",aide:"Aide"};
 var PARBUSY=false;
 async function parFill(force){if(PARBUSY)return;var n=G("parn"),b=G("parfill"),c=cvFor("fr"),t=G("pnotes");
