@@ -32,7 +32,9 @@ jobs:
           CE_WEB=../_site node e2e.cjs
           CE_WEB=../_site node sim.cjs
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with: { path: _site }
+      - name: Laisser à GitHub le temps d'enregistrer le paquet (sinon il arrive qu'il soit introuvable)
+        run: sleep 15
       - id: d
         uses: actions/deploy-pages@v4
