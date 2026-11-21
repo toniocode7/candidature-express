@@ -254,6 +254,7 @@
     var t0 = performance.now();
     document.body.appendChild(s);
     var exec = performance.now() - t0;
+    try { window.CE_handleView && window.CE_handleView(); } catch (e) {}
     requestAnimationFrame(function () { requestAnimationFrame(function () {
       document.documentElement.classList.remove("ce-boot");
       // Vitesse : temps écoulé depuis le lancement jusqu'à l'app affichée et utilisable (noté une fois par ouverture).

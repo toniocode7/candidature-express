@@ -679,106 +679,127 @@ dialog.sheet.ofd{height:94dvh;max-height:94dvh}@media (min-width:700px){dialog.s
 <body>
 <!-- Écran d'ouverture animé : un cercle se dessine, s'ouvre en C sous la poussée de la flèche, le nom apparaît,
      puis la flèche est décochée vers la droite et l'app apparaît dans son sillage.
-     Fluidité : tout ce qui bouge est déplacé, tourné, agrandi ou fondu (pris en charge par la puce graphique, fluide même
-     quand l'iPhone démarre l'app) ; le seul tracé (le cercle) a lieu avant le démarrage de l'app. -->
+     Fluidité : l'animation démarre seulement quand la page est affichée ; tout ce qui démarre (tracé, flèche, lettres)
+     a lieu avant que l'app ne démarre ; ensuite seuls tournent des déplacements et fondus pris en charge par la puce
+     graphique. Positions fixes : rien ne bouge quand la police du nom finit de se charger. -->
 <div id="ce-splash" aria-hidden="true">
   <div class="sp-bg"><i class="sp-edge"></i><div class="sp-halo"></div><div class="sp-parts"></div></div>
-  <div class="sp-stage">
-    <div class="sp-mark">
-      <div class="sp-glow"></div>
-      <div class="sp-wave"></div><div class="sp-wave w2"></div>
-      <div class="sp-cwrap"><svg class="sp-csvg" viewBox="0 0 52 52">
-        <path class="sp-c" pathLength="100" d="M33.5 17.2A12 12 0 1 0 33.5 34.8"/>
-        <path class="sp-gap" pathLength="100" d="M33.5 34.8A12 12 0 0 0 33.5 17.2"/>
-      </svg></div>
-      <div class="sp-fly">
-        <div class="sp-lines"><i></i><i></i><i></i></div>
-        <div class="sp-awrap"><svg class="sp-asvg" viewBox="0 0 52 52"><path class="sp-shaft" d="M24 26h13.5"/><path class="sp-head" d="M32.5 20.8L37.8 26l-5.3 5.2"/></svg></div>
-      </div>
-      <div class="sp-flash"></div>
+  <div class="sp-mark">
+    <div class="sp-glow"></div>
+    <div class="sp-wave"></div><div class="sp-wave w2"></div>
+    <div class="sp-cwrap"><div class="sp-cin"><svg viewBox="0 0 52 52">
+      <path class="sp-c" pathLength="100" d="M33.5 17.2A12 12 0 1 0 33.5 34.8"/>
+      <path class="sp-gap" pathLength="100" d="M33.5 34.8A12 12 0 0 0 33.5 17.2"/>
+    </svg></div></div>
+    <div class="sp-fly">
+      <div class="sp-lines"><i></i><i></i><i></i></div>
+      <div class="sp-awrap"><svg viewBox="0 0 52 52"><path class="sp-shaft" d="M24 26h13.5"/><path class="sp-head" d="M32.5 20.8L37.8 26l-5.3 5.2"/></svg></div>
     </div>
-    <div class="sp-word"></div>
+    <div class="sp-flash"></div>
   </div>
+  <div class="sp-word"></div>
 </div>
 <style>
-#ce-splash{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;contain:strict}
-#ce-splash .sp-bg{position:absolute;inset:0 -30vw 0 0;padding-left:0;will-change:transform;
-  background:radial-gradient(130% 95% at 38% 42%,#7D70F7 0%,#5B4DE0 38%,#4338CA 64%,#29247F 100%)}
-#ce-splash .sp-edge{position:absolute;top:0;bottom:0;left:-30vw;width:30vw;background:linear-gradient(90deg,rgba(67,56,202,0),#4b40d2 85%)}
-#ce-splash .sp-halo{position:absolute;left:calc(50vw - min(55vw,350px));top:calc(45% - min(55vw,350px));width:min(110vw,700px);height:min(110vw,700px);border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.26) 0%,rgba(255,255,255,.07) 38%,rgba(255,255,255,0) 66%);will-change:transform,opacity;animation:spHalo 3.2s ease-in-out infinite}
+#ce-splash{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100lvh;z-index:9999;pointer-events:none;overflow:hidden;contain:strict;
+  --cy:46lvh;--cy:calc(46vh);background:transparent}
+@supports (height:100lvh){#ce-splash{--cy:46lvh}}
+#ce-splash:not(.go) *,#ce-splash:not(.go) *::before,#ce-splash:not(.go) *::after{animation-play-state:paused!important}
+#ce-splash .sp-bg{position:absolute;left:0;top:0;bottom:0;width:140vw;will-change:transform;
+  background:radial-gradient(90vw 70lvh at 50vw var(--cy),#7E72F8 0%,#6153E4 45%,#4F42D6 75%,#4A3DD2 100%)}
+#ce-splash .sp-edge{position:absolute;top:0;bottom:0;left:-36vw;width:36vw;background:linear-gradient(90deg,rgba(74,61,210,0),rgba(74,61,210,.85) 70%,#4A3DD2)}
+#ce-splash .sp-halo{position:absolute;left:calc(50vw - 300px);top:calc(var(--cy) - 300px);width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.22) 0%,rgba(255,255,255,.06) 40%,rgba(255,255,255,0) 68%);will-change:transform,opacity;animation:spHalo 3.4s ease-in-out infinite}
 #ce-splash .sp-parts{position:absolute;left:0;top:0;width:100vw;height:100%}
 #ce-splash .sp-parts i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:0;will-change:transform,opacity;animation:spDust var(--t) var(--d) ease-in-out infinite}
-#ce-splash .sp-stage{position:absolute;left:50%;top:46%;display:flex;flex-direction:column;align-items:center;gap:22px;transform:translate(-50%,-50%)}
-#ce-splash .sp-mark{position:relative;width:136px;height:136px}
+#ce-splash .sp-mark{position:absolute;left:calc(50vw - 68px);top:calc(var(--cy) - 68px);width:136px;height:136px}
 #ce-splash svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 #ce-splash path{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round}
-#ce-splash .sp-glow{position:absolute;inset:-26px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.34) 0%,rgba(255,255,255,.1) 42%,rgba(255,255,255,0) 68%);opacity:0;will-change:opacity,transform;animation:spGlowIn 1s .2s ease-out forwards}
-#ce-splash .sp-cwrap,#ce-splash .sp-awrap,#ce-splash .sp-fly{position:absolute;inset:0;will-change:transform,opacity}
-#ce-splash .sp-cwrap{transform-origin:48.7% 50%;animation:spSpin 1.1s .1s cubic-bezier(.3,0,.2,1) both}
+#ce-splash .sp-glow{position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.3) 0%,rgba(255,255,255,.09) 45%,rgba(255,255,255,0) 70%);opacity:0;will-change:opacity,transform;animation:spGlowIn .9s .15s ease-out forwards}
+#ce-splash .sp-cwrap,#ce-splash .sp-cin,#ce-splash .sp-awrap,#ce-splash .sp-fly{position:absolute;inset:0;will-change:transform,opacity}
+#ce-splash .sp-cwrap{transform-origin:48.7% 50%;animation:spSpin 1s .05s cubic-bezier(.25,0,.15,1) both}
+#ce-splash .sp-cin{transform-origin:48.7% 50%;animation:spBreath 2.6s 1.7s ease-in-out infinite}
 #ce-splash .sp-c,#ce-splash .sp-gap{stroke-width:4.4;stroke-dasharray:100 200;stroke-dashoffset:100;opacity:0}
-#ce-splash .sp-c{animation:spDraw .72s .15s cubic-bezier(.55,0,.35,1) forwards}
-#ce-splash .sp-gap{animation:spDraw .2s .86s linear forwards,spGapOut .2s 1.14s ease-in forwards}
+#ce-splash .sp-c{animation:spDraw .62s .1s cubic-bezier(.5,0,.3,1) forwards}
+#ce-splash .sp-gap{animation:spDraw .16s .72s linear forwards,spGapOut .16s .98s ease-in forwards}
 #ce-splash .sp-shaft,#ce-splash .sp-head{stroke-width:4}
-/* La flèche sort du C : elle glisse depuis le centre (masquée par le C qui s'ouvre), puis la pointe se pose avec un rebond. */
-#ce-splash .sp-awrap{opacity:0;transform-origin:72% 50%;animation:spArrowIn .55s 1.12s cubic-bezier(.2,1.5,.35,1) forwards}
-#ce-splash .sp-flash{position:absolute;left:60%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,0) 70%);opacity:0;will-change:transform,opacity;animation:spFlash .55s 1.34s ease-out both}
-#ce-splash .sp-wave{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);opacity:0;will-change:transform,opacity;animation:spWave 2.4s 1.5s ease-out infinite}
-#ce-splash .sp-wave.w2{animation-delay:2.7s}
-#ce-splash .sp-word{display:flex;font:700 1.35rem/1 Sora,"Instrument Sans",-apple-system,system-ui,sans-serif;letter-spacing:-.01em;color:#fff;white-space:pre}
-#ce-splash .sp-word span{display:inline-block;opacity:0;transform:translateY(14px);will-change:transform,opacity;animation:spLetter .55s calc(1.45s + var(--i) * 30ms) cubic-bezier(.2,.8,.2,1) forwards}
-#ce-splash .sp-word span.x{color:#D6D1FF}
+#ce-splash .sp-awrap{opacity:0;transform-origin:72% 50%;animation:spArrowIn .55s .96s cubic-bezier(.18,1.45,.35,1) forwards,spReady 2.6s 1.7s ease-in-out infinite}
+#ce-splash .sp-flash{position:absolute;left:60%;top:50%;width:80px;height:80px;margin:-40px 0 0 -40px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.9),rgba(255,255,255,0) 70%);opacity:0;will-change:transform,opacity;animation:spFlash .55s 1.16s ease-out both}
+#ce-splash .sp-wave{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.45);opacity:0;will-change:transform,opacity;animation:spWave 2.6s 1.3s ease-out infinite}
+#ce-splash .sp-wave.w2{animation-delay:2.6s}
+#ce-splash .sp-word{position:absolute;left:0;width:100vw;top:calc(var(--cy) + 96px);height:30px;text-align:center;white-space:pre;color:#fff;
+  font:700 22px/30px -apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;letter-spacing:-.2px}
+#ce-splash .sp-word.sora{font-family:Sora,-apple-system,system-ui,sans-serif;letter-spacing:-.3px}
+#ce-splash .sp-word span{display:inline-block;opacity:0;transform:translateY(12px);will-change:transform,opacity;animation:spLetter .5s calc(1.12s + var(--i) * 26ms) cubic-bezier(.2,.8,.2,1) forwards}
+#ce-splash .sp-word span.x{color:#DCD7FF}
 #ce-splash .sp-lines{position:absolute;right:70%;top:50%;width:46vw;height:0}
 #ce-splash .sp-lines i{position:absolute;right:0;width:100%;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.85));opacity:0;transform:scaleX(0);transform-origin:100% 50%;will-change:transform,opacity}
 #ce-splash .sp-lines i:nth-child(1){top:-14px}#ce-splash .sp-lines i:nth-child(2){top:-1px;height:3px}#ce-splash .sp-lines i:nth-child(3){top:12px}
-@keyframes spHalo{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes spHalo{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
 @keyframes spDust{0%,100%{opacity:0;transform:translateY(0)}40%{opacity:var(--o)}100%{transform:translateY(-36px)}}
 @keyframes spDraw{0%{opacity:0;stroke-dashoffset:100}1%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
 @keyframes spGapOut{to{opacity:0}}
-@keyframes spSpin{from{transform:rotate(-140deg) scale(.82)}to{transform:none}}
+@keyframes spSpin{from{transform:rotate(-150deg) scale(.84)}to{transform:none}}
+@keyframes spBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes spReady{0%,100%{transform:translateX(0)}50%{transform:translateX(2.5px)}}
 @keyframes spGlowIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
 @keyframes spArrowIn{0%{opacity:0;transform:translateX(-16px) scale(.6)}25%{opacity:1}100%{opacity:1;transform:none}}
-@keyframes spFlash{0%{opacity:0;transform:scale(.3)}30%{opacity:.85}100%{opacity:0;transform:scale(1.6)}}
-@keyframes spWave{0%{opacity:.45;transform:scale(.9)}100%{opacity:0;transform:scale(2.4)}}
+@keyframes spFlash{0%{opacity:0;transform:scale(.3)}30%{opacity:.8}100%{opacity:0;transform:scale(1.6)}}
+@keyframes spWave{0%{opacity:.42;transform:scale(.9)}100%{opacity:0;transform:scale(2.3)}}
 @keyframes spLetter{to{opacity:1;transform:none}}
-/* Départ : le nom s'efface, l'arc se tend, la flèche est décochée avec ses traînées ; le panneau violet glisse vers la
-   droite derrière elle (bord doux) et découvre l'app. */
-#ce-splash.out .sp-bg{animation:spSlide .9s .4s cubic-bezier(.62,0,.28,1) forwards}
+/* Départ (1,15 s) : le nom s'efface, l'arc se tend (flèche qui recule, C qui se contracte), la flèche est décochée
+   avec ses traînées et sort de l'écran ; le panneau violet glisse vers la droite derrière elle et découvre l'app,
+   qui arrive elle-même d'un léger glissement. */
+#ce-splash.out .sp-bg{animation:spSlide .86s .3s cubic-bezier(.65,0,.3,1) forwards}
 #ce-splash.out .sp-halo{animation:none;opacity:.9}
-#ce-splash.out .sp-word span{opacity:1;transform:none;animation:spWordOut .32s calc(var(--i) * 12ms) ease-in forwards}
+#ce-splash.out .sp-word span{opacity:1;transform:none;animation:spWordOut .28s calc(var(--i) * 10ms) ease-in forwards}
 #ce-splash.out .sp-wave{animation:none;opacity:0}
 #ce-splash.out .sp-c{opacity:1;stroke-dashoffset:0;animation:none}
 #ce-splash.out .sp-gap{opacity:0;animation:none}
+#ce-splash.out .sp-cin{animation:none}
 #ce-splash.out .sp-awrap{opacity:1;transform:none;animation:none}
-#ce-splash.out .sp-glow{opacity:1;animation:spFade .5s .3s forwards}
-#ce-splash.out .sp-cwrap{animation:spCOut .62s cubic-bezier(.4,0,.2,1) forwards}
-#ce-splash.out .sp-fly{animation:spFly .8s cubic-bezier(.6,-.05,.85,.3) forwards}
-#ce-splash.out .sp-lines i{animation:spLine .42s .34s ease-out forwards}
-#ce-splash.out .sp-lines i:nth-child(2){animation-delay:.32s}#ce-splash.out .sp-lines i:nth-child(3){animation-delay:.4s}
-#ce-splash.out .sp-parts i{animation:spSuck .8s calc(.25s + var(--k) * 30ms) cubic-bezier(.6,0,.9,.4) forwards}
-@keyframes spWordOut{to{opacity:0;transform:translateY(-8px)}}
-@keyframes spCOut{0%{transform:none}30%{transform:scale(.88) rotate(10deg)}55%{transform:scale(1.06) rotate(-14deg);opacity:1}100%{transform:scale(.7) rotate(-40deg);opacity:0}}
-@keyframes spFly{0%{transform:none}30%{transform:translateX(-10px) scaleX(.9)}45%{transform:translateX(20px) scaleX(1.25)}100%{transform:translateX(85vw) scaleX(2.4)}}
+#ce-splash.out .sp-glow{opacity:1;animation:spFade .4s .2s forwards}
+#ce-splash.out .sp-cwrap{animation:spCOut .55s cubic-bezier(.4,0,.2,1) forwards}
+#ce-splash.out .sp-fly{animation:spFly .72s cubic-bezier(.55,-.08,.8,.3) forwards}
+#ce-splash.out .sp-lines i{animation:spLine .38s .3s ease-out forwards}
+#ce-splash.out .sp-lines i:nth-child(2){animation-delay:.27s}#ce-splash.out .sp-lines i:nth-child(3){animation-delay:.33s}
+#ce-splash.out .sp-parts i{animation:spSuck .7s calc(.22s + var(--k) * 24ms) cubic-bezier(.6,0,.9,.4) forwards}
+@keyframes spWordOut{to{opacity:0;transform:translateY(-6px)}}
+@keyframes spCOut{0%{transform:none}35%{transform:scale(.9) rotate(8deg)}100%{transform:scale(.72) rotate(-35deg);opacity:0}}
+@keyframes spFly{0%{transform:none}32%{transform:translateX(-9px) scaleX(.92)}46%{transform:translateX(16px) scaleX(1.2)}100%{transform:translateX(95vw) scaleX(2.3)}}
 @keyframes spLine{0%{opacity:0;transform:scaleX(0)}30%{opacity:1}100%{opacity:0;transform:scaleX(1)}}
 @keyframes spSuck{0%{opacity:var(--o)}100%{opacity:0;transform:translate(70vw,0) scaleX(6)}}
-@keyframes spSlide{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 30vw))}}
+@keyframes spSlide{from{transform:translateX(0)}to{transform:translateX(150vw)}}
 @keyframes spFade{to{opacity:0}}
+html.ce-enter body>.page{animation:spAppIn .8s .38s cubic-bezier(.2,.8,.2,1) both}
+@keyframes spAppIn{from{transform:translateX(-14px);opacity:.55}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){#ce-splash *{animation:none!important}#ce-splash .sp-c{opacity:1;stroke-dashoffset:0}#ce-splash .sp-awrap,#ce-splash .sp-glow{opacity:1}
   #ce-splash .sp-gap,#ce-splash .sp-wave,#ce-splash .sp-parts,#ce-splash .sp-flash{display:none}#ce-splash .sp-word span{opacity:1;transform:none}
-  #ce-splash.out{animation:spFade .35s forwards!important}}
+  #ce-splash.out{animation:spFade .35s forwards!important}html.ce-enter body>.page{animation:none}}
 </style>
 <script>
-/* Écran d'ouverture : nom lettre par lettre et particules créés ici ; il se retire dès que l'app (ou l'écran de connexion)
-   est prête, après au moins 2,25 s. CE_splashGate : le démarrage de l'app attend que le cercle soit tracé (1,5 s),
-   pour que le tracé reste fluide. Jamais pendant le tri en arrière-plan. */
+/* Écran d'ouverture.
+   - Démarre (classe go) une fois la page affichée, pour ne sauter aucune image.
+   - CE_splashGate : l'app attend que tout ce qui démarre dans l'animation ait démarré (1,75 s) avant de se lancer.
+   - Se retire dès que l'app (ou l'écran de connexion) est prête, au plus tôt à 2,2 s.
+   - Pendant l'animation, la barre d'état de l'iPhone prend la couleur du fond (plus de voile sombre en haut).
+   - Jamais pendant le tri automatique en arrière-plan. */
 (function(){var s=document.getElementById("ce-splash");if(!s)return;
 if(/[?&]bg=1\b/.test(location.search)){s.remove();return}
+var reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
 var w=s.querySelector(".sp-word"),txt="Candidature Express",h="";for(var i=0;i<txt.length;i++)h+='<span style="--i:'+i+'"'+(i>11?' class="x"':'')+'>'+(txt[i]===" "?" ":txt[i])+'</span>';w.innerHTML=h;
-var P=s.querySelector(".sp-parts"),ph="";for(var k=0;k<16;k++){var r=function(a,b){return a+Math.random()*(b-a)};ph+='<i style="left:'+r(4,96).toFixed(1)+'%;top:'+r(10,92).toFixed(1)+'%;--s:'+r(2,4.5).toFixed(1)+'px;--o:'+r(.25,.7).toFixed(2)+';--t:'+r(3,5).toFixed(1)+'s;--d:'+r(0,1.6).toFixed(2)+'s;--k:'+k+'"></i>'}P.innerHTML=ph;
-var t0=Date.now(),done=false,reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
-window.CE_splashGate=function(){var w=reduce?0:Math.max(0,1500-(Date.now()-t0));return new Promise(function(ok){setTimeout(ok,w)})};
-window.CE_splashOut=function(){if(done)return;done=true;setTimeout(function(){s.classList.add("out");setTimeout(function(){s.remove();window.CE_splashGate=null},1400)},Math.max(0,(reduce?300:2250)-(Date.now()-t0)))};
+var P=s.querySelector(".sp-parts"),ph="";for(var k=0;k<14;k++){var r=function(a,b){return a+Math.random()*(b-a)};ph+='<i style="left:'+r(4,96).toFixed(1)+'%;top:'+r(8,94).toFixed(1)+'%;--s:'+r(2,4).toFixed(1)+'px;--o:'+r(.25,.65).toFixed(2)+';--t:'+r(3.2,5).toFixed(1)+'s;--d:'+r(0,1.4).toFixed(2)+'s;--k:'+k+'"></i>'}P.innerHTML=ph;
+var metas=[].slice.call(document.querySelectorAll('meta[name="theme-color"]')),old=metas.map(function(m){return m.content});metas.forEach(function(m){m.content="#5F52E2"});
+var t0=null,started=null,ready=new Promise(function(ok){started=ok}),done=false;
+function go(){if(t0)return;t0=Date.now();s.classList.add("go");started();
+  // Police du nom : Sora si elle est déjà chargée avant que les lettres n'apparaissent, sinon police du système (aucun saut).
+  setTimeout(function(){try{if(document.fonts&&document.fonts.check("700 22px Sora"))w.classList.add("sora")}catch(e){}},900)}
+function start(){requestAnimationFrame(function(){requestAnimationFrame(go)})}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+setTimeout(go,1500);
+window.CE_splashGate=function(){return ready.then(function(){var wt=reduce?0:Math.max(0,1750-(Date.now()-t0));return new Promise(function(ok){setTimeout(ok,wt)})})};
+window.CE_splashOut=function(){if(done)return;done=true;ready.then(function(){setTimeout(function(){s.classList.add("out");document.documentElement.classList.add("ce-enter");
+  setTimeout(function(){s.remove();window.CE_splashGate=null;metas.forEach(function(m,i){m.content=old[i]});document.documentElement.classList.remove("ce-enter")},1250)},Math.max(0,(reduce?300:2200)-(Date.now()-t0)))})};
 function chk(){var c=document.documentElement.classList;if(!c.contains("ce-boot")||c.contains("ce-gated"))window.CE_splashOut()}
 try{new MutationObserver(chk).observe(document.documentElement,{attributes:true,attributeFilter:["class"]})}catch(e){}
 setTimeout(window.CE_splashOut,10000)})();

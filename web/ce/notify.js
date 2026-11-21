@@ -122,18 +122,21 @@
   window.CE_notifUI = function () { build(); refresh().catch(function () {}); };
 
   /* ---------- Annonce partagée depuis Safari, LinkedIn, Indeed (Raccourci iOS) ---------- */
+  // Lien d'une notification : ouvrir le bon onglet (et la candidature concernée) dès le démarrage de l'app,
+  // avant que l'écran d'ouverture ne la découvre (sinon on verrait l'accueil puis un changement d'onglet).
+  function keepDemo() { return /[?&]demo\b/.test(location.search) ? "?demo" : ""; }
+  window.CE_handleView = function () {
+    var q = new URLSearchParams(location.search), s = q.get("share") || q.get("url") || q.get("text");
+    var v = q.get("v"), tab = { accueil: 0, analyser: 1, sugg: 2, list: 3, stats: 4 }[v];
+    if (s || tab == null) return;
+    history.replaceState(null, "", location.pathname + keepDemo());
+    var b = document.querySelectorAll(".bnav button")[tab]; if (b) b.click();
+    var oid = q.get("o"); if (oid && window.CE_openOffer) setTimeout(function () { window.CE_openOffer(oid); }, 900);
+  };
   window.CE_handleShare = function () {
     var q = new URLSearchParams(location.search), s = q.get("share") || q.get("url") || q.get("text");
-    // Lien d'une notification : ouvrir le bon onglet (et la candidature concernée).
-    var v = q.get("v"), tab = { accueil: 0, analyser: 1, sugg: 2, list: 3, stats: 4 }[v];
-    if (!s && tab != null) {
-      history.replaceState(null, "", location.pathname);
-      var b = document.querySelectorAll(".bnav button")[tab]; if (b) b.click();
-      var oid = q.get("o"); if (oid && window.CE_openOffer) setTimeout(function () { window.CE_openOffer(oid); }, 500);
-      return;
-    }
     if (!s) return;
-    history.replaceState(null, "", location.pathname);
+    history.replaceState(null, "", location.pathname + keepDemo());
     var m = /https?:\/\/[^\s<>"']+/i.exec(s);
     var nav = document.querySelectorAll(".bnav button")[1]; if (nav) nav.click();
     setTimeout(function () {
