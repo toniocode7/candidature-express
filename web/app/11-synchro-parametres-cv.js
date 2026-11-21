@@ -56,7 +56,7 @@ if(pfEmpty(PF.nom)&&pfEmpty(PF.mail)&&CV.list.length)pfFromCv(false);setSyn("Syn
 window.addEventListener("ce:remote",function(){pull()});document.addEventListener("visibilitychange",function(){if(!document.hidden)pull();else if(Object.keys(SY.dirty).length){clearTimeout(SY.t);push()}})}catch(e){}})();
 
 /* ---------- Paramètres ---------- */
-function openSet(){var d=G("pfbox");spGo("");if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}setUI();spSum()}
+function openSet(){var d=G("pfbox");spGo("");if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}setUI()}
 var SPT={profil:"Mes coordonnées",cv:"Mes CV",parcours:"Mon parcours",docs:"CV, lettres et messages",suivi:"Suivi des candidatures",recherche:"Recherche d'offres",app:"Apparence",notifs:"Notifications et calendrier",aide:"Aide"};
 var PARBUSY=false;
 async function parFill(force){if(PARBUSY)return;var n=G("parn"),b=G("parfill"),c=cvFor("fr"),t=G("pnotes");
@@ -65,21 +65,12 @@ if(t.value.trim()&&!force){return}
 PARBUSY=true;b.disabled=true;n.textContent="Je reprends ton CV principal...";var out="";
 try{var sample=await claude.use("sample");if(sample){var res=await sample("Réorganise ce CV en un parcours détaillé, en texte simple et lisible (pas de markdown : ni #, ni *, ni gras). Garde TOUTES les informations du CV, n'invente rien, ne reformule pas en mieux. Structure :\nFORMATION\npuis une ligne par diplôme (intitulé, école, ville, dates)\n\nEXPÉRIENCES\npour chaque poste : une ligne « Poste, Entreprise, Ville (dates) », puis ses missions sur des lignes commençant par « - »\n\nCOMPÉTENCES\nLANGUES\nCENTRES D'INTÉRÊT (seulement s'ils sont dans le CV)\n\nLaisse une ligne vide entre les blocs. Réponds uniquement avec le texte.\n\nCV :\n"+c.text,{cache:false,modelTier:"default"});out=String(res&&res.text||"").replace(/\*\*/g,"").replace(/^#+\s*/gm,"").replace(/\s*—\s*/g,", ").trim()}}catch(e){out=""}
 if(!out)out=String(c.text||"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
-var old=t.value.trim();if(old&&!/^FORMATION/.test(old))out+="\n\nCOMPLÉMENTS\n"+old;t.value=out;t.dispatchEvent(new Event("input",{bubbles:true}));n.textContent="Repris depuis « "+(c.name||"ton CV")+" ». Modifie ce que tu veux.";PARBUSY=false;b.disabled=false;try{spSum()}catch(e){}}
+var old=t.value.trim();if(old&&!/^FORMATION/.test(old))out+="\n\nCOMPLÉMENTS\n"+old;t.value=out;t.dispatchEvent(new Event("input",{bubbles:true}));n.textContent="Repris depuis « "+(c.name||"ton CV")+" ». Modifie ce que tu veux.";PARBUSY=false;b.disabled=false}
 G("parfill").onclick=function(){var b=this,t=G("pnotes");if(t.value.trim()&&!b.dataset.ok){b.dataset.ok="1";b.textContent=/^FORMATION/.test(t.value.trim())?"Appuie encore : tes modifications seront remplacées":"Appuie encore : tes notes seront gardées en bas";setTimeout(function(){delete b.dataset.ok;b.textContent="Reprendre mon CV principal"},4000);return}delete b.dataset.ok;b.textContent="Reprendre mon CV principal";parFill(true)};
-function spGo(k){if(k==="notifs"&&window.CE_notifUI)setTimeout(CE_notifUI,0);if(k==="aide"&&window.CE_errUI)setTimeout(CE_errUI,0);if(k==="aide"&&window.CE_perfUI)setTimeout(CE_perfUI,0);G("sphome").hidden=!!k;document.querySelectorAll("#pfbox .sp").forEach(function(x){x.hidden=x.getAttribute("data-p")!==k});G("setback").hidden=!k;G("seth").textContent=k?SPT[k]:"Paramètres";try{G("pfbox").querySelector(".dwb").scrollTop=0}catch(e){}if(!k)spSum();if(k==="parcours"&&!G("pnotes").value.trim()&&(CV.list||[]).length)parFill(false)}
-function spSel(id){var e=G(id);return e&&e.selectedIndex>=0?e.options[e.selectedIndex].text:""}
-function spSum(){function S(k,t){var e=G("sps_"+k);if(e)e.textContent=t}try{
-var nm=G("pnom").value.trim(),vi=G("padr").value.trim();S("profil",[nm,vi].filter(Boolean).join(" · ")||"À compléter");
-var n=(CV.list||[]).length,lg={fr:"français",en:"anglais",es:"espagnol"};S("cv",n?n+" CV : "+(CV.list||[]).map(function(c){return lg[c.lang]||c.lang}).filter(function(x,i,a){return a.indexOf(x)===i}).join(", "):"Aucun CV, importe-en un");
-var pn=G("pnotes").value.trim();S("parcours",pn?pn.split(/\s+/).length+" mots":"Se remplit avec ton CV principal");
-S("docs",spSel("stlang")+" · photo "+(G("stphoto").checked?"oui":"non"));
-var nr=G("stnr").value;S("suivi",(G("stauto").checked?"Mise à jour auto · ":"")+(nr==="0"?"jamais refusée toute seule":"refusée après "+nr+" j sans réponse"));
-S("recherche","Note min. "+G("stmin").value+" · "+G("stcap").value+" offres max · "+G("stwin").value+" jours");
-S("app",spSel("sttheme"));S("aide","Guide et astuces")}catch(e){}}
+function spGo(k){if(k==="notifs"&&window.CE_notifUI)setTimeout(CE_notifUI,0);if(k==="aide"&&window.CE_errUI)setTimeout(CE_errUI,0);if(k==="aide"&&window.CE_perfUI)setTimeout(CE_perfUI,0);G("sphome").hidden=!!k;document.querySelectorAll("#pfbox .sp").forEach(function(x){x.hidden=x.getAttribute("data-p")!==k});G("setback").hidden=!k;G("seth").textContent=k?SPT[k]:"Paramètres";try{G("pfbox").querySelector(".dwb").scrollTop=0}catch(e){}if(k==="parcours"&&!G("pnotes").value.trim()&&(CV.list||[]).length)parFill(false)}
 document.querySelectorAll("#pfbox .spr").forEach(function(b){b.onclick=function(){spGo(b.getAttribute("data-sp"))}});
 G("setback").onclick=function(){spGo("")};G("spguide").onclick=function(){closeSet();setTimeout(gdOpen,150)};
-G("pfbox").addEventListener("change",function(){setTimeout(spSum,50)});G("pfbox").addEventListener("input",function(){clearTimeout(spSum.t);spSum.t=setTimeout(spSum,300)});
+
 function closeSet(){var d=G("pfbox");if(d.open)d.close()}
 G("setb").onclick=openSet;G("setx").onclick=closeSet;
 G("pfbox").addEventListener("click",function(e){if(e.target===this)closeSet()});
