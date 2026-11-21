@@ -39,7 +39,7 @@ const server = http.createServer((q, r) => {
     ];
     s.at = now; s.mt = now + 1e9; localStorage.setItem("candexp.sugg", JSON.stringify(s));
   }, DUPFP);
-  await p.goto(base + "/?demo&v=sugg"); await p.waitForTimeout(3000);
+  await p.goto(base + "/?demo&v=sugg"); await p.waitForFunction(() => document.querySelector("#bnav button.on, #bnav button[aria-current=page]") && !document.getElementById("ce-splash"), null, { timeout: 15000 }).catch(() => {}); await p.waitForTimeout(500);
   const shown = () => p.$$eval("#sgl .sgc h3", (h) => h.map((x) => x.textContent.replace(/^(Nouvelle|Rattrapée)\s*/, "").trim()).sort());
   eq("lien de notification : onglet Suggérées", await p.$eval(".bnav button[aria-current=page], .bnav button.on", (e) => /Suggérées/.test(e.textContent)).catch(() => false), true);
   eq("critères appliqués", await shown(), ["Acheteur Alpha", "Acheteur Paris", "Analyst Amsterdam", "Appro bas salaire", "Appro souhaité 5 ans", "Approvisionneur Brest"].sort());
