@@ -98,13 +98,15 @@ if(a.lieu)f.push('<span>Lieu <b>'+esc(a.lieu)+'</b></span>');
 if(a.salaire)f.push('<span>Salaire <b>'+esc(a.salaire)+'</b></span>');
 if(a.duree)f.push('<span>Durée <b>'+esc(a.duree)+'</b></span>');
 if(a.horaires)f.push('<span>Horaires <b>'+esc(a.horaires)+'</b></span>');
-var h='';
-if(d)h+='<div class="dup"><span>'+(DUPT==="close"?'Offre proche déjà dans tes candidatures : « '+esc(dInfo(d).poste)+' »'+((d.an||d.meta||{}).entreprise?' chez '+esc(String((d.an||d.meta).entreprise).split(" (")[0]):'')+', ajoutée le ':'Offre déjà analysée le ')+new Date(d.ct).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+' ('+esc(d.st==null?"pas encore classée":d.st===2&&d.ir?"Entretien, non retenu":ST[d.st])+').</span><button class="sm" type="button" data-act="opdup" data-id="'+esc(d.id)+'">Voir</button></div>';
+var h='',dupH='';
+if(d)dupH='<div class="dup"><span>'+(DUPT==="close"?'Offre proche déjà dans tes candidatures : « '+esc(dInfo(d).poste)+' »'+((d.an||d.meta||{}).entreprise?' chez '+esc(String((d.an||d.meta).entreprise).split(" (")[0]):'')+', ajoutée le ':'Offre déjà analysée le ')+new Date(d.ct).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+' ('+esc(d.st==null?"pas encore classée":d.st===2&&d.ir?"Entretien, non retenu":ST[d.st])+').</span><button class="sm" type="button" data-act="opdup" data-id="'+esc(d.id)+'">Voir</button></div>';
 if(!inList)h+='<div class="rtop"><span class="eyebrow">'+(o.st==null?'Nouvelle analyse':'Analysée le '+new Date(o.ct).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+' · '+esc(ST[o.st]))+'</span><button type="button" class="chev" data-act="chev" aria-expanded="'+(!col)+'" title="'+(col?'Ouvrir l\'analyse':'Refermer l\'analyse')+'" aria-label="'+(col?'Ouvrir l\'analyse':'Refermer l\'analyse')+'">'+CHEV+'</button></div>';
 h+='<div class="rh"><div style="min-width:0">'+(inList?'':'<h3>'+esc(a.poste||"Poste")+'</h3>'+(a.entreprise?'<div class="who">'+esc(a.entreprise)+'</div>':''))+'<div class="facts">'+f.join("")+'</div><span class="stamp">'+esc(a.contrat||"Contrat ?")+'</span></div>'
 +'<div class="sc"><div class="ring '+cls+'" style="--p:'+a.score+'"><span>'+a.score+'</span></div><small>correspondance<br>avec ton CV</small></div></div>';
 h+='<div class="rbody" data-act="body"'+(col?' hidden':'')+'>';
 if(a.verdict)h+='<div class="verdict">'+esc(tuify(a.verdict))+'</div>';
+/* Ordre : titre et note, verdict, offre déjà connue, salaire conseillé (posé à .salslot), puis le détail. */
+h+=dupH+'<div class="salslot"></div>';
 h+=critHTML(a);
 if(a.resume.length)h+='<div class="blk"><h4>L\'offre en bref</h4>'+li(a.resume)+'</div>';
 h+='<div class="grid2"><div class="blk pos"><h4>Tes points forts</h4>'+li(a.forts,1)+'</div><div class="blk neg"><h4>Points à travailler</h4>'+li(a.faibles,1)+'</div></div>';

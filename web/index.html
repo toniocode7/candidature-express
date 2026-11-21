@@ -655,6 +655,20 @@ dialog h3{font-size:1.12rem;margin-bottom:12px}
 dialog:focus,dialog:focus-visible{outline:none}
 .dcard.wk svg{display:block;width:100%;max-width:440px;margin:0 auto}
 .calbox .dcard{max-width:none}.calbox .calg,.calbox .calh,.calbox .callg,.calbox #calday{max-width:520px;margin-left:auto;margin-right:auto}
+/* Fenêtre de génération : poste en sous-titre ; « Télécharger » en bouton principal pleine largeur, puis les autres
+   actions en deux colonnes égales, « Fermer » centré en bas. */
+.ddsub{margin:2px 0 0;color:var(--mute);font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dd>.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#dd>.row>button{width:100%;min-width:0;padding-inline:8px;min-height:44px;white-space:nowrap;font-size:.84rem}
+#dd>.row>#dclaude{grid-column:1/-1}
+#dd>.row>#dgo,#dd>.row>#ddl,#dd>.row>#dx{grid-column:1/-1}
+#dd>.row>#ddl{order:-1;background:var(--brand);border-color:var(--brand);color:var(--onbrand)}
+#dd:has(#ddl:not([hidden])) #dgo{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+#dd>.row>#dx{order:9;justify-self:center;width:auto;min-height:0;padding:6px 14px}
+/* Rangée de suggestions d'instruction : fondu sur le bord droit pour montrer qu'elle défile. */
+.cmdchips{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);padding-right:36px!important}
+/* Barre des mails : un message long passe sous le bouton (sur téléphone). */
+@media (max-width:560px){.mlbox.mllong .mlbar{flex-wrap:wrap}.mlbox.mllong .mlst{flex-basis:100%}}
 .qma{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.qma .sb{flex:1 1 auto;justify-content:center}
 .rcl{display:grid;gap:8px;margin-top:10px}.rci{border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}.rci b{display:block}.rci .note{margin:2px 0 0;overflow-wrap:anywhere}.rci .row{margin-top:6px;gap:6px;flex-wrap:wrap}.rch{font:700 .84rem var(--fb);color:var(--mute);margin:12px 0 0;text-transform:uppercase;letter-spacing:.04em}
 #rcq{width:100%}
@@ -1012,7 +1026,7 @@ setTimeout(window.CE_splashOut,10000)})();
 <div class="sp" data-p="suivi" hidden>
   <div class="spcard"><label for="stnr">Candidature sans réponse</label><select id="stnr"><option value="30">Passer en « Refusée » après 30 jours</option><option value="45">Passer en « Refusée » après 45 jours</option><option value="60">Passer en « Refusée » après 60 jours</option><option value="0">Ne jamais changer le statut tout seul</option></select><p class="note">Compté à partir du passage en « Envoyée ». Un premier contact ou un entretien arrête le compte.</p></div>
   <div class="spcard"><label for="stgoal">Objectif de candidatures par semaine</label><select id="stgoal"><option value="0">Pas d'objectif</option><option value="3">3 par semaine</option><option value="5">5 par semaine</option><option value="10">10 par semaine</option><option value="15">15 par semaine</option><option value="20">20 par semaine</option><option value="30">30 par semaine</option></select><p class="note">Une jauge dans Stats montre où tu en es, du lundi au dimanche.</p></div>
-  <div class="spcard"><p class="spl">Sauvegarde</p><p class="note">Tes données sont synchronisées avec ta base privée. Chaque dimanche, une copie complète (candidatures, analyses, CV, réglages) est aussi déposée dans ton Google Drive, dossier « Candidature Express - Sauvegardes » ; les 8 dernières sont gardées. Pour revenir à l'une d'elles : « Restaurer », puis choisis le fichier dans Google Drive.</p><div class="row" style="margin-top:6px"><button type="button" class="sb sec" id="bkdl">Télécharger une sauvegarde</button><button type="button" class="sb sec" id="bkup">Restaurer</button></div><input type="file" id="bkf" accept="application/json,.json" hidden><button type="button" class="sb no" id="bkok" style="margin-top:8px" hidden></button><p class="note" id="bkn" style="margin:6px 0 0"></p><p class="note" style="margin:14px 0 6px">Pour ouvrir tes candidatures dans Numbers, Excel ou Google Sheets :</p><div class="row"><button type="button" class="sb sec" id="expcsv">Télécharger un tableau (CSV)</button><span class="note" id="expn"></span></div></div>
+  <div class="spcard"><p class="spl">Sauvegarde</p><p class="note">Tes données sont synchronisées avec ta base privée. Chaque dimanche, une copie complète (candidatures, analyses, CV, réglages) est aussi déposée dans ton Google Drive, dossier « Candidature Express - Sauvegardes » ; les 8 dernières sont gardées. Pour revenir à l'une d'elles : « Restaurer », puis choisis le fichier dans Google Drive.</p><div class="row" style="margin-top:6px"><button type="button" class="sb sec" id="bkdl">Télécharger une sauvegarde</button><button type="button" class="sb sec" id="bkup">Restaurer</button></div><input type="file" id="bkf" accept="application/json,.json" hidden><button type="button" class="sb no" id="bkok" style="margin-top:8px" aria-label="Restaurer la sauvegarde choisie" hidden></button><p class="note" id="bkn" style="margin:6px 0 0"></p><p class="note" style="margin:14px 0 6px">Pour ouvrir tes candidatures dans Numbers, Excel ou Google Sheets :</p><div class="row"><button type="button" class="sb sec" id="expcsv">Télécharger un tableau (CSV)</button><span class="note" id="expn"></span></div></div>
   <div class="spcard"><p class="spl">Justificatif de recherche d'emploi</p><p class="note">Un PDF de tes candidatures envoyées sur la période choisie (date, entreprise, poste, lieu, site, réponse), pour France Travail ou un organisme qui demande une preuve de recherche active.</p>
   <div class="jpq" role="group" aria-label="Période"><button type="button" class="sb sec sm" data-jp="m0">Ce mois-ci</button><button type="button" class="sb sec sm" data-jp="m1">Le mois dernier</button><button type="button" class="sb sec sm" data-jp="m3">3 derniers mois</button></div>
   <div class="pfgrid" style="margin-top:8px"><div><label for="jpfrom">Du</label><input id="jpfrom" type="date"></div><div><label for="jpto">Au</label><input id="jpto" type="date"></div></div>
@@ -1058,7 +1072,7 @@ setTimeout(window.CE_splashOut,10000)})();
 <div class="dwb"><p class="note" id="advm" style="margin:14px 0 8px"></p><div class="row" style="margin-bottom:14px"><button type="button" class="sb sec" id="advc">Copier le lien de l'annonce</button></div><div id="advb" class="advb"></div></div>
 </dialog>
 <dialog id="dd" aria-labelledby="ddt">
-  <div class="shh ddh"><h3 id="ddt">Document</h3><button type="button" class="gear" id="ddx2" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="shh ddh"><div style="min-width:0"><h3 id="ddt">Document</h3><p class="ddsub" id="ddsub"></p></div><button type="button" class="gear" id="ddx2" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="dgrid">
     <div><label for="dlang">Langue</label><select id="dlang"><option value="fr">Français</option><option value="en">Anglais</option><option value="es">Espagnol</option></select></div>
     <div><label for="dfoc">À mettre en avant (facultatif)</label><input id="dfoc" placeholder="Ex. : mon expérience en douane, ma disponibilité immédiate"></div>

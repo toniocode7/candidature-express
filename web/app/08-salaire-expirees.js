@@ -74,7 +74,7 @@ async function salEstimate(o){if(!o.an||o._smTry)return;o._smTry=1;var sample=nu
 try{var r=await sample.json("Estime la fourchette de salaire du MARCHÉ (pas celle de l'annonce), en k€ brut annuel, pour ce poste réel, ce secteur, ce lieu et ce profil (junior bac+5). En outre-mer : droit du travail français, usages locaux. À l'étranger : marché local converti en euros. Réponds en JSON : {\"bas\":0,\"haut\":0,\"explication\":\"une phrase qui tutoie et dit sur quoi tu te fondes\"}\n\nPOSTE : "+JSON.stringify({poste:i.poste,entreprise:a.entreprise,lieu:i.lieu,contrat:a.contrat,salaire_annonce:a.salaire,missions:a.resume})+"\n\nPROFIL :\n"+cv,{cache:false});
 if(r&&+r.bas>=12&&+r.haut>=+r.bas){a.sm={bas:+r.bas,haut:+r.haut,explication:String(r.explication||""),at:Date.now()};touch(o);mark("o_"+o.id);UNDOSKIP=true;try{saveOff()}finally{UNDOSKIP=false}}}catch(e){}
 document.querySelectorAll('.sal[data-oid="'+o.id+'"]').forEach(function(el){el.outerHTML=salHtml(o)})}
-function salMount(b,o){if(!b||b.querySelector(".sal"))return;b.insertAdjacentHTML("afterbegin",salHtml(o));if(o.an&&!salAI(o.an))salEstimate(o)}
+function salMount(b,o){if(!b||b.querySelector(".sal"))return;var sl=b.querySelector(".salslot");if(sl)sl.insertAdjacentHTML("afterbegin",salHtml(o));else b.insertAdjacentHTML("afterbegin",salHtml(o));if(o.an&&!salAI(o.an))salEstimate(o)}
 /* ---------- Annonces expirées ---------- */
 var EXPBUSY=false;
 function expApply(){return 0}

@@ -47,7 +47,7 @@ else if(ty==="ouvrir"){var o=find(String(a.id||""));if(o){try{showInList(o.id)}c
 n.textContent=done?done+" statut"+(done>1?"s":"")+" mis à jour.":""}
 catch(e){var c0=e&&e.code||"";n.textContent=c0==="not_granted"?"Accès refusé : reconnecte-toi à l'app puis réessaie.":c0==="rate_limited"?"Trop de demandes d'un coup, réessaie dans un moment.":"L'instruction n'a pas pu aboutir ("+(c0||"erreur")+"). Réessaie.";t.value=t.value||txt}
 CMDBUSY=false;b.disabled=false}
-G("cmdb").onclick=function(){var p=G("cmdp"),o=p.hidden;p.hidden=!o;this.setAttribute("aria-expanded",String(o));if(o)setTimeout(function(){G("cmdt").focus()},30)};
+G("cmdb").onclick=function(){var p=G("cmdp"),o=p.hidden;p.hidden=!o;try{G("cmdchips").scrollLeft=0}catch(e){}this.setAttribute("aria-expanded",String(o));if(o)setTimeout(function(){G("cmdt").focus()},30)};
 G("cmdgo").onclick=cmdRun;G("cmdx").onclick=function(){cmdClose();try{G("cmdb").focus({preventScroll:true})}catch(e){}};
 G("cmdt").addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();cmdRun()}});
 function cmdClose(){CMDH=[];G("cmdlog").innerHTML="";G("cmdn").textContent="";G("cmdt").value="";G("cmdnew").hidden=true;G("cmdp").hidden=true;G("cmdb").setAttribute("aria-expanded","false")}

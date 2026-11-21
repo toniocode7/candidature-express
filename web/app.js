@@ -168,7 +168,7 @@ else if(ty==="ouvrir"){var o=find(String(a.id||""));if(o){try{showInList(o.id)}c
 n.textContent=done?done+" statut"+(done>1?"s":"")+" mis à jour.":""}
 catch(e){var c0=e&&e.code||"";n.textContent=c0==="not_granted"?"Accès refusé : reconnecte-toi à l'app puis réessaie.":c0==="rate_limited"?"Trop de demandes d'un coup, réessaie dans un moment.":"L'instruction n'a pas pu aboutir ("+(c0||"erreur")+"). Réessaie.";t.value=t.value||txt}
 CMDBUSY=false;b.disabled=false}
-G("cmdb").onclick=function(){var p=G("cmdp"),o=p.hidden;p.hidden=!o;this.setAttribute("aria-expanded",String(o));if(o)setTimeout(function(){G("cmdt").focus()},30)};
+G("cmdb").onclick=function(){var p=G("cmdp"),o=p.hidden;p.hidden=!o;try{G("cmdchips").scrollLeft=0}catch(e){}this.setAttribute("aria-expanded",String(o));if(o)setTimeout(function(){G("cmdt").focus()},30)};
 G("cmdgo").onclick=cmdRun;G("cmdx").onclick=function(){cmdClose();try{G("cmdb").focus({preventScroll:true})}catch(e){}};
 G("cmdt").addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();cmdRun()}});
 function cmdClose(){CMDH=[];G("cmdlog").innerHTML="";G("cmdn").textContent="";G("cmdt").value="";G("cmdnew").hidden=true;G("cmdp").hidden=true;G("cmdb").setAttribute("aria-expanded","false")}
@@ -557,7 +557,7 @@ else if(OFT==="itv"){B.innerHTML=ofItv(o);var q=function(s){return B.querySelect
 if(o.cof===undefined&&!OFCOT[o.id]){OFCOT[o.id]=1;coLoad(o).then(function(c){if(c===undefined)OFCOT[o.id]=2;if(OFO===o&&OFT==="itv"&&G("ofd").open)ofRender()})}}
 else{B.innerHTML='<label class="spl" for="ofnt">Tes notes sur cette candidature</label><textarea id="ofnt" rows="10" placeholder="Ce que le recruteur t\'a dit, le salaire évoqué, la prochaine étape, le nom de ton contact...">'+esc(o.notes||"")+'</textarea><p class="note" id="ofntn" style="margin:6px 0 0">Enregistré automatiquement.</p>';var ta=G("ofnt"),tt=0;ta.addEventListener("input",function(){clearTimeout(tt);G("ofntn").textContent="...";tt=setTimeout(function(){o.notes=ta.value;touch(o);saveOff();mark("o_"+o.id);G("ofntn").textContent="Enregistré.";try{G("oftb").querySelector('[data-oft="notes"]').textContent="Notes"+(o.notes.trim()?" •":"")}catch(e){}},600)})}}
 function ofWhen(t){var d=new Date(t);return d.toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:d.getFullYear()!==new Date().getFullYear()?"numeric":undefined}).replace(".","")+" à "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}).replace(":","h")}
-function ofSuivi(o){var h='<section class="ofsec"><h4>Statut</h4><div class="ofst">'+STORD.map(function(v){var cur=o.st===v&&!(v===2&&o.ir);return '<button type="button" class="s'+v+'" data-v="'+v+'" aria-pressed="'+cur+'">'+ST[v]+'</button>'}).join("")+'</div>'+(o.st===2?'<div class="ofir"><button type="button" data-ir="0" aria-pressed="'+(!o.ir)+'">En cours</button><button type="button" data-ir="1" class="no" aria-pressed="'+(!!o.ir)+'">Non retenu</button></div>':'')+'<p class="note" style="margin:8px 0 0">Astuce : dans la liste, glisse une candidature vers la droite pour la faire avancer, vers la gauche pour la passer en refusée.</p></section>';
+function ofSuivi(o){var h='<section class="ofsec"><h4>Statut</h4><div class="ofst">'+STORD.map(function(v){var cur=o.st===v&&!(v===2&&o.ir);return '<button type="button" class="s'+v+'" data-v="'+v+'" aria-pressed="'+cur+'">'+ST[v]+'</button>'}).join("")+'</div>'+(o.st===2?'<div class="ofir"><button type="button" data-ir="0" aria-pressed="'+(!o.ir)+'">En cours</button><button type="button" data-ir="1" class="no" aria-pressed="'+(!!o.ir)+'">Non retenu</button></div>':'')+(lsg("swused",0)?'':'<p class="note" style="margin:8px 0 0">Astuce : dans la liste, glisse une candidature vers la droite pour la faire avancer, vers la gauche pour la passer en refusée.</p>')+'</section>';
 var hs=(o.hist||[]).slice().sort(function(a,c){return c.t-a.t});h+='<section class="ofsec"><h4>Historique</h4>'+(hs.length?'<ul class="oftl">'+hs.map(function(e){var l=histLabel(e);return '<li class="'+l[1]+'"><span>'+esc(l[0])+'</span><small>'+esc(ofWhen(e.t))+'</small></li>'}).join("")+'</ul>':'<p class="note">Rien pour l\'instant.</p>')+'</section>';
 return h+ofCompany(o)}
 function entNames(o){var a=o.an||o.meta||{},e=norm(String(a.entreprise||(o.sug||{}).entreprise||"").replace(/\(.*?\)/g," ")),m=e.match(/\bpour (le compte de |son client |l entreprise )?(.+)$/),out=[];
@@ -589,7 +589,7 @@ itb.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse"&&e.but
 itb.addEventListener("pointermove",function(e){if(!on||e.pointerId!==pid)return;var mx=e.clientX-x0,my=e.clientY-y0;if(!dec){if(Math.abs(mx)>12&&Math.abs(mx)>Math.abs(my)*1.4){dec=true;try{itb.setPointerCapture(pid)}catch(er){}if(!bg){bg=document.createElement("div");bg.className="swbg";el.insertBefore(bg,el.firstChild)}el.classList.add("swing")}else if(Math.abs(my)>10){on=false;return}else return}
 dx=Math.max(-160,Math.min(160,mx));var nx=swNext(o),canR=nx!=null,canL=o.st!==3&&!(o.st===2&&o.ir);if((dx>0&&!canR)||(dx<0&&!canL))dx=dx/4;itb.style.transform="translateX("+dx+"px)";
 bg.className="swbg "+(dx>0?"r":"l")+(Math.abs(dx)>=90?" go":"");bg.innerHTML=dx>0?'<span>'+(canR?"→ "+esc(ST[nx]):"Déjà à la dernière étape")+'</span>':'<span>'+(canL?(o.st===2?"Non retenu":"Refusée")+" ←":"Déjà refusée")+'</span>';e.preventDefault()});
-function end(){if(!on)return;on=false;if(!dec)return;itb.lpDone=true;setTimeout(function(){itb.lpDone=false},400);var nx=swNext(o),v=dx;itb.style.transition="transform .18s";itb.style.transform="";setTimeout(function(){itb.style.transition="";el.classList.remove("swing");if(bg){bg.remove();bg=null}},190);
+function end(){if(!on)return;on=false;if(!dec)return;itb.lpDone=true;setTimeout(function(){itb.lpDone=false},400);lss("swused",1);var nx=swNext(o),v=dx;itb.style.transition="transform .18s";itb.style.transform="";setTimeout(function(){itb.style.transition="";el.classList.remove("swing");if(bg){bg.remove();bg=null}},190);
 if(v>=90&&nx!=null){setTimeout(function(){cmdApply(o.id,nx,false);if(nx===1){o.sentAt=Date.now();saveOff()}},200)}else if(v<=-90&&o.st!==3&&!(o.st===2&&o.ir)){setTimeout(function(){if(o.st===2)cmdApply(o.id,2,true);else cmdApply(o.id,3,false)},200)}}
 itb.addEventListener("pointerup",end);itb.addEventListener("pointercancel",end)}
 
@@ -719,7 +719,7 @@ async function salEstimate(o){if(!o.an||o._smTry)return;o._smTry=1;var sample=nu
 try{var r=await sample.json("Estime la fourchette de salaire du MARCHÉ (pas celle de l'annonce), en k€ brut annuel, pour ce poste réel, ce secteur, ce lieu et ce profil (junior bac+5). En outre-mer : droit du travail français, usages locaux. À l'étranger : marché local converti en euros. Réponds en JSON : {\"bas\":0,\"haut\":0,\"explication\":\"une phrase qui tutoie et dit sur quoi tu te fondes\"}\n\nPOSTE : "+JSON.stringify({poste:i.poste,entreprise:a.entreprise,lieu:i.lieu,contrat:a.contrat,salaire_annonce:a.salaire,missions:a.resume})+"\n\nPROFIL :\n"+cv,{cache:false});
 if(r&&+r.bas>=12&&+r.haut>=+r.bas){a.sm={bas:+r.bas,haut:+r.haut,explication:String(r.explication||""),at:Date.now()};touch(o);mark("o_"+o.id);UNDOSKIP=true;try{saveOff()}finally{UNDOSKIP=false}}}catch(e){}
 document.querySelectorAll('.sal[data-oid="'+o.id+'"]').forEach(function(el){el.outerHTML=salHtml(o)})}
-function salMount(b,o){if(!b||b.querySelector(".sal"))return;b.insertAdjacentHTML("afterbegin",salHtml(o));if(o.an&&!salAI(o.an))salEstimate(o)}
+function salMount(b,o){if(!b||b.querySelector(".sal"))return;var sl=b.querySelector(".salslot");if(sl)sl.insertAdjacentHTML("afterbegin",salHtml(o));else b.insertAdjacentHTML("afterbegin",salHtml(o));if(o.an&&!salAI(o.an))salEstimate(o)}
 /* ---------- Annonces expirées ---------- */
 var EXPBUSY=false;
 function expApply(){return 0}
@@ -1125,13 +1125,15 @@ if(a.lieu)f.push('<span>Lieu <b>'+esc(a.lieu)+'</b></span>');
 if(a.salaire)f.push('<span>Salaire <b>'+esc(a.salaire)+'</b></span>');
 if(a.duree)f.push('<span>Durée <b>'+esc(a.duree)+'</b></span>');
 if(a.horaires)f.push('<span>Horaires <b>'+esc(a.horaires)+'</b></span>');
-var h='';
-if(d)h+='<div class="dup"><span>'+(DUPT==="close"?'Offre proche déjà dans tes candidatures : « '+esc(dInfo(d).poste)+' »'+((d.an||d.meta||{}).entreprise?' chez '+esc(String((d.an||d.meta).entreprise).split(" (")[0]):'')+', ajoutée le ':'Offre déjà analysée le ')+new Date(d.ct).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+' ('+esc(d.st==null?"pas encore classée":d.st===2&&d.ir?"Entretien, non retenu":ST[d.st])+').</span><button class="sm" type="button" data-act="opdup" data-id="'+esc(d.id)+'">Voir</button></div>';
+var h='',dupH='';
+if(d)dupH='<div class="dup"><span>'+(DUPT==="close"?'Offre proche déjà dans tes candidatures : « '+esc(dInfo(d).poste)+' »'+((d.an||d.meta||{}).entreprise?' chez '+esc(String((d.an||d.meta).entreprise).split(" (")[0]):'')+', ajoutée le ':'Offre déjà analysée le ')+new Date(d.ct).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+' ('+esc(d.st==null?"pas encore classée":d.st===2&&d.ir?"Entretien, non retenu":ST[d.st])+').</span><button class="sm" type="button" data-act="opdup" data-id="'+esc(d.id)+'">Voir</button></div>';
 if(!inList)h+='<div class="rtop"><span class="eyebrow">'+(o.st==null?'Nouvelle analyse':'Analysée le '+new Date(o.ct).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+' · '+esc(ST[o.st]))+'</span><button type="button" class="chev" data-act="chev" aria-expanded="'+(!col)+'" title="'+(col?'Ouvrir l\'analyse':'Refermer l\'analyse')+'" aria-label="'+(col?'Ouvrir l\'analyse':'Refermer l\'analyse')+'">'+CHEV+'</button></div>';
 h+='<div class="rh"><div style="min-width:0">'+(inList?'':'<h3>'+esc(a.poste||"Poste")+'</h3>'+(a.entreprise?'<div class="who">'+esc(a.entreprise)+'</div>':''))+'<div class="facts">'+f.join("")+'</div><span class="stamp">'+esc(a.contrat||"Contrat ?")+'</span></div>'
 +'<div class="sc"><div class="ring '+cls+'" style="--p:'+a.score+'"><span>'+a.score+'</span></div><small>correspondance<br>avec ton CV</small></div></div>';
 h+='<div class="rbody" data-act="body"'+(col?' hidden':'')+'>';
 if(a.verdict)h+='<div class="verdict">'+esc(tuify(a.verdict))+'</div>';
+/* Ordre : titre et note, verdict, offre déjà connue, salaire conseillé (posé à .salslot), puis le détail. */
+h+=dupH+'<div class="salslot"></div>';
 h+=critHTML(a);
 if(a.resume.length)h+='<div class="blk"><h4>L\'offre en bref</h4>'+li(a.resume)+'</div>';
 h+='<div class="grid2"><div class="blk pos"><h4>Tes points forts</h4>'+li(a.forts,1)+'</div><div class="blk neg"><h4>Points à travailler</h4>'+li(a.faibles,1)+'</div></div>';
@@ -1618,6 +1620,11 @@ if(SN.length)h+='<details class="calsn"'+(IV.length||SN.length<=3?'':'')+(SN.len
 G("calday").innerHTML=h;
 G("calday").querySelectorAll("[data-ci]").forEach(function(b){var go=function(){var e=L[+b.getAttribute("data-ci")];if(e)ofOpen(e.o)};b.onclick=go;b.onkeydown=function(k){if(k.key==="Enter"||k.key===" "){k.preventDefault();go()}}})}}
 
+/* Barre des mails : quand le message d'état est long (erreur…), il passe sous le bouton au lieu de se tasser à côté. */
+(function(){var st=document.querySelector(".mlbox .mlst"),box=document.querySelector(".mlbox");if(!st||!box)return;
+function f(){var n=(G("mln").textContent||"").trim().length;box.classList.toggle("mllong",n>34)}
+try{new MutationObserver(f).observe(G("mln"),{childList:true,characterData:true,subtree:true})}catch(e){}f()})();
+
 /* ---------- Simulation d'entretien à la voix ---------- */
 /* Le recruteur pose ses questions à voix haute (voix de l'appareil), tu réponds en parlant : la réponse est enregistrée,
    transcrite (Groq Whisper, gratuit) puis commentée par l'IA d'après l'annonce et ton CV. Aucune saisie au clavier. */
@@ -1764,7 +1771,7 @@ async function renderPreview(blob){var box=G("prev");box.textContent="";try{var 
 /* ---------- Génération ---------- */
 var DD={kind:"",blob:null,fname:""};
 function openDoc(kind,oo){var o=oo||find(CUR);if(o)DD.oid=o.id;if(!o||!o.an)return;if(!CV.list.length){openSet();return}
-DD.kind=kind;DD.blob=null;DD.cvb=null;G("ddl").textContent="Télécharger le PDF";G("ddt").textContent=(kind==="cv"?"CV adapté : ":kind==="msg"?"Message d'accompagnement : ":"Lettre de motivation : ")+(o.an.poste||"");
+DD.kind=kind;DD.blob=null;DD.cvb=null;G("ddl").textContent="Télécharger le PDF";G("ddt").textContent=kind==="cv"?"CV adapté":kind==="msg"?"Message d'accompagnement":"Lettre de motivation";G("ddsub").textContent=o.an.poste||"";
 var l=o.an.langue,sl=SETV().lang;G("dlang").value=sl!=="auto"?sl:((l==="en"||l==="es")?l:"fr");G("dfoc").value="";
 G("dphl").hidden=kind!=="cv";G("dph").checked=!!PF.photo&&SETV().photo!==false;G("dph").disabled=!PF.photo;
 G("prev").textContent="";G("ltx").hidden=true;G("ddl").hidden=true;G("dcp").hidden=true;G("dup").hidden=true;G("dgo").textContent="Générer";
@@ -1787,8 +1794,8 @@ await renderPreview(DD.blob);G("ddl").hidden=false;G("dn").textContent=DD.kind==
 catch(e){G("dn").textContent="Impossible de générer pour l'instant ("+(e&&e.code||"erreur")+"). Réessaie dans un instant."}
 btn.disabled=false;btn.textContent="Générer à nouveau"};
 G("ddl").onclick=async function(){if(!DD.blob)return;try{var d=await claude.use("downloads");if(!d){G("dn").textContent="Téléchargement indisponible dans cette vue.";return}if(DD.cvb&&DD.kind==="letter")await d.saveAll([{filename:DD.cvb.fname,data:DD.cvb.blob},{filename:DD.fname,data:DD.blob}]);else await d.save({filename:DD.fname,data:DD.blob})}catch(e){}};
-async function genBoth(o){openDoc("cv",o);if(!G("dd").open||DD.kind!=="cv")return;var go=G("dgo").onclick,t=o.an.poste||"";G("ddt").textContent="CV et lettre : "+t;G("dn").textContent="Je prépare ton CV puis ta lettre, environ une minute et demie...";
-await go.call(G("dgo"));if(!DD.blob)return;var cvb={blob:DD.blob,fname:DD.fname};DD.kind="letter";DD.blob=null;G("dphl").hidden=true;await go.call(G("dgo"));if(!DD.blob)return;DD.cvb=cvb;G("ddt").textContent="CV et lettre : "+t;G("ddl").textContent="Télécharger les 2 PDF";G("dn").textContent="Ton CV et ta lettre sont prêts. L'aperçu montre la lettre ; « Télécharger les 2 PDF » enregistre les deux. Relis avant d'envoyer."}
+async function genBoth(o){openDoc("cv",o);if(!G("dd").open||DD.kind!=="cv")return;var go=G("dgo").onclick,t=o.an.poste||"";G("ddt").textContent="CV et lettre";G("ddsub").textContent=t;G("dn").textContent="Je prépare ton CV puis ta lettre, environ une minute et demie...";
+await go.call(G("dgo"));if(!DD.blob)return;var cvb={blob:DD.blob,fname:DD.fname};DD.kind="letter";DD.blob=null;G("dphl").hidden=true;await go.call(G("dgo"));if(!DD.blob)return;DD.cvb=cvb;G("ddt").textContent="CV et lettre";G("ddsub").textContent=t;G("ddl").textContent="Télécharger les 2 PDF";G("dn").textContent="Ton CV et ta lettre sont prêts. L'aperçu montre la lettre ; « Télécharger les 2 PDF » enregistre les deux. Relis avant d'envoyer."}
 function claudeAsk(o,kind,lang){var a=o.an||{},cv=cvFor(lang),foc=G("dfoc").value.trim(),what=kind==="cv"?"Adapte mon CV à cette offre : une page, sobre, compatible ATS, avec un résumé de profil général, le permis de conduire dans les coordonnées et mon LinkedIn sans « www. ».":kind==="msg"?"Écris le court message d'accompagnement (60 à 110 mots) que je colle dans le formulaire de candidature, à côté de mon CV.":"Écris ma lettre de motivation pour cette offre : une page, mise en page de traitement de texte, mes coordonnées puis celles de l'entreprise, lieu et date du jour, une ligne vide de plus avant l'Objet (sans référence d'annonce), corps de 230 à 300 mots."+(lang==="en"?" Termine par « Yours sincerely » seul sur sa ligne, puis mon nom une seule fois.":"");
 return what+" Langue : "+LN[lang]+".\n\n"+RULES+"\n"+(a.conseil?"\nConseil tiré de l'analyse de l'offre, à appliquer : "+a.conseil+"\n":"")+(foc?"\nÀ mettre en avant si mon parcours le permet : "+foc+"\n":"")+"\nMES COORDONNÉES : "+[PF.nom,PF.adr,PF.cp,PF.tel,PF.mail].filter(Boolean).join(", ")+"\n"+(PF.notes?"\nCOMPLÉMENTS SUR MON PARCOURS :\n"+PF.notes+"\n":"")+"\nMON CV :\n"+cv.text+"\n\n"+offerTxt(o)}
 G("dclaude").onclick=function(){var o=find(DD.oid);if(!o||!o.an)return;CE_sendToClaude(claudeAsk(o,DD.kind,G("dlang").value))};

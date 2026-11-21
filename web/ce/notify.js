@@ -110,7 +110,7 @@
   function build() {
     var box = document.querySelector('#pfbox .sp[data-p="notifs"]'); if (!box || box.dataset.ok) return;
     box.dataset.ok = 1;
-    box.innerHTML = '<p class="spg">Sur cet appareil</p><div class="spgrp ceng"><div class="cenrow"><button type="button" class="sb pri" id="cenon">Activer sur cet appareil</button><button type="button" class="sb" id="cetest">Notification de test</button></div><p class="note" id="censt">...</p><p class="note">Sur iPhone, ouvre l\'app depuis son icône de l\'écran d\'accueil pour activer les notifications. Fais-le aussi sur le Mac pour les recevoir sur les deux.</p></div>' +
+    box.innerHTML = '<p class="spg">Sur cet appareil</p><div class="spgrp ceng"><div class="cenrow"><button type="button" class="sb pri" id="cenon">Activer sur cet appareil</button><button type="button" class="sb" id="cetest">Notification de test</button></div><p class="note" id="censt">Vérification…</p><p class="note">Sur iPhone, ouvre l\'app depuis son icône de l\'écran d\'accueil pour activer les notifications. Fais-le aussi sur le Mac pour les recevoir sur les deux.</p></div>' +
       '<p class="spg">Me prévenir pour</p><div class="spgrp ceng">' + KINDS.map(function (k) {
         return '<label class="prc swl cenk"><span>' + k[1] + '</span><input type="checkbox" class="sw" checked data-nf="' + k[0] + '"><i class="swt" aria-hidden="true"></i></label>';
       }).join("") + '</div>' +

@@ -76,3 +76,8 @@ h+=IV.map(function(e){var o=e.o,i=L.indexOf(e);return '<div class="cali iv" role
 if(SN.length)h+='<details class="calsn"'+(IV.length||SN.length<=3?'':'')+(SN.length<=3?' open':'')+'><summary><span class="csn"></span>'+(SN.length>3?'Voir les '+SN.length+' candidatures envoyées':SN.length>1?'Candidatures envoyées':'Candidature envoyée')+'</summary>'+SN.map(function(e){return '<div class="cals" role="button" tabindex="0" data-ci="'+L.indexOf(e)+'">'+esc(nm(e.o)||"Candidature")+'</div>'}).join("")+'</details>';
 G("calday").innerHTML=h;
 G("calday").querySelectorAll("[data-ci]").forEach(function(b){var go=function(){var e=L[+b.getAttribute("data-ci")];if(e)ofOpen(e.o)};b.onclick=go;b.onkeydown=function(k){if(k.key==="Enter"||k.key===" "){k.preventDefault();go()}}})}}
+
+/* Barre des mails : quand le message d'état est long (erreur…), il passe sous le bouton au lieu de se tasser à côté. */
+(function(){var st=document.querySelector(".mlbox .mlst"),box=document.querySelector(".mlbox");if(!st||!box)return;
+function f(){var n=(G("mln").textContent||"").trim().length;box.classList.toggle("mllong",n>34)}
+try{new MutationObserver(f).observe(G("mln"),{childList:true,characterData:true,subtree:true})}catch(e){}f()})();
