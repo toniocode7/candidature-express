@@ -45,16 +45,17 @@ const eq = (label, got, want) => { n++; if (JSON.stringify(got) !== JSON.stringi
   eq("première installation : tous les fichiers gardés hors ligne", keysA, 15);
 
   root = B; log = [];
-  const done = await p.evaluate(async () => {
-    const reg = await navigator.serviceWorker.getRegistration();
-    await reg.update();
-    const w = reg.installing || reg.waiting;
-    if (w) await new Promise(ok => { if (w.state === "activated") ok(); w.addEventListener("statechange", () => w.state === "activated" && ok()); });
-    const keys = await caches.keys();
-    const c = await caches.open("ce-bbbb2222");
-    return { keys, n: (await c.keys()).length };
-  });
-  const got = [...new Set(log)].filter(u => u !== "/favicon.ico").sort();
+  // Nouvelle version publiée : l'app la cherche, l'installe, puis se recharge d'elle-même (rien n'est ouvert).
+  let logAtReload = null;
+  p.on("framenavigated", () => { if (!logAtReload) logAtReload = log.slice(); });
+  const reloaded = p.waitForEvent("load", { timeout: 20000 }).then(() => true).catch(() => false);
+  await p.evaluate(async () => { const reg = await navigator.serviceWorker.getRegistration(); await reg.update(); });
+  eq("rechargement automatique sur la nouvelle version", await reloaded, true);
+  await p.waitForTimeout(500);
+  const done = await p.evaluate(async () => { const keys = await caches.keys(); const c = await caches.open("ce-bbbb2222"); const k = await c.keys(); return { keys, n: k.filter(r => /[?&]h=/.test(r.url)).length }; });
+  const got = [...new Set(logAtReload || log)].filter(u => u !== "/favicon.ico").sort();
+  const after = log.slice((logAtReload || log).length).filter(u => u !== "/favicon.ico");
+  eq("après le rechargement : rien n'est retéléchargé", after.filter(u => u !== "/" && u !== "/index.html"), []);
   eq("mise à jour : seuls sw.js et app.js téléchargés", got, ["/app.js", "/sw.js"]);
   eq("nouvelle version complète hors ligne", done.n, 15);
   eq("ancienne version supprimée", done.keys.includes("ce-aaaa1111"), false);

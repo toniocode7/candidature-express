@@ -285,6 +285,25 @@
 
   if ("serviceWorker" in navigator && !DEMO) {
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+    // Mise à jour : l'iPhone garde souvent l'app ouverte en arrière-plan. À chaque retour dans l'app (au plus une fois
+    // toutes les 10 min), on vérifie s'il existe une nouvelle version ; une fois installée, l'app se recharge d'elle-même
+    // si tu n'es pas en train de faire quelque chose (aucune fenêtre ouverte, aucun champ en cours de saisie).
+    var hadCtrl = !!navigator.serviceWorker.controller, pending = false, lastChk = Date.now();
+    function idle() { return !document.querySelector("dialog[open]") && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) && !(window.CE_simActive && window.CE_simActive()); }
+    function reloadIfIdle() { if (pending && (document.hidden || idle())) { pending = false; location.reload(); } }
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hadCtrl) { hadCtrl = true; return; } // première installation : rien à recharger
+      pending = true; reloadIfIdle();
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { reloadIfIdle(); return; }
+      reloadIfIdle();
+      if (Date.now() - lastChk > 10 * 60000) {
+        lastChk = Date.now();
+        navigator.serviceWorker.getRegistration().then(function (r) { if (r) r.update().catch(function () {}); }).catch(function () {});
+      }
+    });
+    setInterval(reloadIfIdle, 15000);
   }
   main().catch(function (e) { document.documentElement.classList.remove("ce-boot"); showGate('<h1>Oups</h1><p class="ce-lead">Le démarrage a échoué : ' + esc(e && e.message || e) + '</p><button class="main" onclick="location.reload()">Réessayer</button>'); });
 })();

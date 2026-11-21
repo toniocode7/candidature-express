@@ -43,14 +43,19 @@ self.addEventListener("fetch", e => {
   }
   if (LAZY.test(req.url)) {
     // Bibliothèques et polices : le cache d'abord.
-    e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+    e.respondWith(caches.match(req, { ignoreSearch: same }).then(hit => hit || fetch(req).then(res => {
       if (res.ok || res.type === "opaque") { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       return res;
     })));
     return;
   }
-  // Code de l'app : ouverture immédiate depuis le cache, mise à jour en arrière-plan
-  // (la nouvelle version est utilisée à l'ouverture suivante).
+  // Version publiée (empreintes connues) : les fichiers de l'app viennent du cache de cette version, sans rien
+  // retélécharger ; une nouvelle publication installe un nouveau service worker qui récupère les fichiers modifiés.
+  if (same && Object.keys(HASH).length) {
+    e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => hit || fetch(req).catch(() => caches.match("index.html"))));
+    return;
+  }
+  // Sans empreintes (essais en local) : ouverture immédiate depuis le cache, mise à jour en arrière-plan.
   const net = fetch(req).then(res => {
     if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
     return res;
