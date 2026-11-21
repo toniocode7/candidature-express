@@ -110,7 +110,8 @@ jobs:
         run: |
           U="$URL_IN"
           if [ -z "$U" ]; then
-            id=$(curl -s -A "Mozilla/5.0" "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=supply%20chain&location=Bretagne&start=0" | grep -oE 'jobs/view/[^"?]*-[0-9]{8,}' | head -1 | grep -oE '[0-9]{8,}$')
+            id=$(curl -s -A "Mozilla/5.0" "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=supply%20chain&location=Bretagne&start=0" | grep -oE 'jobs/view/[^"?]*-[0-9]{8,}' | head -1 | grep -oE '[0-9]{8,}$' || true)
+            if [ -z "$id" ]; then echo "LinkedIn refuse la recherche en ce moment (blocage temporaire) : lecture d'annonce non testée."; exit 0; fi
             U="https://www.linkedin.com/jobs/view/$id"
           fi
           echo "Annonce : $U"
