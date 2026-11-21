@@ -82,23 +82,6 @@ jobs:
           print("Modèle :", j.get("model"), "| erreur :", j.get("error"), "| détail :", str(j.get("detail"))[:900])
           if j.get("json"): print("Note obtenue :", j["json"].get("score"))
           PY
-      - name: Transcription de la voix (simulation d'entretien)
-        run: |
-          sudo apt-get install -y -qq espeak-ng > /dev/null 2>&1 || true
-          espeak-ng -v fr -s 150 -w voix.wav "Bonjour, je suis assistant logistique depuis deux ans et je gère les commandes fournisseurs."
-          python3 - <<'PY2'
-          import base64, json, os, time, urllib.request
-          data = base64.b64encode(open("voix.wav", "rb").read()).decode()
-          t = time.time()
-          req = urllib.request.Request(os.environ["FN"] + "/ai", data=json.dumps({"transcribe": {"mime": "audio/wav", "data": data}}).encode(),
-                                       headers={"x-ce-key": os.environ["KEY"], "Content-Type": "application/json"})
-          try:
-              j = json.load(urllib.request.urlopen(req, timeout=60))
-          except urllib.error.HTTPError as e:
-              j = json.load(e)
-          print(f"Durée : {time.time() - t:.1f} s | service : {j.get('via')} | erreur : {j.get('error')} {str(j.get('detail') or '')[:300]}")
-          print("Texte compris :", j.get("text"))
-          PY2
       - name: Recherche web (infos entreprise pour les lettres)
         run: |
           curl -s -X POST "$FN/read" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \
@@ -161,3 +144,27 @@ jobs:
       - name: Calendrier avec un mauvais jeton (doit être refusé)
         run: |
           curl -s -o /dev/null -w "HTTP %{http_code}\n" "$FN/ics?k=faux"
+  voix:
+    name: Voix (simulation d'entretien)
+    runs-on: ubuntu-latest
+    env:
+      FN: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1
+      KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Transcription de la voix (simulation d'entretien)
+        run: |
+          sudo apt-get install -y -qq espeak-ng > /dev/null 2>&1 || true
+          espeak-ng -v fr -s 150 -w voix.wav "Bonjour, je suis assistant logistique depuis deux ans et je gère les commandes fournisseurs."
+          python3 - <<'PY2'
+          import base64, json, os, time, urllib.request
+          data = base64.b64encode(open("voix.wav", "rb").read()).decode()
+          t = time.time()
+          req = urllib.request.Request(os.environ["FN"] + "/ai", data=json.dumps({"transcribe": {"mime": "audio/wav", "data": data}}).encode(),
+                                       headers={"x-ce-key": os.environ["KEY"], "Content-Type": "application/json"})
+          try:
+              j = json.load(urllib.request.urlopen(req, timeout=60))
+          except urllib.error.HTTPError as e:
+              j = json.load(e)
+          print(f"Durée : {time.time() - t:.1f} s | service : {j.get('via')} | erreur : {j.get('error')} {str(j.get('detail') or '')[:300]}")
+          print("Texte compris :", j.get("text"))
+          PY2
