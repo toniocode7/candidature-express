@@ -245,6 +245,9 @@
     src = src.replace(/\{\{PRENOM\}\}/g, jsStr(p.prenom || "toi"))
       .replace(/\{\{NOM\}\}/g, jsStr(p.nom || ""))
       .replace(/\{\{AFF\}\}/g, JSON.stringify(p.aff || {}));
+    // Laisse l'écran d'ouverture tracer son cercle avant de démarrer l'app (le démarrage occupe le processeur).
+    var waited = 0;
+    if (window.CE_splashGate) { var w0 = performance.now(); try { await window.CE_splashGate(); } catch (e) {} waited = performance.now() - w0; }
     hideGate();
     var s = document.createElement("script");
     s.textContent = src + "\n//# sourceURL=app.js";
@@ -254,7 +257,7 @@
     requestAnimationFrame(function () { requestAnimationFrame(function () {
       document.documentElement.classList.remove("ce-boot");
       // Vitesse : temps écoulé depuis le lancement jusqu'à l'app affichée et utilisable (noté une fois par ouverture).
-      try { window.CE_perf && window.CE_perf(performance.now(), exec); } catch (e) {}
+      try { window.CE_perf && window.CE_perf(performance.now() - waited, exec); } catch (e) {}
     }); });
     realtime();
     setTimeout(function () { try { window.CE_srcUI && window.CE_srcUI(); } catch (e) {} }, 1500);
