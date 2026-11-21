@@ -2,6 +2,7 @@
 // Appelée par l'app (« Nouvelle recherche ») et par l'horloge de Supabase (pg_cron), plus fiable que celle de GitHub.
 // Utilise une clé GitHub limitée à ce dépôt (droit « Actions » seulement), rangée dans les secrets Supabase.
 import { authorize, CORS, json, SERVICE_KEY, SUPABASE_URL } from "../_shared/common.ts";
+import { heureParis } from "../_shared/heure.ts";
 
 const TOKEN = (Deno.env.get("GH_DISPATCH_TOKEN") ?? "").trim();
 const REPO = (Deno.env.get("GH_REPO") ?? "").trim();
@@ -50,7 +51,8 @@ Deno.serve(async (req) => {
   const s = st?.[0]?.data ?? {};
   const now = Date.now();
   if (cron) {
-    const heure = +new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "numeric", hourCycle: "h23" }).format(new Date());
+    const heure = heureParis();
+    if (!Number.isFinite(heure)) return json({ error: "heure illisible" }, 500);
     if (heure % 6 !== 0) return json({ ok: true, horsCreneau: heure });
     if (now - (s._manual ?? 0) < 60 * 60e3) return json({ ok: true, deja: true, manuelle: Math.round((now - s._manual) / 60e3) });
   } else if (now - (s._asked ?? 0) < 10 * 60e3) {

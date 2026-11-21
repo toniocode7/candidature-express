@@ -83,4 +83,12 @@ eq("agence d'intérim", rid({ mail: "agence.brest@adecco.fr" }), "b");
 eq("adresse déjà notée sur la candidature", rid({ mail: "j.martin@gmail.com" }), "c");
 eq("messagerie personnelle sans lien : pas relié", rid({ mail: "paul@gmail.com", nom: "Paul" }), null);
 eq("nom tiré de l'adresse", RCF.rcName({ mail: "claire.durand@naval-group.com" }), "Claire Durand");
+// Horloge de la recherche automatique : heure de Paris lue comme un nombre (hiver et été)
+{
+  const src = require("fs").readFileSync(require("path").join(__dirname, "../supabase/functions/_shared/heure.ts"), "utf8").replace("export function", "function");
+  const heureParis = new Function(src + "\nreturn heureParis;")();
+  eq("heure de Paris : 6 h en hiver", heureParis(new Date("2026-11-21T05:00:30Z")), 6);
+  eq("heure de Paris : minuit", heureParis(new Date("2026-11-20T23:00:10Z")), 0);
+  eq("heure de Paris : 18 h en été", heureParis(new Date("2026-07-01T16:00:00Z")), 18);
+}
 done("Règles de l'app");
