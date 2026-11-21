@@ -329,6 +329,7 @@ dialog.sheet .pfgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .kpi .kl{font-size:.8rem;color:var(--mute);font-weight:600}
 .kpi .kv{font:700 1.7rem/1.1 var(--fd);letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
 .kpi .ks{font-size:.8rem;color:var(--mute);margin-top:4px;line-height:1.35}
+.errl{margin-top:8px;display:grid;gap:8px}.errl .eri{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:.82rem;overflow-wrap:anywhere}.errl .eri b{display:block;font-weight:600}.errl .eri small{color:var(--mute)}
 .dcard{border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
 .dcard h3{font-size:.95rem;font-weight:700;margin:0 0 4px}
 .dcard .dn{font-size:.8rem;color:var(--mute);margin:0 0 10px}
@@ -860,6 +861,7 @@ dialog.sheet.ofd{height:94dvh;max-height:94dvh}@media (min-width:700px){dialog.s
   <div class="fbty" role="group" aria-label="Type"><button type="button" data-fb="Souci" aria-pressed="true">Un souci</button><button type="button" data-fb="Idée" aria-pressed="false">Une idée</button></div>
   <textarea id="fbt" rows="4" placeholder="Ex. : le bouton Lettre ne réagit pas sur une offre Indeed ; ce serait bien de pouvoir trier par date..."></textarea>
   <div class="row"><button type="button" class="sb main" id="fbgo">Enregistrer</button><span class="note" id="fbn"></span></div><div class="fbl" id="fbl"></div></div>
+  <div class="spcard" id="errcard"><p class="spl">Erreurs techniques</p><p class="note">Les plantages de l'app (sur tes appareils ou pendant le tri automatique) sont notés ici et te sont signalés s'ils se répètent. Fais une capture de cette liste à Claude pour qu'il les corrige.</p><div id="errl" class="errl"></div></div>
   <div class="spcard"><p class="spl">Prise en main</p><p class="note">Les 4 écrans qui expliquent le fonctionnement du site.</p><div class="row" style="margin-top:8px"><button type="button" class="sb sec" id="spguide">Revoir le guide</button></div></div>
   <div class="spcard"><p class="spl">Astuce mails</p><p class="note">Archive tes mails de réponse plutôt que de les supprimer : ils restent lisibles par « Vérifier mes mails ».</p></div>
 </div>
@@ -891,6 +893,7 @@ dialog.sheet.ofd{height:94dvh;max-height:94dvh}@media (min-width:700px){dialog.s
   <div id="prev"></div>
 </dialog>
 <script src="config.js"></script>
+<script src="ce/errors.js"></script>
 <script src="vendor/supabase.js"></script>
 <script src="ce/ai.js"></script>
 <script src="ce/search.js"></script>

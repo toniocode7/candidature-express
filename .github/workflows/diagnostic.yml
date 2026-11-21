@@ -1,4 +1,6 @@
-name: Tester l'IA et la lecture d'annonces
+name: Diagnostic complet
+# Un seul bouton pour tout vérifier : base, IA, lecture d'annonces, notifications.
+# Rien de personnel n'est affiché (comptes et états seulement).
 on:
   workflow_dispatch:
     inputs:
@@ -6,8 +8,30 @@ on:
         description: "Adresse d'une annonce à lire (facultatif)"
         required: false
         default: ""
+      notif:
+        description: "Envoyer une notification de test sur tes appareils"
+        type: boolean
+        default: true
 jobs:
-  test:
+  base:
+    name: Base de données
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compter les données enregistrées (sans rien afficher de personnel)
+        env:
+          URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+          KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          set -e
+          q() { curl -sf "$URL/rest/v1/docs?select=id&col=eq.$1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Prefer: count=exact" -H "Range: 0-0" -D - -o /dev/null | grep -i content-range | sed 's/.*\///' | tr -d '\r'; }
+          echo "Documents de l'app : $(q app)"
+          echo "Réglages privés    : $(q ce)"
+          curl -sf "$URL/rest/v1/docs?select=id&col=eq.app&id=like.o_*" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "import json,sys; print('Candidatures :', len(json.load(sys.stdin)))"
+          echo "Inscriptions fermées : $(curl -s "$URL/auth/v1/settings" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" | python3 -c 'import json,sys; print("oui" if json.load(sys.stdin).get("disable_signup") else "NON, à fermer")')"
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/rest/v1/docs?select=id" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}")
+          echo "Lecture sans connexion (doit être vide ou refusée) : HTTP $code, $(curl -s "$URL/rest/v1/docs?select=id" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" | head -c 80)"
+  ia:
+    name: IA et lecture d'annonces
     runs-on: ubuntu-latest
     env:
       FN: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1
@@ -94,3 +118,23 @@ jobs:
           print("---")
           print(j.get("markdown", "")[:700])
           PY
+  notifs:
+    name: Notifications et calendrier
+    runs-on: ubuntu-latest
+    env:
+      FN: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1
+      KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Clé publique des notifications (créée au premier appel)
+        run: |
+          curl -s -X POST "$FN/push" -H "Content-Type: application/json" -d '{"action":"vapid"}' | python3 -c "import json,sys; k=json.load(sys.stdin)['publicKey']; print('Clé publique :', k[:12]+'…', len(k), 'caractères')"
+      - name: Envoi sans autorisation (doit être refusé)
+        run: |
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" -X POST "$FN/push" -H "Content-Type: application/json" -d '{"action":"test"}'
+      - name: Notification de test vers les appareils abonnés
+        if: ${{ github.event.inputs.notif != 'false' }}
+        run: |
+          curl -s -X POST "$FN/push" -H "x-ce-key: $KEY" -H "Content-Type: application/json" -d '{"action":"test"}'; echo
+      - name: Calendrier avec un mauvais jeton (doit être refusé)
+        run: |
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" "$FN/ics?k=faux"

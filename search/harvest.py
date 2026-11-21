@@ -18,9 +18,11 @@ import os
 import random
 import re
 import sys
+import threading
 import time
 import traceback
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote, quote_plus, urljoin, urlparse, parse_qs, urlencode
 
@@ -38,8 +40,18 @@ NOW = datetime.now(timezone.utc)
 H = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}", "Content-Type": "application/json"}
 
 
+_LOCAL = threading.local()
+_PRINT = threading.Lock()
+
+
 def log(*a):
-    print(*a, flush=True)
+    """Pendant une récolte en parallèle, chaque source garde ses lignes et les affiche d'un bloc à la fin."""
+    buf = getattr(_LOCAL, "buf", None)
+    if buf is not None:
+        buf.append(" ".join(str(x) for x in a))
+        return
+    with _PRINT:
+        print(*a, flush=True)
 
 
 # ---------------------------------------------------------------- Supabase
@@ -214,14 +226,16 @@ CC = {"usa": "US", "canada": "CA", "switzerland": "CH", "uk": "GB", "netherlands
 
 
 class _Blocked(logging.Handler):
-    """JobSpy signale un blocage (429) dans son journal sans lever d'erreur : on le capte pour le compter."""
+    """JobSpy signale un blocage (429) dans son journal sans lever d'erreur : on le capte pour le compter.
+    Compté par site (journal « jobspy.indeed », « jobspy.linkedin ») : les deux sites sont interrogés en même temps."""
     def __init__(self):
         super().__init__()
-        self.hits = 0
+        self.hits: dict[str, int] = {}
 
     def emit(self, record):
         if "429" in record.getMessage() or "blocked" in record.getMessage().lower():
-            self.hits += 1
+            site = record.name.split(".")[1] if record.name.count(".") else ""
+            self.hits[site] = self.hits.get(site, 0) + 1
 
 
 BLOCKED = _Blocked()
@@ -230,10 +244,10 @@ logging.getLogger("jobspy").addHandler(BLOCKED)
 
 def jobspy_rows(site: str, term: str, location: str, country: str, hours: int, n: int, km: int = 30):
     from jobspy import scrape_jobs
-    before = BLOCKED.hits
+    before = BLOCKED.hits.get(site, 0) + BLOCKED.hits.get("", 0)
     df = scrape_jobs(site_name=[site], search_term=term, location=location, country_indeed=country, distance=max(5, round(km / 1.609)),
                      results_wanted=n, hours_old=hours, linkedin_fetch_description=False, verbose=0)
-    if BLOCKED.hits > before:
+    if BLOCKED.hits.get(site, 0) + BLOCKED.hits.get("", 0) > before:
         raise RuntimeError("429 : le site limite les requêtes (blocage temporaire)")
     return [] if df is None else df.to_dict("records")
 
@@ -853,6 +867,46 @@ def save(found: list[dict]) -> int:
     return len(rows)
 
 
+def run_source(s: str, C: dict, uid: str) -> tuple[dict, list[str]]:
+    """Récolte d'une source, lancée dans son propre fil ; renvoie son état et ses lignes de journal."""
+    _LOCAL.buf = lines = [f"\n== {LABEL[s]}"]
+    t0 = time.time()
+    try:
+        if s in ("indeed", "linkedin"):
+            found = src_jobspy(s, C)
+        elif s == "francetravail":
+            found = src_francetravail(C)
+        elif s == "hellowork":
+            found = src_hellowork(C)
+        elif s == "meteojob":
+            found = src_meteojob(C)
+        elif s == "carrieres":
+            found = src_careers(C, uid)
+        else:
+            raise RuntimeError("source inconnue")
+        try:
+            enrich(found)
+        except Exception as e:
+            log("  Lecture des annonces incomplète :", str(e)[:150])
+        n = save(found)
+        bump("source", s, True)
+        log(f"  OK : {n} offres en {time.time() - t0:.0f} s")
+        now = int(time.time() * 1000)
+        return {"ok": True, "n": n, "at": now, "lastOk": now, "err": ""}, lines
+    except Exception as e:
+        msg = str(e)[:200]
+        try:
+            bump("source", s, False)
+        except Exception:
+            pass
+        log(f"  ÉCHEC : {msg}")
+        if os.environ.get("DEBUG"):
+            lines.append(traceback.format_exc())
+        return {"ok": False, "at": int(time.time() * 1000), "err": msg}, lines
+    finally:
+        _LOCAL.buf = None
+
+
 def main():
     uid = user_id()
     C = criteria(uid)
@@ -880,40 +934,20 @@ def main():
         if FORCE or due or failed or changed:
             todo.append(s)
     log("Sources à interroger :", ", ".join(LABEL[s] for s in todo) or "aucune (toutes récentes)")
+    # Les sources sont des sites différents : on les interroge en même temps (chacune garde son propre rythme
+    # de requêtes, aucun site n'est sollicité davantage). La recherche dure le temps de la source la plus lente.
+    t_all = time.time()
+    with ThreadPoolExecutor(max_workers=max(1, len(todo))) as pool:
+        results = list(pool.map(lambda s: run_source(s, C, uid), todo))
     total = 0
-    for s in todo:
-        t0 = time.time()
-        log(f"\n== {LABEL[s]}")
-        try:
-            if s in ("indeed", "linkedin"):
-                found = src_jobspy(s, C)
-            elif s == "francetravail":
-                found = src_francetravail(C)
-            elif s == "hellowork":
-                found = src_hellowork(C)
-            elif s == "meteojob":
-                found = src_meteojob(C)
-            elif s == "carrieres":
-                found = src_careers(C, uid)
-            else:
-                raise RuntimeError("source inconnue")
-            try:
-                enrich(found)
-            except Exception as e:
-                log("  Lecture des annonces incomplète :", str(e)[:150])
-            n = save(found)
-            total += n
-            state[s] = {"ok": True, "n": n, "at": int(time.time() * 1000), "lastOk": int(time.time() * 1000), "err": ""}
-            bump("source", s, True)
-            log(f"  OK : {n} offres en {time.time() - t0:.0f} s")
-        except Exception as e:
-            msg = str(e)[:200]
-            prev = state.get(s) or {}
-            state[s] = {**prev, "ok": False, "at": int(time.time() * 1000), "err": msg}
-            bump("source", s, False)
-            log(f"  ÉCHEC : {msg}")
-            if os.environ.get("DEBUG"):
-                traceback.print_exc()
+    for s, (res, lines) in zip(todo, results):
+        log("\n".join(lines))
+        if res.get("ok"):
+            total += res["n"]
+            state[s] = res
+        else:
+            state[s] = {**(state.get(s) or {}), **res}
+    log(f"\nSources interrogées en parallèle : {time.time() - t_all:.0f} s au total.")
     state["_run"] = {"at": int(time.time() * 1000), "n": total}
     set_doc(uid, "ce", "sources", state)
     # Ménage : offres vues pour la dernière fois il y a plus de 45 jours.

@@ -43,7 +43,7 @@ jobs:
       SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12", cache: pip, cache-dependency-path: search/requirements.txt }
       - name: Installer les outils (JobSpy, navigateur)
         run: |

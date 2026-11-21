@@ -5,6 +5,8 @@ import os
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from urllib.parse import quote
+
 import requests
 
 SB_URL = f"https://{os.environ['SUPABASE_PROJECT_REF']}.supabase.co"
@@ -29,14 +31,14 @@ def docs(q):
 def light_offers():
     """Seulement les champs utiles aux rappels (pas le texte des annonces ni les analyses) : peu de données transférées."""
     f = ("id:data->>id,st:data->st,ir:data->ir,iv:data->iv,sentAt:data->sentAt,hist:data->hist,autoRef:data->autoRef,"
-         "ap:data->an->>poste,ae:data->an->>entreprise,mp:data->meta->>poste,me:data->meta->>entreprise,gp:data->sug->>titre,ge:data->sug->>entreprise")
+         "ap:data->an->>poste,ae:data->an->>entreprise,mp:data->meta->>poste,me:data->meta->>entreprise,gp:data->sug->>titre,ge:data->sug->>entreprise,gs:data->sug->>src")
     r = requests.get(f"{SB_URL}/rest/v1/docs?select={f}&col=eq.app&id=like.o_*", headers=H, timeout=60)
     r.raise_for_status()
     out = []
     for x in r.json():
         x["an"] = {"poste": x.pop("ap", None), "entreprise": x.pop("ae", None)}
         x["meta"] = {"poste": x.pop("mp", None), "entreprise": x.pop("me", None)}
-        x["sug"] = {"titre": x.pop("gp", None), "entreprise": x.pop("ge", None)}
+        x["sug"] = {"titre": x.pop("gp", None), "entreprise": x.pop("ge", None), "src": x.pop("gs", None)}
         out.append(x)
     return out
 
@@ -118,6 +120,45 @@ def bilan(now, offers):
         parts.append(f"{top} offre{'s' if top > 1 else ''} notée{'s' if top > 1 else ''} 80 ou plus repérée{'s' if top > 1 else ''} cette semaine")
     push("bilan", f"Ta semaine : {sent} candidature{'s' if sent > 1 else ''} envoyée{'s' if sent > 1 else ''}", " · ".join(parts) + ".",
          f"bilan:{monday.date()}", "./?v=stats")
+    sources(now, offers, monday)
+
+
+def found_count(src, since):
+    """Nombre d'offres récoltées sur une source depuis une date (compté par la base, rien n'est téléchargé)."""
+    r = requests.head(f"{SB_URL}/rest/v1/raw_offers?select=id&source=eq.{src}&first_seen=gte.{since.isoformat()}",
+                      headers={**H, "Prefer": "count=exact", "Range": "0-0"}, timeout=60)
+    try:
+        return int(r.headers.get("content-range", "*/0").split("/")[-1])
+    except ValueError:
+        return 0
+
+
+def source_score(offers, since_ms, counts):
+    """Par source, sur la période : offres récoltées, candidatures envoyées, réponses (entretien, contact, refus manuel)."""
+    out = []
+    for k, lab in LABELS.items():
+        sent = [o for o in offers if (o.get("sug") or {}).get("src") == k and (o.get("st") or 0) >= 1 and (o.get("sentAt") or 0) >= since_ms]
+        rep = sum(1 for o in sent if o.get("st") in (2, 4) or (o.get("st") == 3 and not o.get("autoRef"))
+                  or any(isinstance(e, dict) and e.get("s") in (2, 4) for e in (o.get("hist") or [])))
+        if counts.get(k) or sent:
+            out.append({"k": k, "lab": lab, "found": counts.get(k, 0), "sent": len(sent), "rep": rep})
+    out.sort(key=lambda x: (-x["rep"], -x["sent"], -x["found"]))
+    return out
+
+
+def sources(now, offers, monday):
+    """Bilan d'efficacité des sources (4 semaines glissantes), envoyé avec le bilan du dimanche. Aucune source n'est coupée :
+    c'est une information pour décider, pas une action automatique."""
+    since = now - timedelta(days=28)
+    sc = source_score(offers, since.timestamp() * 1000, {k: found_count(k, since) for k in LABELS})
+    if not sc:
+        return
+    parts = [f"{x['lab']} : {x['found']} trouvée{'s' if x['found'] > 1 else ''}, {x['sent']} envoyée{'s' if x['sent'] > 1 else ''}"
+             + (f", {x['rep']} réponse{'s' if x['rep'] > 1 else ''}" if x["rep"] else "") for x in sc]
+    vides = [x["lab"] for x in sc if x["found"] >= 30 and not x["sent"]]
+    if vides:
+        parts.append(f"Aucune candidature venue de {', '.join(vides)} : {'ces sources ne t’apportent' if len(vides) > 1 else 'cette source ne t’apporte'} rien d'utile pour l'instant")
+    push("bilan", "Tes sources sur 4 semaines", " · ".join(parts) + ".", f"sources:{monday.date()}", "./?v=stats")
 
 
 LABELS = {"francetravail": "France Travail", "indeed": "Indeed", "linkedin": "LinkedIn", "hellowork": "HelloWork",
@@ -141,7 +182,7 @@ def sante(now):
         x = st.get(k) or {}
         if x and x.get("ok") is False and t - (x.get("lastOk") or 0) > 24 * 3600e3:
             alertes.append((f"src-{k}", f"{lab} ne répond plus depuis plus de 24 h",
-                            f"Erreur : {str(x.get('err') or '')[:90]}. Les autres sites continuent ; nouvel essai automatique chaque heure."))
+                            f"Erreur : {str(x.get('err') or '')[:90]}. Les autres sites continuent ; nouvel essai à chaque recherche."))
     run = (st.get("_run") or {}).get("at") or 0
     if run and t - run > 7 * 3600e3:
         alertes.append(("recherche", "La recherche automatique ne tourne plus",
@@ -168,10 +209,31 @@ def sante(now):
                             "Transmets cette alerte à Claude : il faudra alléger les données gardées."))
     except Exception:
         pass
+    alertes += erreurs(now)
     for key, titre, corps in alertes:
         push("alerte", titre, corps, f"alerte:{key}:{jour}", "./?v=accueil")
     if not alertes:
         print("Surveillance : tout fonctionne.")
+
+
+def erreurs(now):
+    """Erreurs de l'app des dernières 24 h (table app_errors) : alerte dès qu'une erreur se répète (3 fois ou plus),
+    ou que plusieurs erreurs différentes apparaissent. Le détail n'est jamais écrit dans le journal public de GitHub."""
+    since = (now - timedelta(hours=24)).isoformat()
+    try:
+        e = rows(f"app_errors?select=msg,src,n&last=gte.{quote(since)}&order=n.desc&limit=20")
+    except Exception as x:
+        print("Journal des erreurs illisible :", str(x)[:80])
+        return []
+    total = sum(x["n"] for x in e)
+    print(f"Erreurs de l'app sur 24 h : {len(e)} différente(s), {total} au total.")
+    if not e or (e[0]["n"] < 3 and len(e) < 2):
+        return []
+    top = e[0]
+    autres = f" (et {len(e) - 1} autre{'s' if len(e) > 2 else ''})" if len(e) > 1 else ""
+    return [("erreurs", "L'app a rencontré une erreur",
+             f"« {top['msg'][:110]} », {top['n']} fois en 24 h{autres}. Le détail est dans Réglages > Aide > Erreurs techniques : "
+             "fais-en une capture à Claude pour qu'il corrige.")]
 
 
 if __name__ == "__main__":

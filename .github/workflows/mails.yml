@@ -30,11 +30,11 @@ jobs:
       - if: steps.new.outputs.n != '0'
         uses: actions/checkout@v5
       - if: steps.new.outputs.n != '0'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - if: steps.new.outputs.n != '0'
         name: Relier les mails aux candidatures (l'app ouverte en arrière-plan)
         run: |
-          pip install -q playwright requests
+          pip install -q playwright==1.65.2 requests==2.34.2
           python -m playwright install --with-deps chromium > /dev/null
           python search/app_run.py mail

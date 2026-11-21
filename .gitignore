@@ -4,3 +4,4 @@ supabase/.temp/
 supabase/.branches/
 *.local.json
 __pycache__/
+_site/

@@ -18,10 +18,20 @@ jobs:
     environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
     steps:
       - uses: actions/checkout@v5
-      - name: Numéro de version du cache hors ligne
-        run: sed -i "s/const VERSION = \"ce-v1\"/const VERSION = \"ce-${GITHUB_SHA::8}\"/" web/sw.js
+      - uses: actions/setup-node@v5
+        with: { node-version: "22" }
+      - name: Préparer la version publiée (code compressé, empreinte de chaque fichier)
+        working-directory: tests
+        run: |
+          npm ci --no-audit --no-fund --silent
+          node publier.cjs ../_site "${GITHUB_SHA::8}"
+      - name: Tester la version publiée elle-même (iPhone, mise à jour par fichier)
+        working-directory: tests
+        run: |
+          npx playwright install --with-deps chromium > /dev/null
+          CE_WEB=../_site node e2e.cjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
-        with: { path: web }
+        with: { path: _site }
       - id: d
         uses: actions/deploy-pages@v4

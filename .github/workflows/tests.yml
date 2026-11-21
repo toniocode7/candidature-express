@@ -11,20 +11,20 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - name: Recherche automatique (Python)
         run: |
-          pip install -q requests pyflakes
+          pip install -q requests==2.34.2 pyflakes==4.1.0
           python -m pyflakes search/*.py
           python search/xp.py | tail -1
           python tests/test_search.py
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: "22" }
       - name: Règles de l'app et app en démo (iPhone)
         working-directory: tests
         run: |
-          npm install --no-audit --no-fund --silent
+          npm ci --no-audit --no-fund --silent
           npx playwright install --with-deps chromium > /dev/null
           npm test
       - uses: denoland/setup-deno@v2

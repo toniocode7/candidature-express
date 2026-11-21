@@ -4,7 +4,7 @@ const { chromium, devices } = require("playwright");
 const { eq, done, pick } = require("./lib.cjs");
 const FIXTXT = JSON.parse(JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures/demo.json"), "utf8")).ls.off)[0].txt;
 const DUPFP = pick(["norm", "fpHash", "FPSTOP", "fpOf"]).fpOf("Annonce publiée par Intérim Plus pour son client. " + FIXTXT.split(". ").slice(1).join(". "));
-const WEB = path.join(__dirname, "../web"), FIX = path.join(__dirname, "fixtures/demo.json");
+const WEB = process.env.CE_WEB ? path.resolve(process.env.CE_WEB) : path.join(__dirname, "../web"), FIX = path.join(__dirname, "fixtures/demo.json");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json" };
 const server = http.createServer((q, r) => {
   const f = path.join(WEB, decodeURIComponent(q.url.split("?")[0]).replace(/\/$/, "/index.html"));

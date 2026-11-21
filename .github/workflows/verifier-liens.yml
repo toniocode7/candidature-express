@@ -16,9 +16,9 @@ jobs:
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - run: |
-          pip install -q requests
+          pip install -q requests==2.34.2
           if [ "${{ inputs.reparer }}" = "true" ] || [ "${{ github.event_name }}" = "schedule" ]; then python search/fix_suggestions.py; fi
           python search/check_links.py

@@ -2,12 +2,27 @@
 const VERSION = "ce-v1";
 // Données de la carte : elles ne changent pas d'une version à l'autre, elles gardent leur propre cache.
 const GEO_CACHE = "ce-geo-v1";
-const CORE = ["./", "index.html", "app.js", "config.js", "ce/boot.js", "ce/ai.js", "ce/search.js", "ce/notify.js", "ce/criteria.js", "ce/ce.css", "manifest.webmanifest",
+const CORE = ["./", "index.html", "app.js", "config.js", "ce/errors.js", "ce/boot.js", "ce/ai.js", "ce/search.js", "ce/notify.js", "ce/criteria.js", "ce/ce.css", "manifest.webmanifest",
   "vendor/supabase.js", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 const LAZY = /\/vendor\/|fonts\.(googleapis|gstatic)\.com/;
 
+// Empreinte de chaque fichier, écrite à la publication (tests/publier.cjs). Vide en local : tout est téléchargé.
+const HASH = {};
+
+// Installation d'une nouvelle version : un fichier dont l'empreinte n'a pas changé est recopié depuis la version
+// précédente déjà sur l'appareil ; seuls les fichiers modifiés sont téléchargés.
+async function prendre(cache, f) {
+  const h = HASH[f], key = h ? f + "?h=" + h : f;
+  if (h) {
+    const old = await caches.match(new URL(key, self.registration.scope).href);
+    if (old) return cache.put(key, old);
+  }
+  const res = await fetch(f, { cache: "no-cache" });
+  if (!res.ok) throw new Error(f + " : " + res.status);
+  return cache.put(key, res);
+}
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => Promise.all(CORE.map(f => prendre(c, f)))).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== GEO_CACHE).map(k => caches.delete(k))))

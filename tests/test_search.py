@@ -36,5 +36,34 @@ eq("entreprise connue (Workday)", (h.known_ats("Thales") or {}).get("ats"), "wor
 import json  # noqa: E402
 ref = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "fp_ref.json")))
 eq("empreinte identique à l'app", h.fp_of(ref["text"]), ref["fp"])
-print(f"Recherche automatique : {14 - fails}/14 réussis")
+# Récolte en parallèle : chaque source tourne dans son fil, garde son journal, une panne n'arrête pas les autres.
+import logging  # noqa: E402
+import time  # noqa: E402
+h.save = lambda found: len(found)
+h.bump = lambda *a: None
+h.enrich = lambda found: None
+def lent(nom, d, err=None):
+    def f(*a):
+        h.log("  page lue :", nom)
+        time.sleep(d)
+        if err:
+            raise RuntimeError(err)
+        return [{}] * 3
+    return f
+h.src_hellowork, h.src_meteojob, h.src_francetravail = lent("hw", 0.4), lent("mj", 0.4, "site en panne"), lent("ft", 0.4)
+t0 = time.time()
+with h.ThreadPoolExecutor(3) as pool:
+    res = list(pool.map(lambda s: h.run_source(s, {}, "u"), ["hellowork", "meteojob", "francetravail"]))
+eq("sources en même temps", time.time() - t0 < 1.0, True)
+eq("journal gardé par source", res[0][1][:2], ["\n== HelloWork", "  page lue : hw"])
+eq("source en panne signalée seule", [r[0]["ok"] for r in res], [True, False, True])
+h.BLOCKED.hits.clear()
+logging.getLogger("jobspy.linkedin").error("429 Too Many Requests")
+eq("blocage compté pour le bon site", (h.BLOCKED.hits.get("linkedin"), h.BLOCKED.hits.get("indeed")), (1, None))
+# Bilan des sources du dimanche
+import notify  # noqa: E402
+sc = notify.source_score([{"sug": {"src": "hellowork"}, "st": 2, "sentAt": 2e12}, {"sug": {"src": "indeed"}, "st": 3, "autoRef": 1, "sentAt": 2e12},
+                          {"sug": {"src": "indeed"}, "st": 1, "sentAt": 1}], 1e12, {"hellowork": 300, "meteojob": 80})
+eq("sources : réponses comptées, refus automatique exclu", [(x["k"], x["sent"], x["rep"]) for x in sc], [("hellowork", 1, 1), ("indeed", 1, 0), ("meteojob", 0, 0)])
+print(f"Recherche automatique : {19 - fails}/19 réussis")
 sys.exit(1 if fails else 0)

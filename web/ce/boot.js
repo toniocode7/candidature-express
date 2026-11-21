@@ -25,7 +25,9 @@
     return e;
   }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function jsStr(s) { return JSON.stringify(String(s == null ? "" : s)).slice(1, -1); }
+  // Texte inséré dans une chaîne du code de l'app : valable entre "", '' ou `` (le code publié est compressé
+  // et peut changer de guillemets).
+  function jsStr(s) { return JSON.stringify(String(s == null ? "" : s)).slice(1, -1).replace(/'/g, "\\'").replace(/`/g, "\\`").replace(/\$/g, "\\$"); }
   function err(code, message) { var e = new Error(message || code); e.code = code; return e; }
 
   /* ---------- Écran d'accueil (connexion, import) ---------- */

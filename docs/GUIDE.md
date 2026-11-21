@@ -21,8 +21,8 @@
 - **Toutes les 15 min** : le script Google transmet les mails de recruteurs. L'IA lit chaque mail en entier et cite la phrase qui prouve un refus ou un entretien ; le statut change seul seulement si elle est sûre, sinon tu valides.
 - **À 0 h, 6 h, 12 h et 18 h** (sauf si tu as lancé une recherche toi-même moins d'une heure avant) : recherche d'offres (France Travail, Indeed, LinkedIn, HelloWork, Meteojob, sites carrières de tes entreprises surveillées). Chaque annonce est lue en entier : expérience exigée, salaire, doublons publiés sur plusieurs sites. Puis tri selon tes critères et ton profil, et notification.
 - **Entretien fixé** : la fiche de préparation est faite en arrière-plan ; rappel la veille (18 h) et le jour (7 h), vérifiés chaque heure.
-- **Chaque jour** : vérification que les annonces de tes candidatures sont encore en ligne (une annonce retirée est signalée, jamais passée en Refusée toute seule) ; surveillance des automatisations, avec une notification si l'une s'arrête (site muet depuis 24 h, script Gmail, IA, sauvegarde).
-- **Le dimanche** : sauvegarde complète dans ton Google Drive (4 h), bilan de la semaine (18 h). Objectif de la semaine le vendredi et le dimanche à 17 h.
+- **Chaque jour** : vérification que les annonces de tes candidatures sont encore en ligne (une annonce retirée est signalée, jamais passée en Refusée toute seule) ; surveillance des automatisations, avec une notification si l'une s'arrête (site muet depuis 24 h, script Gmail, IA, sauvegarde, erreur de l'app qui se répète).
+- **Le dimanche** : sauvegarde complète dans ton Google Drive (4 h), bilan de la semaine et efficacité de chaque source sur 4 semaines (18 h). Objectif de la semaine le vendredi et le dimanche à 17 h.
 
 ## Recherche à la demande (clé GitHub, une seule fois)
 « Nouvelle recherche » trie toujours les offres déjà récoltées. Avec cette clé, il lance en plus une récolte complète sur tous les sites, sans attendre le prochain passage (résultats en 5 à 15 minutes, avec une notification).
@@ -45,6 +45,14 @@ Quand la clé expire, l'app le dit au moment de la recherche : refais les étape
 | L'app ne s'ouvre plus ou « Supabase » en pause | Se connecter sur supabase.com et cliquer « Restore project » (gratuit). |
 | « Voir l'annonce » ouvre une autre offre | GitHub, Actions, « Vérifier les liens des offres suggérées », cocher « Retirer… et les retrier », Run workflow. |
 | Une clé a expiré ou a été changée | La remplacer dans GitHub, Settings, Secrets and variables, Actions, puis relancer l'action « Mettre à jour Supabase ». |
+| Alerte « L'app a rencontré une erreur » | Paramètres, Aide, « Erreurs techniques » : faire une capture à Claude. Une fois corrigé, « Effacer la liste ». |
+| Vérifier que tout marche | GitHub, Actions, « Diagnostic complet », Run workflow : base, IA, lecture d'annonces, notifications (rien de personnel n'est affiché). |
+
+## Pour Claude (maintenance)
+- Outils de la recherche figés dans `search/requirements.txt`. Mise à jour : `uv pip compile` de la liste des trois outils directs (python-jobspy, playwright, requests) pour Python 3.12, puis tests et une recherche manuelle.
+- Outils des tests et de la publication figés dans `tests/package-lock.json` (`npm ci`).
+- Publication : `tests/publier.cjs` compresse le code dans `_site` et écrit l'empreinte de chaque fichier dans le service worker ; les tests tournent aussi sur cette version publiée.
+- `npm test` (dossier tests) : vérificateur de code, règles, synchronisation, app en démo sur iPhone, mise à jour par fichier.
 
 ## Gratuité
 Aucune carte bancaire n'est enregistrée nulle part. À chaque plafond gratuit, le service refuse simplement et l'app passe au suivant : rien ne peut être facturé. Le compteur du jour est dans Paramètres, « Suivi des candidatures ».
