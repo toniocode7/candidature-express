@@ -608,7 +608,7 @@ function synShow(){var b=G("synb");if(!b.hidden){b.hidden=true;return}var h=synT
 G("syn").addEventListener("click",synShow);G("syn").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();synShow()}});document.addEventListener("click",function(e){var b=G("synb");if(!b.hidden&&!e.target.closest("#synb")&&!e.target.closest("#syn"))b.hidden=true});
 
 /* Candidature supprimée : « Annuler » pendant 6 secondes la remet à sa place (et dans la base). */
-function offDelUndo(o){var i=OFF.indexOf(o);setTimeout(function(){undoToast("« "+((dInfo(o).poste)||"Offre")+" » supprimée.",function(){if(find(o.id))return;OFF.splice(Math.max(0,Math.min(i,OFF.length)),0,o);touch(o);saveOff();mark("o_"+o.id,1);renderList()})},0)}
+function offDelUndo(o){var i=OFF.indexOf(o);delAdd(o.id);setTimeout(function(){undoToast("« "+((dInfo(o).poste)||"Offre")+" » supprimée.",function(){if(find(o.id))return;delUndo(o.id);OFF.splice(Math.max(0,Math.min(i,OFF.length)),0,o);touch(o);saveOff();mark("o_"+o.id,1);renderList()})},0)}
 /* ---------- Carnet des recruteurs ---------- */
 /* Résumé par expéditeur calculé par la base (ce_contacts : mails automatiques écartés), relié aux candidatures :
    adresse déjà notée sur la candidature, sinon nom de l'entreprise retrouvé dans l'adresse ou le nom de l'expéditeur. */
@@ -911,12 +911,18 @@ else if(k==="mail"){await SY.col.doc("mail").set(JSON.parse(JSON.stringify(ML)))
 else if(k==="profil"){var p=Object.assign({},PF);delete p.mt;await SY.col.doc("profil").set({p:p,mt:PF.mt||Date.now()})}
 else if(k==="cvs"){await SY.col.doc("cvs").set({list:CV.list,mt:CV.mt||Date.now()})}
 else if(k==="sugg"){await SY.col.doc("sugg").set(JSON.parse(JSON.stringify(SG)))}
-else if(k.indexOf("o_")===0){var o=find(k.slice(2));if(o){await SY.col.doc(k).set(offDoc(o));o.sy=1}else{try{await SY.col.doc(k).delete()}catch(e){}}}done[k]=1}
+else if(k.indexOf("o_")===0){var o=find(k.slice(2));if(o&&!delIs(o.id)){await SY.col.doc(k).set(offDoc(o));o.sy=1}else{await SY.col.doc(k).delete()}}done[k]=1}
 var err=null;try{for(var i=0;i<keys.length;i++){if(i&&Object.keys(SY.pri).length){var nk=Object.keys(SY.pri).filter(function(k){return SY.dirty[k]});SY.pri={};for(var j=0;j<nk.length;j++){delete SY.dirty[nk[j]];SY.fly[nk[j]]=1;await one(nk[j])}}if(i&&!pri[keys[i]])await new Promise(function(r){setTimeout(r,i%10===0?500:120)});await one(keys[i])}
 saveOff();setSyn("Synchronisé sur ton compte");SY.fail=0}catch(e){err=e;keys.forEach(function(k){if(!done[k]){SY.dirty[k]=1;if(pri[k])SY.pri[k]=1}});SY.fail=(SY.fail||0)+1;setSyn("Synchronisation en pause")}SY.fly={};SY.busy=false;if(Object.keys(SY.dirty).length){clearTimeout(SY.t);SY.t=setTimeout(push,err?Math.min(60000,3000*Math.pow(2,SY.fail-1)):Object.keys(SY.pri).length?100:1200)}}
+/* Candidatures supprimées sur cet appareil : gardées 30 jours pour que la synchronisation ne les remette jamais,
+   même si elle passe avant que la suppression soit arrivée dans la base (ou si la suppression échoue : nouvel essai). */
+var DELS=lsg("dels",{});
+function delIs(id){var t=DELS[id];return !!t&&Date.now()-t<30*864e5}
+function delAdd(id){DELS[id]=Date.now();Object.keys(DELS).forEach(function(k){if(Date.now()-DELS[k]>30*864e5)delete DELS[k]});lss("dels",DELS)}
+function delUndo(id){delete DELS[id];lss("dels",DELS)}
 function newer(a,b){var x=a.rv||0,y=b.rv||0;if(x!==y)return x>y?1:-1;x=a.mt||0;y=b.mt||0;return x===y?0:x>y?1:-1}
 async function pull(){if(!SY.col)return;try{var snap=await SY.col.get(),seen={},ch=false;
-snap.docs.forEach(function(d){if(d.same){if(d.id.indexOf("o_")===0)seen[d.id.slice(2)]=1;return}var v=d.data();if(!v)return;
+snap.docs.forEach(function(d){if(d.id.indexOf("o_")===0&&delIs(d.id.slice(2))){SY.dirty[d.id]=1;return}if(d.same){if(d.id.indexOf("o_")===0)seen[d.id.slice(2)]=1;return}var v=d.data();if(!v)return;
 if(d.id==="profil"&&v.p){if(pfMerge(v))ch=true}
 else if(d.id==="mail"&&v.seen){mlMerge(v)}
 else if(d.id==="fc"&&v.m){if(!FC||v.m!==FC.m?(v.m===fcMonth()):((+v.u||0)>(+FC.u||0))){FC={m:v.m,u:+v.u||0,t:v.t||0};lss("fc",FC);try{fcUI()}catch(e){}}else if(FC&&FC.m===v.m&&(+FC.u||0)>(+v.u||0))SY.dirty.fc=1}
@@ -1543,6 +1549,8 @@ try{if(G("prepd").open&&PREPO===o)prepRender(o)}catch(e){}}
 (function(){var d=G("simd");if(d)d.addEventListener("close",simStop)})();
 /* Pour les tests automatiques : ouvrir la fiche entretien de la première candidature analysée, savoir si le micro est actif. */
 window.CE_testPrep=function(){var o=OFF.filter(function(x){return x.an})[0]||OFF[0];if(o)prepOpen(o)};window.CE_simActive=function(){return !!SIM};
+/* Pour les tests automatiques : supprimer une candidature exactement comme le bouton « Supprimer ». */
+window.CE_testDel=function(id){var o=find(id);if(!o)return false;offDelUndo(o);OFF=OFF.filter(function(y){return y.id!==o.id});saveOff();mark("o_"+o.id);renderList();return true};
 
 /* ---------- PDF ---------- */
 function wa(s){return String(s==null?"":s).replace(/—/g,",").replace(/[\u00a0\u202f\u2009]/g," ").replace(/[‘’]/g,"'").replace(/[^\x20-\x7E\xA1-\xFF“”•–€…\n]/g,"")}

@@ -28,6 +28,10 @@ jobs:
           echo "Réglages privés    : $(q ce)"
           curl -sf "$URL/rest/v1/docs?select=id&col=eq.app&id=like.o_*" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "import json,sys; print('Candidatures :', len(json.load(sys.stdin)))"
           echo "Inscriptions fermées : $(curl -s "$URL/auth/v1/settings" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" | python3 -c 'import json,sys; print("oui" if json.load(sys.stdin).get("disable_signup") else "NON, à fermer")')"
+          curl -sf "$URL/rest/v1/docs?select=ct:data->ct,st:data->st,src:data->>src,sug:data->sug->>src,an:data->an->>note&col=eq.app&id=like.o_*" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c 'import json,sys,datetime
+          r=[x for x in json.load(sys.stdin) if x.get("st") in (None,0)]
+          print("À postuler :", len(r))
+          for x in sorted(r, key=lambda x: x.get("ct") or 0): print("  créée le", datetime.datetime.fromtimestamp((x.get("ct") or 0)/1000, datetime.timezone(datetime.timedelta(hours=1))).strftime("%d/%m %H:%M"), "| origine :", x.get("src") or "?", "| depuis suggestion :", x.get("sug") or "non", "| analysée :", "oui" if x.get("an") else "non")'
           echo "Journal des erreurs de l'app (7 jours) : $(curl -sf "$URL/rest/v1/app_errors?select=n&last=gte.$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c 'import json,sys; e=json.load(sys.stdin); print(len(e), "erreur(s) différente(s),", sum(x["n"] for x in e), "au total")')"
           echo "Vitesse d'ouverture (7 jours) : $(curl -sf "$URL/rest/v1/app_perf?select=dev,n,open_sum&day=gte.$(date -u -d '7 days ago' +%Y-%m-%d)" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c 'import json,sys; r=json.load(sys.stdin); d={}
           for x in r: a=d.setdefault(x["dev"],[0,0]); a[0]+=x["n"]; a[1]+=x["open_sum"]

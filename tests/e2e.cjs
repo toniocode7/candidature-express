@@ -91,6 +91,13 @@ const server = http.createServer((q, r) => {
   eq("carnet des recruteurs : ouvert", await p.$eval("#rcd", (d) => d.open && /Aucun recruteur/.test(d.textContent)), true);
   await p.evaluate(() => document.getElementById("rcd").close());
 
+  // Suppression : une synchronisation qui passe juste après ne remet pas la candidature (même si la base l'a encore)
+  const delId = await p.evaluate(() => JSON.parse(localStorage.getItem("candexp.off"))[0].id);
+  await p.evaluate((id) => { window.CE_testDel(id); window.dispatchEvent(new Event("ce:remote")); }, delId);
+  await p.waitForTimeout(3000);
+  eq("suppression : pas remise par la synchronisation", await p.evaluate((id) => JSON.parse(localStorage.getItem("candexp.off")).some((o) => o.id === id)), false);
+  eq("suppression : effacée de la base", await p.evaluate((id) => !JSON.stringify(JSON.parse(localStorage.getItem("ce.demo.db") || "{}")).includes('"o_' + id + '"'), delId), true);
+
   // Chaque onglet s'ouvre, sans débordement horizontal
   for (let i = 0; i < 5; i++) {
     await p.click(`.bnav button >> nth=${i}`); await p.waitForTimeout(500);

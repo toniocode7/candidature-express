@@ -85,7 +85,7 @@ function synShow(){var b=G("synb");if(!b.hidden){b.hidden=true;return}var h=synT
 G("syn").addEventListener("click",synShow);G("syn").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();synShow()}});document.addEventListener("click",function(e){var b=G("synb");if(!b.hidden&&!e.target.closest("#synb")&&!e.target.closest("#syn"))b.hidden=true});
 
 /* Candidature supprimée : « Annuler » pendant 6 secondes la remet à sa place (et dans la base). */
-function offDelUndo(o){var i=OFF.indexOf(o);setTimeout(function(){undoToast("« "+((dInfo(o).poste)||"Offre")+" » supprimée.",function(){if(find(o.id))return;OFF.splice(Math.max(0,Math.min(i,OFF.length)),0,o);touch(o);saveOff();mark("o_"+o.id,1);renderList()})},0)}
+function offDelUndo(o){var i=OFF.indexOf(o);delAdd(o.id);setTimeout(function(){undoToast("« "+((dInfo(o).poste)||"Offre")+" » supprimée.",function(){if(find(o.id))return;delUndo(o.id);OFF.splice(Math.max(0,Math.min(i,OFF.length)),0,o);touch(o);saveOff();mark("o_"+o.id,1);renderList()})},0)}
 /* ---------- Carnet des recruteurs ---------- */
 /* Résumé par expéditeur calculé par la base (ce_contacts : mails automatiques écartés), relié aux candidatures :
    adresse déjà notée sur la candidature, sinon nom de l'entreprise retrouvé dans l'adresse ou le nom de l'expéditeur. */

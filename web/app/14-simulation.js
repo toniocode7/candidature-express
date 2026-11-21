@@ -57,3 +57,5 @@ try{if(G("prepd").open&&PREPO===o)prepRender(o)}catch(e){}}
 (function(){var d=G("simd");if(d)d.addEventListener("close",simStop)})();
 /* Pour les tests automatiques : ouvrir la fiche entretien de la première candidature analysée, savoir si le micro est actif. */
 window.CE_testPrep=function(){var o=OFF.filter(function(x){return x.an})[0]||OFF[0];if(o)prepOpen(o)};window.CE_simActive=function(){return !!SIM};
+/* Pour les tests automatiques : supprimer une candidature exactement comme le bouton « Supprimer ». */
+window.CE_testDel=function(id){var o=find(id);if(!o)return false;offDelUndo(o);OFF=OFF.filter(function(y){return y.id!==o.id});saveOff();mark("o_"+o.id);renderList();return true};
