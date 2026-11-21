@@ -30,6 +30,7 @@ jobs:
         run: |
           npx playwright install --with-deps chromium > /dev/null
           CE_WEB=../_site node e2e.cjs
+          CE_WEB=../_site node sim.cjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }

@@ -9,7 +9,7 @@ const GEM = "https://generativelanguage.googleapis.com/v1beta";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Img = { mime: string; data: string };
-type Req = { mode?: "text" | "json"; prompt?: string; messages?: Msg[]; images?: Img[]; tier?: "quality" | "light"; url?: string; search?: boolean; system?: string };
+type Req = { mode?: "text" | "json"; prompt?: string; messages?: Msg[]; images?: Img[]; tier?: "quality" | "light"; url?: string; search?: boolean; system?: string; transcribe?: Img };
 type Cand = { provider: "gemini" | "groq"; model: string };
 
 class Exhausted extends Error {}
@@ -117,6 +117,45 @@ function parseJson(t: string): unknown {
 }
 
 // Une limite par minute n'épuise pas la journée : on ne marque « épuisé » que la limite quotidienne.
+// Transcription d'une réponse dite à voix haute (simulation d'entretien) : Groq Whisper (gratuit), Gemini en secours.
+async function transcribe(a: Img, flash: string[]): Promise<{ text: string; via: string }> {
+  const mime = (a.mime || "audio/mp4").split(";")[0];
+  const bin = Uint8Array.from(atob(a.data || ""), (c) => c.charCodeAt(0));
+  if (!bin.length) throw new Error("audio vide");
+  if (bin.length > 20e6) throw new Error("enregistrement trop long");
+  const errs: string[] = [];
+  if (GROQ_KEY) {
+    for (const model of ["whisper-large-v3-turbo", "whisper-large-v3"]) {
+      try {
+        const ext = /webm/.test(mime) ? "webm" : /ogg/.test(mime) ? "ogg" : /wav/.test(mime) ? "wav" : /mpeg|mp3/.test(mime) ? "mp3" : "m4a";
+        const f = new FormData();
+        f.append("file", new Blob([bin], { type: mime }), "reponse." + ext);
+        f.append("model", model); f.append("language", "fr"); f.append("response_format", "json"); f.append("temperature", "0");
+        const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", { method: "POST", headers: { Authorization: `Bearer ${GROQ_KEY}` }, body: f });
+        if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 160)}`);
+        const text = String((await res.json()).text || "").trim();
+        await bumpUsage("groq", model, true);
+        return { text, via: "groq:" + model };
+      } catch (e) { errs.push(`${model}: ${String(e).slice(0, 160)}`); await bumpUsage("groq", model, false); }
+    }
+  }
+  if (GEMINI_KEY && flash.length) {
+    const model = flash[0];
+    try {
+      const res = await fetch(`${GEM}/models/${model}:generateContent`, {
+        method: "POST", headers: { "x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Transcris mot pour mot, en français, ce que dit la personne dans cet enregistrement. Réponds uniquement par la transcription, sans commentaire." }, { inline_data: { mime_type: mime, data: a.data } }] }], generationConfig: { temperature: 0 } })
+      });
+      if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 160)}`);
+      const j = await res.json();
+      const text = String(j?.candidates?.[0]?.content?.parts?.map((x: any) => x.text || "").join("") || "").trim();
+      await bumpUsage("gemini", model, true);
+      return { text, via: "gemini:" + model };
+    } catch (e) { errs.push(`${model}: ${String(e).slice(0, 160)}`); await bumpUsage("gemini", model, false); }
+  }
+  throw new Error(errs.join(" | ") || "aucun service de transcription");
+}
+
 function isDaily(msg: string): boolean {
   return /per ?day|PerDay|daily|RPD|requests_per_day|tokens per day|TPD/i.test(msg);
 }
@@ -132,6 +171,9 @@ Deno.serve(async (req) => {
   }
 
   const m = await models();
+  if (r.transcribe) {
+    try { return json(await transcribe(r.transcribe, m.flash)); } catch (e) { return json({ error: "transcription impossible", detail: String(e).slice(0, 400) }, 502); }
+  }
   const [ex, rel] = await Promise.all([exhaustedToday(), reliability()]);
   // Dans chaque famille, on essaie d'abord les modèles qui ont bien répondu ces derniers jours.
   const sortRel = (l: string[], p: string) => l.map((m, i) => ({ m, i, s: rel.get(`${p}:${m}`) ?? 0 }))

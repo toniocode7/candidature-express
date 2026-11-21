@@ -86,3 +86,23 @@ G("syn").addEventListener("click",synShow);G("syn").addEventListener("keydown",f
 
 /* Candidature supprimée : « Annuler » pendant 6 secondes la remet à sa place (et dans la base). */
 function offDelUndo(o){var i=OFF.indexOf(o);setTimeout(function(){undoToast("« "+((dInfo(o).poste)||"Offre")+" » supprimée.",function(){if(find(o.id))return;OFF.splice(Math.max(0,Math.min(i,OFF.length)),0,o);touch(o);saveOff();mark("o_"+o.id,1);renderList()})},0)}
+/* ---------- Carnet des recruteurs ---------- */
+/* Résumé par expéditeur calculé par la base (ce_contacts : mails automatiques écartés), relié aux candidatures :
+   adresse déjà notée sur la candidature, sinon nom de l'entreprise retrouvé dans l'adresse ou le nom de l'expéditeur. */
+var RC={at:0,list:[]},RCGEN=/^(gmail|googlemail|outlook|hotmail|live|msn|yahoo|ymail|icloud|me|mac|orange|wanadoo|free|sfr|neuf|laposte|bbox|aol|gmx|proton|protonmail)$/;
+function rcCompact(s){return norm(s).replace(/\b(sas|sa|sarl|group|groupe|france|the|and|et|de|du|des|la|le|les)\b/g," ").replace(/[^a-z0-9]/g,"")}
+function rcMatch(c){var mail=c.mail||"",dom=(mail.split("@")[1]||"").split("."),core=dom.length>1?dom.slice(0,-1).join(""):"",gen=RCGEN.test(core),best=null;
+OFF.forEach(function(o){var hit=0;if(o.rcp&&o.rcp.mail===mail)hit=3;else{var co=rcCompact(coName(o)||(o.an||o.meta||{}).entreprise||"");if(co.length>=4){var cc=core.replace(/[^a-z0-9]/g,"");if(!gen&&cc.length>=4&&(cc.indexOf(co)>=0||co.indexOf(cc)>=0))hit=2;else if(rcCompact(c.nom||"").indexOf(co)>=0)hit=1}}
+if(hit&&(!best||hit>best.h||(hit===best.h&&(o.mt||o.ct||0)>(best.o.mt||best.o.ct||0))))best={o:o,h:hit}});return best&&best.o}
+function rcName(c){if(c.nom&&!/@/.test(c.nom))return c.nom.replace(/^"|"$/g,"");var l=(c.mail||"").split("@")[0].split(/[._-]+/).filter(function(x){return x&&!/\d/.test(x)});return l.length>=2?l.map(function(x){return x.charAt(0).toUpperCase()+x.slice(1)}).join(" "):c.mail}
+async function rcLoad(force){var sb=window.CE&&CE.supabase;if(!sb)return RC.list;if(!force&&Date.now()-RC.at<6e5)return RC.list;var r=await sb.rpc("ce_contacts");if(r.error)throw new Error(r.error.message);var me=norm(PF.tel||"").replace(/\D/g,"").slice(-9);
+RC={at:Date.now(),list:(r.data||[]).map(function(c){if(c.tel&&me&&c.tel.replace(/\D/g,"").slice(-9)===me)c.tel="";return c})};return RC.list}
+function rcHtml(c){var o=rcMatch(c),d=c.last?new Date(c.last).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"}):"";
+return '<div class="rci"><b>'+esc(rcName(c))+'</b><p class="note">'+esc([o?(coName(o)||(o.an||o.meta||{}).entreprise||""):"",o?dInfo(o).poste:""].filter(Boolean).join(" · ")||"Pas relié à une candidature")+'</p><p class="note">Dernier mail le '+esc(d)+(c.objet?' : « '+esc(String(c.objet).slice(0,80))+' »':'')+(c.n>1?' · '+c.n+' mails':'')+'</p>'+
+'<div class="row"><a class="sb sec sm" href="mailto:'+esc(c.mail)+'">'+esc(c.mail)+'</a>'+(c.tel?'<a class="sb sec sm" href="tel:'+esc(c.tel.replace(/[^\d+]/g,""))+'">'+esc(c.tel)+'</a>':'')+(o?'<button type="button" class="sb sec sm" data-rco="'+esc(o.id)+'">Voir la candidature</button>':'')+'</div></div>'}
+function rcRender(){var L=G("rcl"),q=norm(G("rcq").value||""),all=RC.list.filter(function(c){return !q||norm(rcName(c)+" "+c.mail+" "+((rcMatch(c)&&coName(rcMatch(c)))||"")).indexOf(q)>=0});
+var lk=all.filter(function(c){return rcMatch(c)}),ot=all.filter(function(c){return !rcMatch(c)});
+L.innerHTML=!all.length?'<p class="note">'+(RC.list.length?"Aucun recruteur ne correspond.":"Aucun recruteur pour l'instant : seuls les mails écrits par de vraies personnes apparaissent ici.")+'</p>':lk.map(rcHtml).join("")+(ot.length?'<p class="rch">Autres personnes</p>'+ot.map(rcHtml).join(""):"");
+L.querySelectorAll("[data-rco]").forEach(function(b){b.onclick=function(){G("rcd").close();TAB="all";showInList(b.getAttribute("data-rco"))}})}
+async function rcOpen(){shOpen(G("rcd"));G("rcl").innerHTML='<p class="note">Chargement...</p>';try{await rcLoad();rcRender()}catch(e){G("rcl").innerHTML='<p class="note">Carnet indisponible pour l\'instant ('+esc(e.message||e)+').</p>'}}
+(function(){if(!G("rcgo"))return;G("rcgo").onclick=rcOpen;G("rcq").oninput=rcRender})();

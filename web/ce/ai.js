@@ -71,7 +71,12 @@
     sample.limits = async function () { return { images: { maxCount: 4 } }; };
     return sample;
   }
-  window.CE_AI = { sample: makeSample, call: call };
+  // Transcription d'un enregistrement (réponse dite à voix haute) : renvoie le texte.
+  async function transcribe(blob) {
+    var j = await call("ai", { transcribe: { mime: blob.type || "audio/mp4", data: await blobToB64(blob) } });
+    return String(j.text || "");
+  }
+  window.CE_AI = { sample: makeSample, call: call, transcribe: transcribe };
 
   /* ---------- Outils de lecture compatibles avec l'ancien artefact ---------- */
   function unavailable() { return err("unavailable"); }

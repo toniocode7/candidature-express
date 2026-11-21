@@ -91,6 +91,34 @@ OFF.forEach(function(o){var i=dInfo(o),a=o.an||o.meta||{};rows.push([i.poste,a.e
 var csv="﻿"+rows.map(function(r){return r.map(q).join(";")}).join("\r\n");
 try{var d=await claude.use("downloads");if(!d)throw{code:"unavailable"};await d.save({filename:"Candidatures "+new Date().toISOString().slice(0,10)+".csv",data:new Blob([csv],{type:"text/csv"})});n.textContent=OFF.length+" candidatures exportées."}catch(e){n.textContent=e&&e.code==="cancelled"?"Export annulé.":"L'export n'a pas pu se faire ici ("+(e&&e.code||"erreur")+")."}};
 
+/* ---------- Justificatif de recherche d'emploi (PDF) ---------- */
+function jpDay(d){return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
+function jpSet(k){var n=new Date(),a,b;if(k==="m0"){a=new Date(n.getFullYear(),n.getMonth(),1);b=n}else if(k==="m1"){a=new Date(n.getFullYear(),n.getMonth()-1,1);b=new Date(n.getFullYear(),n.getMonth(),0)}else{a=new Date(n.getFullYear(),n.getMonth()-2,1);b=n}G("jpfrom").value=jpDay(a);G("jpto").value=jpDay(b)}
+/* Candidatures envoyées entre deux dates (incluses), triées par date d'envoi. */
+function jpRows(from,to){var a=new Date(from+"T00:00:00").getTime(),b=new Date(to+"T23:59:59").getTime();return OFF.filter(function(o){if(o.st==null||o.st===0)return false;var t=dSent(o);return t&&t>=a&&t<=b}).sort(function(x,y){return dSent(x)-dSent(y)}).map(function(o){var i=dInfo(o),a2=o.an||o.meta||{},sg=o.sug||{};
+return {d:new Date(dSent(o)).toLocaleDateString("fr-FR"),e:String(a2.entreprise||sg.entreprise||"").split(" (")[0],p:i.poste||"",l:i.lieu||"",s:o.spont?"Candidature spontanée":dSite(o),r:o.st===2?(o.ir?"Entretien, non retenu":"Entretien"):o.st===4?"Premier contact":o.st===3?(o.autoRef?"Sans réponse":"Refus"):"En attente"}})}
+/* Caractères hors de la police standard du PDF remplacés par leur équivalent simple. */
+function jpTxt(s){return String(s==null?"":s).replace(/[‘’ʼ]/g,"'").replace(/[“”«»]/g,'"').replace(/[–—]/g,"-").replace(/œ/g,"oe").replace(/Œ/g,"OE").replace(/…/g,"...").replace(/[  ]/g," ").replace(/[^\x20-\x7e -ÿ]/g,"")}
+async function jpPdf(from,to){var R=jpRows(from,to);var J=await loadJsPdf();var doc=new J({unit:"mm",format:"a4"}),W=210,M=14,y=18;
+function fr(s){var d=new Date(s+"T12:00:00");return d.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}
+doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text(jpTxt("Justificatif de recherche d'emploi"),M,y);y+=7;
+doc.setFont("helvetica","normal");doc.setFontSize(10);var who=[PF.nom,pfLoc(),PF.mail,PF.tel].filter(Boolean).map(jpTxt);if(who.length){doc.text(who.join("  ·  ").replace(/·/g,"-"),M,y);y+=5}
+doc.text(jpTxt("Période : du "+fr(from)+" au "+fr(to)),M,y);y+=5;
+var cnt={};R.forEach(function(r){cnt[r.r]=(cnt[r.r]||0)+1});
+doc.text(jpTxt(R.length+" candidature"+(R.length>1?"s":"")+" envoyée"+(R.length>1?"s":"")+(R.length?" : "+Object.keys(cnt).map(function(k){return cnt[k]+" "+k.toLowerCase()}).join(", "):"")+"."),M,y);y+=8;
+var C=[["Date",20],["Entreprise",37],["Poste",46],["Lieu",28],["Site",30],["Réponse",21]];
+function head(){doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.setFillColor(238,238,238);doc.rect(M,y-4,W-2*M,6,"F");var x=M+1;C.forEach(function(c){doc.text(jpTxt(c[0]),x,y);x+=c[1]});y+=4;doc.setFont("helvetica","normal")}
+head();
+R.forEach(function(r){var cells=[r.d,r.e,r.p,r.l,r.s,r.r].map(function(v,i){return doc.splitTextToSize(jpTxt(v)||"-",C[i][1]-2)}),h=Math.max.apply(null,cells.map(function(c){return c.length}))*3.6+2;
+if(y+h>285){doc.addPage();y=18;head()}var x=M+1;cells.forEach(function(c,i){doc.text(c,x,y+1);x+=C[i][1]});doc.setDrawColor(225,225,225);doc.line(M,y+h-2.2,W-M,y+h-2.2);y+=h});
+if(!R.length){doc.setFontSize(10);doc.text(jpTxt("Aucune candidature envoyée sur cette période."),M,y+4)}
+var pages=doc.getNumberOfPages();for(var i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setTextColor(130);doc.text(jpTxt("Établi le "+new Date().toLocaleDateString("fr-FR")+" à partir du suivi de candidatures  -  page "+i+" / "+pages),M,292);doc.setTextColor(0)}
+return {blob:doc.output("blob"),n:R.length}}
+(function(){if(!G("jpgo"))return;jpSet("m1");document.querySelectorAll("[data-jp]").forEach(function(b){b.onclick=function(){jpSet(b.getAttribute("data-jp"))}});
+G("jpgo").onclick=async function(){var n=G("jpn"),f=G("jpfrom").value,t=G("jpto").value;if(!f||!t||f>t){n.textContent="Choisis une période valide.";return}n.textContent="Création...";
+try{var r=await jpPdf(f,t);var d=await claude.use("downloads");if(!d)throw{code:"unavailable"};await d.save({filename:"Justificatif recherche d'emploi "+f+" au "+t+".pdf",data:r.blob});n.textContent=r.n+" candidature"+(r.n>1?"s":"")+" dans le PDF."}
+catch(e){n.textContent=e&&e.code==="cancelled"?"Annulé.":"Le PDF n'a pas pu être créé ("+(e&&(e.code||e.message)||"erreur")+").";if(window.CE_err&&!(e&&e.code))CE_err(e,"justificatif")}}})();
+
 var PREPO=null;
 function sgWhyAsk(b,u){var art=b.closest("article")||b.parentNode.parentNode,ex=art.querySelector(".sgwhy");if(ex){ex.remove();return}
 art.insertAdjacentHTML("beforeend",'<div class="sgwhy"><p>Pourquoi tu l\'écartes ? Ça m\'aide à mieux choisir les prochaines offres.</p><div class="sgwc">'+WHYS.map(function(w){return '<button type="button" data-w="'+w[0]+'" title="'+w[1]+'">'+(w[2]||w[1])+'</button>'}).join("")+'</div><button type="button" class="lk" data-wx>Annuler</button></div>');

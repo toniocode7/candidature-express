@@ -80,3 +80,35 @@ window.CE_errUI = function () {
     };
   });
 };
+
+/* Vitesse de l'app : temps d'ouverture envoyé une fois par lancement (table app_perf, moyenne par jour et par appareil). */
+window.CE_perf = function (openMs, execMs) {
+  if (window.CE_BG || /[?&]demo\b/.test(location.search)) return;
+  var ua = navigator.userAgent, dev = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Macintosh/.test(ua) ? (navigator.maxTouchPoints > 1 ? "iPad" : "Mac") : /Android/.test(ua) ? "Android" : "autre";
+  var n = 0;
+  try { n = (JSON.parse(localStorage.getItem("candexp.off") || "[]") || []).length; } catch (e) {}
+  window.CE_PERF_LAST = { open: Math.round(openMs), exec: Math.round(execMs), dev: dev, n: n };
+  var tries = 0;
+  (function send() {
+    var ce = window.CE, sb = ce && ce.supabase;
+    if (!sb || !ce.user) { if (++tries < 10) setTimeout(send, 3000); return; }
+    sb.rpc("ce_log_perf", { p_open: Math.round(openMs), p_exec: Math.round(execMs), p_cands: n, p_dev: dev }).then(function () {}, function () {});
+  })();
+};
+
+/* Vitesse dans Réglages > Aide : moyenne des 7 derniers jours, par appareil. */
+window.CE_perfUI = function () {
+  var box = document.getElementById("perfl"), ce = window.CE, sb = ce && ce.supabase;
+  if (!box) return;
+  var last = window.CE_PERF_LAST;
+  var cur = last ? "Cette ouverture : " + (last.open / 1000).toFixed(1).replace(".", ",") + " s." : "";
+  if (!sb) { box.textContent = cur; return; }
+  var since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  sb.from("app_perf").select("dev,n,open_sum,open_max").gte("day", since).then(function (r) {
+    if (r.error || !(r.data || []).length) { box.textContent = cur || "Pas encore de mesure."; return; }
+    var by = {};
+    r.data.forEach(function (x) { var b = by[x.dev] = by[x.dev] || { n: 0, s: 0, m: 0 }; b.n += x.n; b.s += +x.open_sum; b.m = Math.max(b.m, x.open_max); });
+    var f = function (ms) { return (ms / 1000).toFixed(1).replace(".", ",") + " s"; };
+    box.textContent = Object.keys(by).map(function (d) { var b = by[d]; return d + " : " + f(b.s / b.n) + " en moyenne (" + b.n + " ouverture" + (b.n > 1 ? "s" : "") + ", la plus lente " + f(b.m) + ")"; }).join(" · ") + (cur ? ". " + cur : ".");
+  });
+};

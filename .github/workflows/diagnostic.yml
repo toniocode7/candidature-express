@@ -29,6 +29,10 @@ jobs:
           curl -sf "$URL/rest/v1/docs?select=id&col=eq.app&id=like.o_*" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "import json,sys; print('Candidatures :', len(json.load(sys.stdin)))"
           echo "Inscriptions fermées : $(curl -s "$URL/auth/v1/settings" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" | python3 -c 'import json,sys; print("oui" if json.load(sys.stdin).get("disable_signup") else "NON, à fermer")')"
           echo "Journal des erreurs de l'app (7 jours) : $(curl -sf "$URL/rest/v1/app_errors?select=n&last=gte.$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c 'import json,sys; e=json.load(sys.stdin); print(len(e), "erreur(s) différente(s),", sum(x["n"] for x in e), "au total")')"
+          echo "Vitesse d'ouverture (7 jours) : $(curl -sf "$URL/rest/v1/app_perf?select=dev,n,open_sum&day=gte.$(date -u -d '7 days ago' +%Y-%m-%d)" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c 'import json,sys; r=json.load(sys.stdin); d={}
+          for x in r: a=d.setdefault(x["dev"],[0,0]); a[0]+=x["n"]; a[1]+=x["open_sum"]
+          print(" · ".join(f"{k} {v[1]/v[0]/1000:.1f} s ({v[0]} ouvertures)" for k,v in d.items()) or "pas encore de mesure")')"
+          echo "Carnet des recruteurs : $(curl -sf -X POST "$URL/rest/v1/rpc/ce_contacts" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}' | python3 -c 'import json,sys; r=json.load(sys.stdin); print(len(r), "personne(s),", sum(1 for x in r if x.get("tel")), "avec téléphone")')"
           curl -s -o /dev/null -w "Écriture d'une erreur sans connexion (doit être refusée) : HTTP %{http_code}\n" -X POST "$URL/rest/v1/rpc/ce_log_error" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" -H "Content-Type: application/json" -d '{"p_msg":"test","p_src":"","p_ver":"","p_ctx":""}'
           code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/rest/v1/docs?select=id" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}")
           echo "Lecture sans connexion (doit être vide ou refusée) : HTTP $code, $(curl -s "$URL/rest/v1/docs?select=id" -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" | head -c 80)"
@@ -78,6 +82,23 @@ jobs:
           print("Modèle :", j.get("model"), "| erreur :", j.get("error"), "| détail :", str(j.get("detail"))[:900])
           if j.get("json"): print("Note obtenue :", j["json"].get("score"))
           PY
+      - name: Transcription de la voix (simulation d'entretien)
+        run: |
+          sudo apt-get install -y -qq espeak-ng > /dev/null 2>&1 || true
+          espeak-ng -v fr -s 150 -w voix.wav "Bonjour, je suis assistant logistique depuis deux ans et je gère les commandes fournisseurs."
+          python3 - <<'PY2'
+          import base64, json, os, time, urllib.request
+          data = base64.b64encode(open("voix.wav", "rb").read()).decode()
+          t = time.time()
+          req = urllib.request.Request(os.environ["FN"] + "/ai", data=json.dumps({"transcribe": {"mime": "audio/wav", "data": data}}).encode(),
+                                       headers={"x-ce-key": os.environ["KEY"], "Content-Type": "application/json"})
+          try:
+              j = json.load(urllib.request.urlopen(req, timeout=60))
+          except urllib.error.HTTPError as e:
+              j = json.load(e)
+          print(f"Durée : {time.time() - t:.1f} s | service : {j.get('via')} | erreur : {j.get('error')} {str(j.get('detail') or '')[:300]}")
+          print("Texte compris :", j.get("text"))
+          PY2
       - name: Recherche web (infos entreprise pour les lettres)
         run: |
           curl -s -X POST "$FN/read" -H "x-ce-key: $KEY" -H "Content-Type: application/json" \

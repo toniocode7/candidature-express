@@ -260,7 +260,7 @@ shOpen(d)}
 /* fiche entretien */
 function prepList(a){return '<ul>'+(a||[]).map(function(x){return '<li>'+esc(String(x).replace(/\s*—\s*/g,", "))+'</li>'}).join("")+'</ul>'}
 var COTRY={};function prepRender(o){var B=G("prepb"),P=o.prep&&o.prep.d;G("prept").textContent="Entretien · "+(dInfo(o).poste||"Offre");if(o.cof===undefined&&!COTRY[o.id]){COTRY[o.id]=1;coLoad(o).then(function(c){if(c===undefined)COTRY[o.id]=2;if(G("prepd").open&&PREPO===o)prepRender(o)})}PREPO=o;var CO=(o.cof===undefined&&COTRY[o.id]===2)?"":coHtml(o);
-if(!P){B.innerHTML='<p class="note">'+esc(mlOffLabel(o))+'</p><p>Je prépare une fiche à partir de l\'annonce et de ton CV : ce qu\'il faut savoir sur le poste et l\'entreprise, tes atouts à mettre en avant, les questions probables avec des pistes de réponse, et les questions à poser.</p><div class="row"><button type="button" class="sb main" id="prepgo">Préparer ma fiche</button><span class="note" id="prepn"></span></div>'+CO;G("prepgo").onclick=function(){prepGen(o)};return}
+if(!P){B.innerHTML=simCard(o)+'<p class="note">'+esc(mlOffLabel(o))+'</p><p>Je prépare une fiche à partir de l\'annonce et de ton CV : ce qu\'il faut savoir sur le poste et l\'entreprise, tes atouts à mettre en avant, les questions probables avec des pistes de réponse, et les questions à poser.</p><div class="row"><button type="button" class="sb main" id="prepgo">Préparer ma fiche</button><span class="note" id="prepn"></span></div>'+CO;G("prepgo").onclick=function(){prepGen(o)};simBind(o);return}
 var h='<p class="note">'+esc(mlOffLabel(o))+' · fiche du '+new Date(o.prep.at).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+'</p>';
 if(P.poste&&P.poste.length)h+='<section><h4>Le poste en bref</h4>'+prepList(P.poste)+'</section>';
 h+=CO;if(P.entreprise&&P.entreprise.length)h+='<section><h4>L\'entreprise</h4>'+prepList(P.entreprise)+'</section>';
@@ -269,7 +269,7 @@ if(P.points_faibles&&P.points_faibles.length)h+='<section><h4>Points sensibles e
 if(P.questions&&P.questions.length)h+='<section><h4>Questions probables</h4>'+P.questions.map(function(x){return '<div class="qa"><b>'+esc(x.question||"")+'</b><span class="ph">'+esc(String(x.piste||"").replace(/\s*—\s*/g,", "))+'</span></div>'}).join("")+'</section>';
 if(P.a_poser&&P.a_poser.length)h+='<section><h4>Questions à poser</h4>'+prepList(P.a_poser)+'</section>';
 if(P.pratique&&P.pratique.length)h+='<section><h4>Côté pratique</h4>'+prepList(P.pratique)+'</section>';
-h+='<div class="row"><button type="button" class="sb sec" id="prepgo">Refaire la fiche</button><span class="note" id="prepn"></span></div>';B.innerHTML=h;G("prepgo").onclick=function(){prepGen(o)}}
+h+='<div class="row"><button type="button" class="sb sec" id="prepgo">Refaire la fiche</button><span class="note" id="prepn"></span></div>';B.innerHTML=simCard(o)+h;G("prepgo").onclick=function(){prepGen(o)};simBind(o)}
 function prepOpen(o){prepRender(o);shOpen(G("prepd"));G("prepb").scrollTop=0}
 async function prepGen(o){var n=G("prepn"),b=G("prepgo"),sample=null;try{sample=await claude.use("sample")}catch(e){}if(!sample){n.textContent="La préparation n'est pas disponible dans cette vue. Vérifie ta connexion internet puis réessaie.";return}
 b.disabled=true;n.textContent="Préparation en cours, une vingtaine de secondes...";
@@ -386,6 +386,34 @@ var rows=[["Poste","Entreprise","Lieu","Contrat","Statut","Note","Ajoutée le","
 OFF.forEach(function(o){var i=dInfo(o),a=o.an||o.meta||{};rows.push([i.poste,a.entreprise||(o.sug||{}).entreprise||"",i.lieu,i.contrat,o.st==null?"Nouvelle":(o.st===2&&o.ir?"Entretien, non retenu":ST[o.st]),i.score==null?"":i.score,new Date(o.ct).toLocaleDateString("fr-FR"),o.st>=1?new Date(dSent(o)).toLocaleDateString("fr-FR"):"",o.iv&&o.iv.at?new Date(o.iv.at).toLocaleString("fr-FR"):"",o.notes||"",i.url])});
 var csv="﻿"+rows.map(function(r){return r.map(q).join(";")}).join("\r\n");
 try{var d=await claude.use("downloads");if(!d)throw{code:"unavailable"};await d.save({filename:"Candidatures "+new Date().toISOString().slice(0,10)+".csv",data:new Blob([csv],{type:"text/csv"})});n.textContent=OFF.length+" candidatures exportées."}catch(e){n.textContent=e&&e.code==="cancelled"?"Export annulé.":"L'export n'a pas pu se faire ici ("+(e&&e.code||"erreur")+")."}};
+
+/* ---------- Justificatif de recherche d'emploi (PDF) ---------- */
+function jpDay(d){return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
+function jpSet(k){var n=new Date(),a,b;if(k==="m0"){a=new Date(n.getFullYear(),n.getMonth(),1);b=n}else if(k==="m1"){a=new Date(n.getFullYear(),n.getMonth()-1,1);b=new Date(n.getFullYear(),n.getMonth(),0)}else{a=new Date(n.getFullYear(),n.getMonth()-2,1);b=n}G("jpfrom").value=jpDay(a);G("jpto").value=jpDay(b)}
+/* Candidatures envoyées entre deux dates (incluses), triées par date d'envoi. */
+function jpRows(from,to){var a=new Date(from+"T00:00:00").getTime(),b=new Date(to+"T23:59:59").getTime();return OFF.filter(function(o){if(o.st==null||o.st===0)return false;var t=dSent(o);return t&&t>=a&&t<=b}).sort(function(x,y){return dSent(x)-dSent(y)}).map(function(o){var i=dInfo(o),a2=o.an||o.meta||{},sg=o.sug||{};
+return {d:new Date(dSent(o)).toLocaleDateString("fr-FR"),e:String(a2.entreprise||sg.entreprise||"").split(" (")[0],p:i.poste||"",l:i.lieu||"",s:o.spont?"Candidature spontanée":dSite(o),r:o.st===2?(o.ir?"Entretien, non retenu":"Entretien"):o.st===4?"Premier contact":o.st===3?(o.autoRef?"Sans réponse":"Refus"):"En attente"}})}
+/* Caractères hors de la police standard du PDF remplacés par leur équivalent simple. */
+function jpTxt(s){return String(s==null?"":s).replace(/[‘’ʼ]/g,"'").replace(/[“”«»]/g,'"').replace(/[–—]/g,"-").replace(/œ/g,"oe").replace(/Œ/g,"OE").replace(/…/g,"...").replace(/[  ]/g," ").replace(/[^\x20-\x7e -ÿ]/g,"")}
+async function jpPdf(from,to){var R=jpRows(from,to);var J=await loadJsPdf();var doc=new J({unit:"mm",format:"a4"}),W=210,M=14,y=18;
+function fr(s){var d=new Date(s+"T12:00:00");return d.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}
+doc.setFont("helvetica","bold");doc.setFontSize(15);doc.text(jpTxt("Justificatif de recherche d'emploi"),M,y);y+=7;
+doc.setFont("helvetica","normal");doc.setFontSize(10);var who=[PF.nom,pfLoc(),PF.mail,PF.tel].filter(Boolean).map(jpTxt);if(who.length){doc.text(who.join("  ·  ").replace(/·/g,"-"),M,y);y+=5}
+doc.text(jpTxt("Période : du "+fr(from)+" au "+fr(to)),M,y);y+=5;
+var cnt={};R.forEach(function(r){cnt[r.r]=(cnt[r.r]||0)+1});
+doc.text(jpTxt(R.length+" candidature"+(R.length>1?"s":"")+" envoyée"+(R.length>1?"s":"")+(R.length?" : "+Object.keys(cnt).map(function(k){return cnt[k]+" "+k.toLowerCase()}).join(", "):"")+"."),M,y);y+=8;
+var C=[["Date",20],["Entreprise",37],["Poste",46],["Lieu",28],["Site",30],["Réponse",21]];
+function head(){doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.setFillColor(238,238,238);doc.rect(M,y-4,W-2*M,6,"F");var x=M+1;C.forEach(function(c){doc.text(jpTxt(c[0]),x,y);x+=c[1]});y+=4;doc.setFont("helvetica","normal")}
+head();
+R.forEach(function(r){var cells=[r.d,r.e,r.p,r.l,r.s,r.r].map(function(v,i){return doc.splitTextToSize(jpTxt(v)||"-",C[i][1]-2)}),h=Math.max.apply(null,cells.map(function(c){return c.length}))*3.6+2;
+if(y+h>285){doc.addPage();y=18;head()}var x=M+1;cells.forEach(function(c,i){doc.text(c,x,y+1);x+=C[i][1]});doc.setDrawColor(225,225,225);doc.line(M,y+h-2.2,W-M,y+h-2.2);y+=h});
+if(!R.length){doc.setFontSize(10);doc.text(jpTxt("Aucune candidature envoyée sur cette période."),M,y+4)}
+var pages=doc.getNumberOfPages();for(var i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7.5);doc.setTextColor(130);doc.text(jpTxt("Établi le "+new Date().toLocaleDateString("fr-FR")+" à partir du suivi de candidatures  -  page "+i+" / "+pages),M,292);doc.setTextColor(0)}
+return {blob:doc.output("blob"),n:R.length}}
+(function(){if(!G("jpgo"))return;jpSet("m1");document.querySelectorAll("[data-jp]").forEach(function(b){b.onclick=function(){jpSet(b.getAttribute("data-jp"))}});
+G("jpgo").onclick=async function(){var n=G("jpn"),f=G("jpfrom").value,t=G("jpto").value;if(!f||!t||f>t){n.textContent="Choisis une période valide.";return}n.textContent="Création...";
+try{var r=await jpPdf(f,t);var d=await claude.use("downloads");if(!d)throw{code:"unavailable"};await d.save({filename:"Justificatif recherche d'emploi "+f+" au "+t+".pdf",data:r.blob});n.textContent=r.n+" candidature"+(r.n>1?"s":"")+" dans le PDF."}
+catch(e){n.textContent=e&&e.code==="cancelled"?"Annulé.":"Le PDF n'a pas pu être créé ("+(e&&(e.code||e.message)||"erreur")+").";if(window.CE_err&&!(e&&e.code))CE_err(e,"justificatif")}}})();
 
 var PREPO=null;
 function sgWhyAsk(b,u){var art=b.closest("article")||b.parentNode.parentNode,ex=art.querySelector(".sgwhy");if(ex){ex.remove();return}
@@ -587,6 +615,27 @@ G("syn").addEventListener("click",synShow);G("syn").addEventListener("keydown",f
 
 /* Candidature supprimée : « Annuler » pendant 6 secondes la remet à sa place (et dans la base). */
 function offDelUndo(o){var i=OFF.indexOf(o);setTimeout(function(){undoToast("« "+((dInfo(o).poste)||"Offre")+" » supprimée.",function(){if(find(o.id))return;OFF.splice(Math.max(0,Math.min(i,OFF.length)),0,o);touch(o);saveOff();mark("o_"+o.id,1);renderList()})},0)}
+/* ---------- Carnet des recruteurs ---------- */
+/* Résumé par expéditeur calculé par la base (ce_contacts : mails automatiques écartés), relié aux candidatures :
+   adresse déjà notée sur la candidature, sinon nom de l'entreprise retrouvé dans l'adresse ou le nom de l'expéditeur. */
+var RC={at:0,list:[]},RCGEN=/^(gmail|googlemail|outlook|hotmail|live|msn|yahoo|ymail|icloud|me|mac|orange|wanadoo|free|sfr|neuf|laposte|bbox|aol|gmx|proton|protonmail)$/;
+function rcCompact(s){return norm(s).replace(/\b(sas|sa|sarl|group|groupe|france|the|and|et|de|du|des|la|le|les)\b/g," ").replace(/[^a-z0-9]/g,"")}
+function rcMatch(c){var mail=c.mail||"",dom=(mail.split("@")[1]||"").split("."),core=dom.length>1?dom.slice(0,-1).join(""):"",gen=RCGEN.test(core),best=null;
+OFF.forEach(function(o){var hit=0;if(o.rcp&&o.rcp.mail===mail)hit=3;else{var co=rcCompact(coName(o)||(o.an||o.meta||{}).entreprise||"");if(co.length>=4){var cc=core.replace(/[^a-z0-9]/g,"");if(!gen&&cc.length>=4&&(cc.indexOf(co)>=0||co.indexOf(cc)>=0))hit=2;else if(rcCompact(c.nom||"").indexOf(co)>=0)hit=1}}
+if(hit&&(!best||hit>best.h||(hit===best.h&&(o.mt||o.ct||0)>(best.o.mt||best.o.ct||0))))best={o:o,h:hit}});return best&&best.o}
+function rcName(c){if(c.nom&&!/@/.test(c.nom))return c.nom.replace(/^"|"$/g,"");var l=(c.mail||"").split("@")[0].split(/[._-]+/).filter(function(x){return x&&!/\d/.test(x)});return l.length>=2?l.map(function(x){return x.charAt(0).toUpperCase()+x.slice(1)}).join(" "):c.mail}
+async function rcLoad(force){var sb=window.CE&&CE.supabase;if(!sb)return RC.list;if(!force&&Date.now()-RC.at<6e5)return RC.list;var r=await sb.rpc("ce_contacts");if(r.error)throw new Error(r.error.message);var me=norm(PF.tel||"").replace(/\D/g,"").slice(-9);
+RC={at:Date.now(),list:(r.data||[]).map(function(c){if(c.tel&&me&&c.tel.replace(/\D/g,"").slice(-9)===me)c.tel="";return c})};return RC.list}
+function rcHtml(c){var o=rcMatch(c),d=c.last?new Date(c.last).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"}):"";
+return '<div class="rci"><b>'+esc(rcName(c))+'</b><p class="note">'+esc([o?(coName(o)||(o.an||o.meta||{}).entreprise||""):"",o?dInfo(o).poste:""].filter(Boolean).join(" · ")||"Pas relié à une candidature")+'</p><p class="note">Dernier mail le '+esc(d)+(c.objet?' : « '+esc(String(c.objet).slice(0,80))+' »':'')+(c.n>1?' · '+c.n+' mails':'')+'</p>'+
+'<div class="row"><a class="sb sec sm" href="mailto:'+esc(c.mail)+'">'+esc(c.mail)+'</a>'+(c.tel?'<a class="sb sec sm" href="tel:'+esc(c.tel.replace(/[^\d+]/g,""))+'">'+esc(c.tel)+'</a>':'')+(o?'<button type="button" class="sb sec sm" data-rco="'+esc(o.id)+'">Voir la candidature</button>':'')+'</div></div>'}
+function rcRender(){var L=G("rcl"),q=norm(G("rcq").value||""),all=RC.list.filter(function(c){return !q||norm(rcName(c)+" "+c.mail+" "+((rcMatch(c)&&coName(rcMatch(c)))||"")).indexOf(q)>=0});
+var lk=all.filter(function(c){return rcMatch(c)}),ot=all.filter(function(c){return !rcMatch(c)});
+L.innerHTML=!all.length?'<p class="note">'+(RC.list.length?"Aucun recruteur ne correspond.":"Aucun recruteur pour l'instant : seuls les mails écrits par de vraies personnes apparaissent ici.")+'</p>':lk.map(rcHtml).join("")+(ot.length?'<p class="rch">Autres personnes</p>'+ot.map(rcHtml).join(""):"");
+L.querySelectorAll("[data-rco]").forEach(function(b){b.onclick=function(){G("rcd").close();TAB="all";showInList(b.getAttribute("data-rco"))}})}
+async function rcOpen(){shOpen(G("rcd"));G("rcl").innerHTML='<p class="note">Chargement...</p>';try{await rcLoad();rcRender()}catch(e){G("rcl").innerHTML='<p class="note">Carnet indisponible pour l\'instant ('+esc(e.message||e)+').</p>'}}
+(function(){if(!G("rcgo"))return;G("rcgo").onclick=rcOpen;G("rcq").oninput=rcRender})();
+
 /* ---------- Salaire conseillé ---------- */
 var MPU="https://www.michaelpage.fr/grilles-de-salaires/achats-supply-chain/",RHU="https://www.roberthalf.com/fr/fr/details-emploi/";
 var SALF=[
@@ -900,7 +949,7 @@ try{var sample=await claude.use("sample");if(sample){var res=await sample("Réor
 if(!out)out=String(c.text||"").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
 var old=t.value.trim();if(old&&!/^FORMATION/.test(old))out+="\n\nCOMPLÉMENTS\n"+old;t.value=out;t.dispatchEvent(new Event("input",{bubbles:true}));n.textContent="Repris depuis « "+(c.name||"ton CV")+" ». Modifie ce que tu veux.";PARBUSY=false;b.disabled=false;try{spSum()}catch(e){}}
 G("parfill").onclick=function(){var b=this,t=G("pnotes");if(t.value.trim()&&!b.dataset.ok){b.dataset.ok="1";b.textContent=/^FORMATION/.test(t.value.trim())?"Appuie encore : tes modifications seront remplacées":"Appuie encore : tes notes seront gardées en bas";setTimeout(function(){delete b.dataset.ok;b.textContent="Reprendre mon CV principal"},4000);return}delete b.dataset.ok;b.textContent="Reprendre mon CV principal";parFill(true)};
-function spGo(k){if(k==="notifs"&&window.CE_notifUI)setTimeout(CE_notifUI,0);if(k==="aide"&&window.CE_errUI)setTimeout(CE_errUI,0);G("sphome").hidden=!!k;document.querySelectorAll("#pfbox .sp").forEach(function(x){x.hidden=x.getAttribute("data-p")!==k});G("setback").hidden=!k;G("seth").textContent=k?SPT[k]:"Paramètres";try{G("pfbox").querySelector(".dwb").scrollTop=0}catch(e){}if(!k)spSum();if(k==="parcours"&&!G("pnotes").value.trim()&&(CV.list||[]).length)parFill(false)}
+function spGo(k){if(k==="notifs"&&window.CE_notifUI)setTimeout(CE_notifUI,0);if(k==="aide"&&window.CE_errUI)setTimeout(CE_errUI,0);if(k==="aide"&&window.CE_perfUI)setTimeout(CE_perfUI,0);G("sphome").hidden=!!k;document.querySelectorAll("#pfbox .sp").forEach(function(x){x.hidden=x.getAttribute("data-p")!==k});G("setback").hidden=!k;G("seth").textContent=k?SPT[k]:"Paramètres";try{G("pfbox").querySelector(".dwb").scrollTop=0}catch(e){}if(!k)spSum();if(k==="parcours"&&!G("pnotes").value.trim()&&(CV.list||[]).length)parFill(false)}
 function spSel(id){var e=G(id);return e&&e.selectedIndex>=0?e.options[e.selectedIndex].text:""}
 function spSum(){function S(k,t){var e=G("sps_"+k);if(e)e.textContent=t}try{
 var nm=G("pnom").value.trim(),vi=G("padr").value.trim();S("profil",[nm,vi].filter(Boolean).join(" · ")||"À compléter");
@@ -1439,6 +1488,66 @@ if(v>=90){setTimeout(function(){var b=art.querySelector('[data-a="an"]');if(b)b.
 art.addEventListener("pointerup",end);art.addEventListener("pointercancel",end);
 /* Un glissement ne doit pas compter comme un toucher sur le bouton où le doigt s'est posé. */
 art.addEventListener("click",function(e){if(e.isTrusted&&Date.now()-moved<350){e.preventDefault();e.stopPropagation()}},true)}
+
+/* ---------- Simulation d'entretien à la voix ---------- */
+/* Le recruteur pose ses questions à voix haute (voix de l'appareil), tu réponds en parlant : la réponse est enregistrée,
+   transcrite (Groq Whisper, gratuit) puis commentée par l'IA d'après l'annonce et ton CV. Aucune saisie au clavier. */
+var SIM=null;
+function simCard(o){var s=(o.sim||[])[(o.sim||[]).length-1];return '<div class="simc"><div><b>Simulation d\'entretien</b><p class="note">Le recruteur te pose ses questions à voix haute, tu réponds en parlant, puis tu as un retour sur chaque réponse.'+(s?' Dernière simulation le '+new Date(s.at).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+' : '+String(s.n).replace(".",",")+' / 5.':'')+'</p></div><button type="button" class="sb main" id="simgo">'+(s?"Recommencer":"Commencer")+'</button></div>'}
+function simBind(o){var b=G("simgo");if(b)b.onclick=function(){simOpen(o)}}
+function simVoice(){var v=[];try{v=speechSynthesis.getVoices()}catch(e){}return v.filter(function(x){return /^fr[-_]FR/i.test(x.lang)})[0]||v.filter(function(x){return /^fr/i.test(x.lang)})[0]||null}
+/* Lecture à voix haute ; se termine aussi au bout d'un temps estimé si l'appareil ne signale pas la fin. */
+function simSay(t){return new Promise(function(ok){if(!t||!window.speechSynthesis){ok();return}try{speechSynthesis.cancel()}catch(e){}var u=new SpeechSynthesisUtterance(t),done=false,fin=function(){if(!done){done=true;clearTimeout(to);ok()}};u.lang="fr-FR";var v=simVoice();if(v)u.voice=v;u.rate=1;u.onend=fin;u.onerror=fin;var to=setTimeout(fin,Math.min(60000,2500+t.length*75));if(SIM)SIM.say=fin;try{speechSynthesis.speak(u)}catch(e){fin()}})}
+function simStop(){if(!SIM)return;try{speechSynthesis.cancel()}catch(e){}try{if(SIM.rec&&SIM.rec.state!=="inactive")SIM.rec.stop()}catch(e){}try{(SIM.stream&&SIM.stream.getTracks()||[]).forEach(function(t){t.stop()})}catch(e){}clearInterval(SIM.tick);SIM.dead=true;SIM=null}
+function simMime(){var l=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"];for(var i=0;i<l.length;i++){try{if(window.MediaRecorder&&MediaRecorder.isTypeSupported(l[i]))return l[i]}catch(e){}}return ""}
+function simCtx(o){var a=o.an||o.meta||{},cv="";try{cv=JSON.stringify(cvFor("fr")).slice(0,3500)}catch(e){}var P=o.prep&&o.prep.d||{};
+return "POSTE : "+(dInfo(o).poste||"")+"\nENTREPRISE : "+String(a.entreprise||coName(o)||"").split(" (")[0]+"\nLIEU : "+(dInfo(o).lieu||"")+"\nRÉSUMÉ DE L'ANALYSE : "+String(a.resume||"")+(a.faibles?"\nÉCARTS AVEC SON PROFIL : "+JSON.stringify(a.faibles).slice(0,600):"")+"\nANNONCE : "+String(o.txt||"").slice(0,3000)+(P.questions&&P.questions.length?"\nQUESTIONS PROBABLES DÉJÀ IDENTIFIÉES : "+P.questions.map(function(x){return x.question}).join(" | ").slice(0,1200):"")+"\nCV DU CANDIDAT : "+cv}
+function simUI(h){var B=G("simb");if(B)B.innerHTML=h}
+function simOpen(o){simStop();SIM={o:o,qs:[],i:0,res:[]};G("simt").textContent="Simulation · "+(dInfo(o).poste||"Entretien");shOpen(G("simd"));
+simUI('<p>Le recruteur va te poser <b>6 questions</b> à voix haute. Réponds en parlant, comme en vrai : appuie sur le micro pour commencer ta réponse, puis sur « J\'ai fini ».</p><p class="note">Monte le son et mets-toi au calme. La première fois, autorise le micro.</p><div class="row"><button type="button" class="sb main" id="sims">C\'est parti</button></div><p class="note" id="simn"></p>');
+G("sims").onclick=simStart}
+async function simStart(){var S=SIM,n=G("simn");if(!S)return;
+// Débloque la voix de l'appareil pendant le geste (exigé par Safari), puis demande le micro.
+try{speechSynthesis.speak(new SpeechSynthesisUtterance(" "))}catch(e){}
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){n.textContent="L'enregistrement de la voix n'est pas possible sur cet appareil.";return}
+try{S.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}catch(e){n.textContent="Micro refusé. Sur iPhone : Réglages, Safari (ou l'app Candidatures), Micro, Autoriser ; puis réessaie.";return}
+n.textContent="Le recruteur prépare ses questions...";G("sims").disabled=true;
+var sample=null;try{sample=await claude.use("sample")}catch(e){}if(!sample){n.textContent="L'IA n'est pas disponible. Vérifie ta connexion.";return}
+try{var j=await sample.json("Tu joues le recruteur de cette entreprise, en entretien d'embauche oral avec {{PRENOM}} pour ce poste. Vouvoie-le comme un vrai recruteur. Prépare l'entretien : une phrase d'accueil courte et chaleureuse, puis exactement 6 questions orales, une par une, réalistes pour CE poste et CETTE entreprise, de difficulté croissante : 1) présentation (« Présentez-vous »), 2) motivation pour le poste et l'entreprise, 3) et 4) questions techniques ou de mise en situation tirées des missions de l'annonce, 5) une question sur un point faible ou un écart entre son CV et l'annonce, 6) une question de fin classique (disponibilité, prétentions ou questions pour nous). Questions courtes, faciles à comprendre à l'oral, sans liste ni parenthèse. Réponds en JSON : {\"accueil\":\"...\",\"questions\":[\"...\"],\"fin\":\"phrase de conclusion courte\"}.\n\n"+simCtx(S.o));
+if(!SIM||SIM!==S)return;S.qs=(j.questions||[]).filter(Boolean).slice(0,6);S.fin=j.fin||"Merci, nous reviendrons vers vous rapidement.";if(!S.qs.length)throw new Error("pas de question");
+simUI('<p class="simq">'+esc(j.accueil||"Bonjour, merci d'être venu.")+'</p>');await simSay(j.accueil||"Bonjour, merci d'être venu.");if(SIM===S)simAsk()}
+catch(e){if(SIM===S){n.textContent="La préparation n'a pas abouti ("+esc(e.message||e)+"). Réessaie.";G("sims").disabled=false}}}
+function simAsk(){var S=SIM;if(!S)return;var q=S.qs[S.i];
+simUI('<p class="note">Question '+(S.i+1)+' sur '+S.qs.length+'</p><p class="simq">'+esc(q)+'</p><div class="simmic"><button type="button" class="simrec" id="simr" aria-label="Répondre"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><span id="simrt" class="note">Appuie pour répondre</span></div><div class="row"><button type="button" class="sb sec sm" id="simrep">Réécouter</button><button type="button" class="sb sec sm" id="simskip">Passer</button></div><p class="note" id="simn"></p>');
+G("simrep").onclick=function(){simSay(q)};G("simskip").onclick=function(){simNext()};G("simr").onclick=simRec;simSay(q)}
+function simRec(){var S=SIM,b=G("simr");if(!S)return;
+if(S.rec&&S.rec.state==="recording"){S.rec.stop();return}
+try{speechSynthesis.cancel()}catch(e){}if(S.say)S.say();
+var mt=simMime(),ch=[];try{S.rec=mt?new MediaRecorder(S.stream,{mimeType:mt}):new MediaRecorder(S.stream)}catch(e){G("simn").textContent="Enregistrement impossible sur cet appareil.";return}
+S.rec.ondataavailable=function(e){if(e.data&&e.data.size)ch.push(e.data)};
+S.rec.onstop=function(){clearInterval(S.tick);if(SIM!==S)return;b.classList.remove("on");simAnswer(new Blob(ch,{type:(S.rec.mimeType||mt||"audio/mp4")}))};
+S.rec.start(1000);b.classList.add("on");var t0=Date.now();G("simrt").textContent="Je t'écoute... appuie quand tu as fini";G("simrep").disabled=true;G("simskip").disabled=true;
+S.tick=setInterval(function(){var s=Math.round((Date.now()-t0)/1000);var el=G("simrt");if(el)el.textContent="Je t'écoute · "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0")+" · appuie quand tu as fini";if(s>=180&&S.rec.state==="recording")S.rec.stop()},500)}
+async function simAnswer(blob){var S=SIM,n=G("simn"),q=S.qs[S.i];G("simr").disabled=true;G("simrt").textContent="";n.textContent="Je retranscris ta réponse...";
+try{var txt=await CE_AI.transcribe(blob);if(SIM!==S)return;if(!txt||txt.replace(/[^a-zà-ÿ]/gi,"").length<8){n.textContent="Je n'ai presque rien entendu. Rapproche-toi du micro et réessaie.";G("simr").disabled=false;G("simrep").disabled=false;G("simskip").disabled=false;G("simrt").textContent="Appuie pour répondre";return}
+n.textContent="Le recruteur réfléchit à ta réponse...";var sample=await claude.use("sample");
+var f=await sample.json("Tu es un coach d'entretien bienveillant mais exigeant. {{PRENOM}} s'entraîne à l'oral pour ce poste. Voici la question posée et sa réponse orale retranscrite (des hésitations ou erreurs de transcription sont possibles : ne les reproche pas). Tutoie-le. Juge le fond et la forme orale (clarté, structure, exemples concrets, longueur, lien avec le poste), d'après l'annonce et son CV. N'invente aucune expérience. Réponds en JSON : {\"note\":1 à 5,\"bien\":\"ce qui était bien, une phrase\",\"manque\":\"ce qui manquait par rapport au poste, une phrase\",\"conseil\":\"le conseil le plus utile, une phrase\",\"exemple\":\"une meilleure formulation de sa réponse en 3 phrases maximum, à l'oral, à la première personne, fondée sur son CV\"}.\n\nQUESTION : "+q+"\nRÉPONSE : "+txt.slice(0,4000)+"\n\n"+simCtx(S.o));
+if(SIM!==S)return;var r={q:q,a:txt,note:Math.max(1,Math.min(5,Math.round(+f.note||3))),bien:f.bien||"",manque:f.manque||"",conseil:f.conseil||"",exemple:f.exemple||""};S.res.push(r);
+simUI('<p class="note">Question '+(S.i+1)+' sur '+S.qs.length+'</p><p class="simq">'+esc(q)+'</p><details class="sima"><summary>Ta réponse (retranscrite)</summary><p>'+esc(txt)+'</p></details><div class="simf"><p class="simnote">'+"★★★★★".slice(0,r.note)+'<span>'+"★★★★★".slice(r.note)+'</span></p>'+(r.bien?'<p><b>Bien :</b> '+esc(r.bien)+'</p>':'')+(r.manque?'<p><b>À ajouter :</b> '+esc(r.manque)+'</p>':'')+(r.conseil?'<p><b>Conseil :</b> '+esc(r.conseil)+'</p>':'')+(r.exemple?'<p class="simex"><b>Par exemple :</b> '+esc(r.exemple)+'</p>':'')+'</div><div class="row"><button type="button" class="sb main" id="simnx">'+(S.i+1<S.qs.length?"Question suivante":"Voir le bilan")+'</button><button type="button" class="sb sec sm" id="simagain">Refaire cette réponse</button></div>');
+G("simnx").onclick=function(){try{speechSynthesis.cancel()}catch(e){}simNext()};G("simagain").onclick=function(){S.res.pop();simAsk()};
+simSay([r.bien,r.conseil].filter(Boolean).join(" "))}
+catch(e){if(SIM===S){n.textContent="Ça n'a pas marché ("+esc(e.message||e)+"). Réessaie.";G("simr").disabled=false;G("simrep").disabled=false;G("simskip").disabled=false;G("simrt").textContent="Appuie pour répondre";if(window.CE_err)CE_err(e,"simulation")}}}
+function simNext(){var S=SIM;if(!S)return;S.i++;if(S.i<S.qs.length){simAsk();return}simEnd()}
+async function simEnd(){var S=SIM,o=S.o,R=S.res;await simSay(S.fin);if(SIM!==S)return;
+if(!R.length){simUI('<p>Simulation terminée sans réponse enregistrée.</p><div class="row"><button type="button" class="sb main" id="simre">Recommencer</button></div>');G("simre").onclick=function(){simOpen(o)};return}
+var avg=Math.round(R.reduce(function(a,r){return a+r.note},0)/R.length*10)/10,best=R.slice().sort(function(a,b){return b.note-a.note})[0],low=R.slice().sort(function(a,b){return a.note-b.note}).filter(function(r){return r.note<4}).slice(0,3);
+o.sim=(o.sim||[]).concat([{at:Date.now(),n:avg,r:R.map(function(r){return {q:r.q,note:r.note,conseil:r.conseil}})}]).slice(-5);touch(o);saveOff();mark("o_"+o.id,1);
+simUI('<p class="simq">Bilan : '+String(avg).replace(".",",")+' / 5</p><p class="note">'+R.length+' réponse'+(R.length>1?"s":"")+' sur '+S.qs.length+' question'+(S.qs.length>1?"s":"")+'.</p>'+(best?'<p><b>Ta meilleure réponse :</b> « '+esc(best.q)+' »</p>':'')+(low.length?'<p><b>À retravailler en priorité :</b></p><ul>'+low.map(function(r){return '<li><b>'+esc(r.q)+'</b><br>'+esc(r.conseil)+'</li>'}).join("")+'</ul>':'<p>Toutes tes réponses tiennent la route. Refais une simulation la veille pour être à l\'aise.</p>')+'<div class="row"><button type="button" class="sb main" id="simre">Refaire une simulation</button></div>');
+G("simre").onclick=function(){simOpen(o)};try{(S.stream.getTracks()||[]).forEach(function(t){t.stop()})}catch(e){}
+try{if(G("prepd").open&&PREPO===o)prepRender(o)}catch(e){}}
+(function(){var d=G("simd");if(d)d.addEventListener("close",simStop)})();
+/* Pour les tests automatiques : ouvrir la fiche entretien de la première candidature analysée, savoir si le micro est actif. */
+window.CE_testPrep=function(){var o=OFF.filter(function(x){return x.an})[0]||OFF[0];if(o)prepOpen(o)};window.CE_simActive=function(){return !!SIM};
 
 /* ---------- PDF ---------- */
 function wa(s){return String(s==null?"":s).replace(/—/g,",").replace(/[\u00a0\u202f\u2009]/g," ").replace(/[‘’]/g,"'").replace(/[^\x20-\x7E\xA1-\xFF“”•–€…\n]/g,"")}

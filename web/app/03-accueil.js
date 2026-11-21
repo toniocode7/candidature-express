@@ -83,7 +83,7 @@ shOpen(d)}
 /* fiche entretien */
 function prepList(a){return '<ul>'+(a||[]).map(function(x){return '<li>'+esc(String(x).replace(/\s*—\s*/g,", "))+'</li>'}).join("")+'</ul>'}
 var COTRY={};function prepRender(o){var B=G("prepb"),P=o.prep&&o.prep.d;G("prept").textContent="Entretien · "+(dInfo(o).poste||"Offre");if(o.cof===undefined&&!COTRY[o.id]){COTRY[o.id]=1;coLoad(o).then(function(c){if(c===undefined)COTRY[o.id]=2;if(G("prepd").open&&PREPO===o)prepRender(o)})}PREPO=o;var CO=(o.cof===undefined&&COTRY[o.id]===2)?"":coHtml(o);
-if(!P){B.innerHTML='<p class="note">'+esc(mlOffLabel(o))+'</p><p>Je prépare une fiche à partir de l\'annonce et de ton CV : ce qu\'il faut savoir sur le poste et l\'entreprise, tes atouts à mettre en avant, les questions probables avec des pistes de réponse, et les questions à poser.</p><div class="row"><button type="button" class="sb main" id="prepgo">Préparer ma fiche</button><span class="note" id="prepn"></span></div>'+CO;G("prepgo").onclick=function(){prepGen(o)};return}
+if(!P){B.innerHTML=simCard(o)+'<p class="note">'+esc(mlOffLabel(o))+'</p><p>Je prépare une fiche à partir de l\'annonce et de ton CV : ce qu\'il faut savoir sur le poste et l\'entreprise, tes atouts à mettre en avant, les questions probables avec des pistes de réponse, et les questions à poser.</p><div class="row"><button type="button" class="sb main" id="prepgo">Préparer ma fiche</button><span class="note" id="prepn"></span></div>'+CO;G("prepgo").onclick=function(){prepGen(o)};simBind(o);return}
 var h='<p class="note">'+esc(mlOffLabel(o))+' · fiche du '+new Date(o.prep.at).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+'</p>';
 if(P.poste&&P.poste.length)h+='<section><h4>Le poste en bref</h4>'+prepList(P.poste)+'</section>';
 h+=CO;if(P.entreprise&&P.entreprise.length)h+='<section><h4>L\'entreprise</h4>'+prepList(P.entreprise)+'</section>';
@@ -92,7 +92,7 @@ if(P.points_faibles&&P.points_faibles.length)h+='<section><h4>Points sensibles e
 if(P.questions&&P.questions.length)h+='<section><h4>Questions probables</h4>'+P.questions.map(function(x){return '<div class="qa"><b>'+esc(x.question||"")+'</b><span class="ph">'+esc(String(x.piste||"").replace(/\s*—\s*/g,", "))+'</span></div>'}).join("")+'</section>';
 if(P.a_poser&&P.a_poser.length)h+='<section><h4>Questions à poser</h4>'+prepList(P.a_poser)+'</section>';
 if(P.pratique&&P.pratique.length)h+='<section><h4>Côté pratique</h4>'+prepList(P.pratique)+'</section>';
-h+='<div class="row"><button type="button" class="sb sec" id="prepgo">Refaire la fiche</button><span class="note" id="prepn"></span></div>';B.innerHTML=h;G("prepgo").onclick=function(){prepGen(o)}}
+h+='<div class="row"><button type="button" class="sb sec" id="prepgo">Refaire la fiche</button><span class="note" id="prepn"></span></div>';B.innerHTML=simCard(o)+h;G("prepgo").onclick=function(){prepGen(o)};simBind(o)}
 function prepOpen(o){prepRender(o);shOpen(G("prepd"));G("prepb").scrollTop=0}
 async function prepGen(o){var n=G("prepn"),b=G("prepgo"),sample=null;try{sample=await claude.use("sample")}catch(e){}if(!sample){n.textContent="La préparation n'est pas disponible dans cette vue. Vérifie ta connexion internet puis réessaie.";return}
 b.disabled=true;n.textContent="Préparation en cours, une vingtaine de secondes...";

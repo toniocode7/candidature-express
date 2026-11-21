@@ -248,8 +248,14 @@
     hideGate();
     var s = document.createElement("script");
     s.textContent = src + "\n//# sourceURL=app.js";
+    var t0 = performance.now();
     document.body.appendChild(s);
-    requestAnimationFrame(function () { requestAnimationFrame(function () { document.documentElement.classList.remove("ce-boot"); }); });
+    var exec = performance.now() - t0;
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      document.documentElement.classList.remove("ce-boot");
+      // Vitesse : temps écoulé depuis le lancement jusqu'à l'app affichée et utilisable (noté une fois par ouverture).
+      try { window.CE_perf && window.CE_perf(performance.now(), exec); } catch (e) {}
+    }); });
     realtime();
     setTimeout(function () { try { window.CE_srcUI && window.CE_srcUI(); } catch (e) {} }, 1500);
     setTimeout(function () { try { window.CE_handleShare && window.CE_handleShare(); } catch (e) {} }, 2500);

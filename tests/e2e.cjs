@@ -80,6 +80,20 @@ const server = http.createServer((q, r) => {
   // Pastille : les nouvelles suggestions ne comptent plus une fois l'onglet Suggérées ouvert
   eq("pastille : suggestions vues, plus comptées", await p.evaluate(() => { const s = JSON.parse(localStorage.getItem("candexp.sugg")); return s.seenAt === s.at && typeof window.CE_badgeN() === "number"; }), true);
 
+  // Justificatif de recherche d'emploi : PDF créé sur une période choisie
+  const dl = p.waitForEvent("download", { timeout: 20000 }).catch(() => null);
+  await p.evaluate(() => { document.querySelector('[data-sp="suivi"]').click(); document.getElementById("jpfrom").value = "2000-01-01"; document.getElementById("jpto").value = "2100-01-01"; document.getElementById("jpgo").click(); });
+  const file = await dl;
+  const pdf = file ? fs.readFileSync(await file.path()).toString("latin1") : "";
+  eq("justificatif : PDF téléchargé", /^%PDF/.test(pdf) && /\.pdf$/.test(file.suggestedFilename()), true);
+  eq("justificatif : message", await p.$eval("#jpn", (e) => /candidatures? dans le PDF/.test(e.textContent)), true);
+  if (process.env.CE_JP_OUT && pdf) fs.writeFileSync(process.env.CE_JP_OUT, pdf, "latin1");
+
+  // Carnet des recruteurs : s'ouvre sans erreur (vide en démo)
+  await p.evaluate(() => document.getElementById("rcgo").click()); await p.waitForTimeout(400);
+  eq("carnet des recruteurs : ouvert", await p.$eval("#rcd", (d) => d.open && /Aucun recruteur/.test(d.textContent)), true);
+  await p.evaluate(() => document.getElementById("rcd").close());
+
   // Chaque onglet s'ouvre, sans débordement horizontal
   for (let i = 0; i < 5; i++) {
     await p.click(`.bnav button >> nth=${i}`); await p.waitForTimeout(500);

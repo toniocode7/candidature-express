@@ -210,10 +210,40 @@ def sante(now):
     except Exception:
         pass
     alertes += erreurs(now)
+    alertes += lenteur(now)
     for key, titre, corps in alertes:
         push("alerte", titre, corps, f"alerte:{key}:{jour}", "./?v=accueil")
     if not alertes:
         print("Surveillance : tout fonctionne.")
+
+
+def lenteur(now):
+    """App nettement plus lente à s'ouvrir ces 3 derniers jours que les 2 semaines d'avant (par appareil),
+    ou plus de 4 s en moyenne : alerte, à transmettre à Claude (alléger les listes, etc.)."""
+    try:
+        r = rows(f"app_perf?select=day,dev,n,open_sum,exec_sum,cands&day=gte.{(now - timedelta(days=17)).date().isoformat()}")
+    except Exception as x:
+        print("Mesures de vitesse illisibles :", str(x)[:80])
+        return []
+    out = []
+    lim = (now - timedelta(days=3)).date().isoformat()
+    for dev in sorted({x["dev"] for x in r}):
+        rec = [x for x in r if x["dev"] == dev and x["day"] >= lim]
+        old = [x for x in r if x["dev"] == dev and x["day"] < lim]
+        rn, on = sum(x["n"] for x in rec), sum(x["n"] for x in old)
+        if rn < 3:
+            continue
+        ra = sum(x["open_sum"] for x in rec) / rn
+        oa = sum(x["open_sum"] for x in old) / on if on >= 5 else None
+        ex = sum(x["exec_sum"] for x in rec) / rn
+        cands = max(x["cands"] for x in rec)
+        s = lambda ms: f"{ms / 1000:.1f}".replace(".", ",") + " s"  # noqa: E731
+        print(f"Vitesse {dev} : {s(ra)} en moyenne sur 3 jours" + (f" (avant : {s(oa)})" if oa else "") + f", dont affichage {s(ex)}")
+        if ra > 4000 or (oa and ra > 2500 and ra > 1.5 * oa):
+            out.append((f"lenteur-{dev}", f"L'app ralentit sur ton {dev}",
+                        f"Ouverture en {s(ra)} en moyenne ces 3 derniers jours" + (f", contre {s(oa)} avant" if oa else "")
+                        + f" ({cands} candidatures). Transmets cette alerte à Claude : il allégera l'affichage."))
+    return out
 
 
 def erreurs(now):

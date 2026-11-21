@@ -21,4 +21,5 @@ Après une modification ici : `node tests/assemble.cjs` (les tests vérifient qu
 | 11-synchro-parametres-cv | Synchronisation, paramètres, profil, CV |
 | 12-analyse | Analyse d'une annonce |
 | 13-suggestions | Offres suggérées, doublons entre sites |
-| 14-pdf-generation-demarrage | PDF, génération des documents, démarrage |
+| 14-simulation | Simulation d'entretien à la voix |
+| 15-pdf-generation-demarrage | PDF, génération des documents, démarrage (ferme la fonction : toujours le dernier) |

@@ -73,4 +73,14 @@ eq("offre de 40 jours : mention", /En ligne depuis 40 jours/.test(AG.ageLine({ p
 eq("offre de 3 mois : plus de 2 mois", /plus de 2 mois/.test(AG.ageLine({ pub: Date.now() - 95 * 864e5 })), true);
 eq("offre récente : rien", AG.ageLine({ pub: Date.now() - 5 * 864e5 }), "");
 eq("date inconnue : rien", AG.ageLine({}), "");
+// Carnet des recruteurs : relier un expéditeur à la bonne candidature
+const RCF = pick(["norm", "RCGEN", "rcCompact", "rcMatch", "rcName"]);
+global.coName = (o) => o.co; global.OFF = [
+  { id: "a", co: "Naval Group", mt: 1 }, { id: "b", co: "Adecco", mt: 2 }, { id: "c", co: "Thales", mt: 3, rcp: { mail: "j.martin@gmail.com" } }];
+const rid = (c) => (RCF.rcMatch(c) || {}).id || null;
+eq("domaine de l'entreprise", rid({ mail: "claire.durand@naval-group.com" }), "a");
+eq("agence d'intérim", rid({ mail: "agence.brest@adecco.fr" }), "b");
+eq("adresse déjà notée sur la candidature", rid({ mail: "j.martin@gmail.com" }), "c");
+eq("messagerie personnelle sans lien : pas relié", rid({ mail: "paul@gmail.com", nom: "Paul" }), null);
+eq("nom tiré de l'adresse", RCF.rcName({ mail: "claire.durand@naval-group.com" }), "Claire Durand");
 done("Règles de l'app");
