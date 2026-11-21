@@ -40,5 +40,10 @@ for (const f of FILES) {
     console.log(`web/${f}:${m.line}:${m.column}  ${m.message}  (${m.ruleId || "syntaxe"})`);
   }
 }
+// Styles essentiels présents (un fichier de styles vidé par erreur casse l'app sans planter : on le détecte ici).
+const CSS = fs.readFileSync(path.join(WEB, "ce/ce.css"), "utf8"), HTML = fs.readFileSync(path.join(WEB, "index.html"), "utf8");
+[[CSS, ".ce-gate{", "écran de connexion"], [CSS, "display-mode:standalone", "barre du bas sur iOS installé"], [CSS, ".cesr{", "liste des sources"],
+ [CSS, "dialog.drawer{padding-top", "fenêtres sous la barre d'état"], [HTML, ".bnav{position:fixed", "barre du bas"], [HTML, "#ce-splash{", "écran d'ouverture"]]
+  .forEach(([txt, needle, what]) => { if (!txt.includes(needle)) { n++; console.log(`Styles manquants : ${what} (« ${needle} » introuvable)`); } });
 console.log(n ? `Vérificateur : ${n} problème(s) dans le code de l'app` : `Vérificateur : aucun problème dans ${FILES.length} fichiers`);
 process.exit(n ? 1 : 0);

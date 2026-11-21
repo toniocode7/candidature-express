@@ -638,8 +638,8 @@ dialog h3{font-size:1.12rem;margin-bottom:12px}
 .ansteps li.cur{color:var(--ink);font-weight:600}.ansteps li.cur i{border-color:var(--brand);border-top-color:transparent;animation:sp .8s linear infinite}
 .ansteps li.ok{color:var(--ink)}.ansteps li.ok i{border-color:var(--good);background:var(--good)}.ansteps li.ok i::after{content:"";position:absolute;left:4px;top:1px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .cesortbox{display:flex;align-items:center;gap:8px;margin:2px 0 12px}.cesortrow{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
-.cesortrow label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.cesortrow select{flex:1;min-width:0;width:auto;padding:8px 30px 8px 12px;border-radius:999px;font-size:.92rem;font-weight:600}
-.cesortd{flex:none}.cesortd .sb{padding:8px 12px;min-height:0;font-size:.84rem}
+.cesortrow label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.cesortrow select{flex:1;min-width:0;text-overflow:ellipsis;width:auto;padding:8px 30px 8px 12px;border-radius:999px;font-size:.92rem;font-weight:600}
+.cesortd{flex:0 1 auto;min-width:0}.cesortd .sb{white-space:nowrap}.cesortd .sb{padding:8px 12px;min-height:0;font-size:.84rem}
 @media (hover:none){dialog :focus-visible{outline:none}}
 .cesum{display:flex;flex-direction:column;gap:3px;min-width:0}.cesum b{font-size:1rem}.cesum small{color:var(--mute);font-weight:500;font-size:.84rem;line-height:1.45}
 dialog:focus,dialog:focus-visible{outline:none}
