@@ -1616,6 +1616,15 @@ G("calday").querySelectorAll("[data-ci]").forEach(function(b){var go=function(){
 function f(){var n=(G("mln").textContent||"").trim().length;box.classList.toggle("mllong",n>34)}
 try{new MutationObserver(f).observe(G("mln"),{childList:true,characterData:true,subtree:true})}catch(e){}f()})();
 
+/* Fenêtre ouverte (paramètres, fiche, toute fenêtre) : la page derrière est figée, puis remise exactement où elle était à la fermeture.
+   Sur iPhone, bloquer le défilement ne suffit pas : la page est fixée à sa position le temps que la fenêtre reste ouverte. */
+(function(){var y=0,on=false,b=document.body;
+function sync(){var any=!!document.querySelector("dialog[open]");if(any===on)return;on=any;
+if(any){y=window.scrollY||0;b.style.position="fixed";b.style.top=-y+"px";b.style.left="0";b.style.right="0";b.style.width="100%";document.documentElement.classList.add("ce-lock")}
+else{b.style.position=b.style.top=b.style.left=b.style.right=b.style.width="";document.documentElement.classList.remove("ce-lock");window.scrollTo({top:y,left:0,behavior:"instant"})}}
+window.CE_lockSync=sync;
+try{new MutationObserver(sync).observe(document.body,{attributes:true,attributeFilter:["open"],subtree:true,childList:true})}catch(e){}sync()})();
+
 /* ---------- Simulation d'entretien à la voix ---------- */
 /* Le recruteur pose ses questions à voix haute (voix de l'appareil), tu réponds en parlant : la réponse est enregistrée,
    transcrite (Groq Whisper, gratuit) puis commentée par l'IA d'après l'annonce et ton CV. Aucune saisie au clavier. */
