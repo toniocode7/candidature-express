@@ -22,7 +22,20 @@ export async function authorize(req: Request): Promise<boolean> {
   const token = auth.replace(/^Bearer\s+/i, "");
   if (!token || token === ANON) return false;
   const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { Authorization: `Bearer ${token}`, apikey: ANON } });
-  return r.ok;
+  if (!r.ok) return false;
+  // Compte connecté, mais est-ce bien le tien ? (identifiant rangé dans ce_secrets, jamais dans le dépôt)
+  const u = await r.json().catch(() => null);
+  return !!u?.id && u.id === (await ownerId());
+}
+
+let OWNER: string | null = null;
+async function ownerId(): Promise<string> {
+  if (OWNER) return OWNER;
+  const r = await rest("ce_secrets?select=value&name=eq.owner");
+  const rows = r.ok ? await r.json().catch(() => []) : [];
+  const v = rows?.[0]?.value;
+  if (typeof v === "string" && v) OWNER = v;
+  return OWNER ?? "";
 }
 
 async function rest(path: string, init: RequestInit = {}): Promise<Response> {

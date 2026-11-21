@@ -57,7 +57,7 @@ g = C.critGuard({ criteres: [crit("experience", "L'annonce ne demande pas d'exp�
 eq("expérience non demandée : note pleine", [g.criteres[0].na, g.criteres[0].note], [false, 4]);
 
 // Salaire conseillé : prétentions cohérentes avec l'offre
-const S = pick(["norm", "esc", "dInfo", "kfmt", "mfmt", "SALF", "MPU", "RHU", "SALR", "SALX", "COL", "COLX", "WISE", "REGCITY", "HOMEKM", "salHome", "salCol", "AFF", "salPerso", "salFam", "salReg", "salParse", "salAI", "salCalc", "salHtml"]);
+const S = pick(["norm", "esc", "dInfo", "kfmt", "mfmt", "SALF", "MPU", "RHU", "SALR", "SALX", "COL", "COLX", "WISE", "REGCITY", "salHome", "salCol", "AFF", "salPerso", "salFam", "salReg", "salParse", "salAI", "salCalc", "salHtml"]);
 const pret = (h) => +(/prétentions : <b>([\d,]+) k€/.exec(h) || [0, "0"])[1].replace(",", ".");
 const off = (salaire, m, poste, lieu) => ({ id: "x", an: { poste, lieu, contrat: "CDI", salaire, score: 70, salaire_marche: m } });
 let h = S.salHtml(off("30 - 35 k€ brut annuel", { bas: 40, haut: 44, explication: "" }, "Chargé de mission logistique", "Paris"));
