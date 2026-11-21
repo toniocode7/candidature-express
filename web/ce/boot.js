@@ -45,8 +45,17 @@
       var g = showGate('<h1>Candidature <em>Express</em></h1><p class="ce-lead">Connexion privée. Une seule fois par appareil.</p>' +
         '<form class="ce-form"><label for="ce-mail">Adresse e-mail</label><input id="ce-mail" type="email" autocomplete="username" required>' +
         '<label for="ce-pw">Mot de passe</label><input id="ce-pw" type="password" autocomplete="current-password" required>' +
-        '<button type="submit" class="main">Se connecter</button><p class="ce-msg" role="status">' + esc(msg || "") + "</p></form>");
+        '<button type="submit" class="main">Se connecter</button><button type="button" class="ce-link" id="ce-forgot">Mot de passe oublié ?</button><p class="ce-msg" role="status">' + esc(msg || "") + "</p></form>");
       var f = g.querySelector("form"), m = g.querySelector(".ce-msg");
+      g.querySelector("#ce-forgot").onclick = async function () {
+        var mail = g.querySelector("#ce-mail").value.trim();
+        if (!/@/.test(mail)) { m.textContent = "Écris d'abord ton adresse e-mail ci-dessus."; g.querySelector("#ce-mail").focus(); return; }
+        this.disabled = true; m.textContent = "Envoi...";
+        var r = await sb.auth.resetPasswordForEmail(mail, { redirectTo: location.origin + location.pathname });
+        this.disabled = false;
+        m.textContent = r.error ? (/rate|seconds/i.test(r.error.message) ? "Trop de demandes, réessaie dans quelques minutes." : "Envoi impossible : " + r.error.message)
+          : "Mail envoyé. Ouvre le lien qu'il contient sur cet appareil pour choisir un nouveau mot de passe.";
+      };
       f.onsubmit = async function (ev) {
         ev.preventDefault();
         var b = f.querySelector("button"); b.disabled = true; m.textContent = "Connexion...";
@@ -58,6 +67,25 @@
           m.textContent = /invalid/i.test(e && e.message || "") ? "Adresse ou mot de passe incorrect." : "Connexion impossible : " + (e && e.message || "erreur");
           b.disabled = false;
         }
+      };
+    });
+  }
+
+  function newPasswordScreen() {
+    return new Promise(function (resolve) {
+      var g = showGate('<h1>Nouveau mot de passe</h1><p class="ce-lead">Choisis ton nouveau mot de passe (au moins 8 caractères).</p>' +
+        '<form class="ce-form"><label for="ce-np1">Nouveau mot de passe</label><input id="ce-np1" type="password" autocomplete="new-password" minlength="8" required>' +
+        '<label for="ce-np2">Le même, une deuxième fois</label><input id="ce-np2" type="password" autocomplete="new-password" minlength="8" required>' +
+        '<button type="submit" class="main">Enregistrer</button><p class="ce-msg" role="status"></p></form>');
+      var f = g.querySelector("form"), m = g.querySelector(".ce-msg");
+      f.onsubmit = async function (ev) {
+        ev.preventDefault();
+        var a = g.querySelector("#ce-np1").value, b = g.querySelector("#ce-np2").value;
+        if (a !== b) { m.textContent = "Les deux ne sont pas identiques."; return; }
+        var btn = f.querySelector("button"); btn.disabled = true; m.textContent = "Enregistrement...";
+        var r = await sb.auth.updateUser({ password: a });
+        if (r.error) { btn.disabled = false; m.textContent = "Impossible : " + r.error.message; return; }
+        resolve();
       };
     });
   }
@@ -270,10 +298,12 @@
     if (DEMO) { USER = { id: "demo" }; PERSO = await loadPerso(); }
     else {
       if (!CFG.supabaseUrl || !CFG.supabaseKey || !window.supabase) { showGate('<h1>Configuration en cours</h1><p class="ce-lead">La connexion à ta base privée n\'est pas encore réglée.</p>'); return; }
+      var recovery = /type=recovery/.test(location.hash) || /type=recovery/.test(location.search);
       sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "ce.auth" } });
       var s = await sb.auth.getSession();
       USER = s.data && s.data.session ? s.data.session.user : null;
-      if (!USER) USER = await loginScreen();
+      if (USER && recovery) { await newPasswordScreen(); try { history.replaceState(null, "", location.pathname); } catch (e) {} }
+      if (!USER) USER = await loginScreen(recovery ? "Le lien a expiré ou a déjà servi. Redemande un mail avec « Mot de passe oublié ? »." : "");
       try { PERSO = JSON.parse(localStorage.getItem("ce.perso") || "null"); } catch (e) { PERSO = null; }
       var fresh = loadPerso().then(function (p) { if (p) { try { localStorage.setItem("ce.perso", JSON.stringify(p)); } catch (e) {} } return p; });
       if (!PERSO) PERSO = await fresh;

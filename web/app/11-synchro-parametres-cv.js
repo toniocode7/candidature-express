@@ -69,7 +69,12 @@ var old=t.value.trim();if(old&&!/^FORMATION/.test(old))out+="\n\nCOMPLÉMENTS\n"
 G("parfill").onclick=function(){var b=this,t=G("pnotes");if(t.value.trim()&&!b.dataset.ok){b.dataset.ok="1";b.textContent=/^FORMATION/.test(t.value.trim())?"Appuie encore : tes modifications seront remplacées":"Appuie encore : tes notes seront gardées en bas";setTimeout(function(){delete b.dataset.ok;b.textContent="Reprendre mon CV principal"},4000);return}delete b.dataset.ok;b.textContent="Reprendre mon CV principal";parFill(true)};
 function spGo(k){if(k==="notifs"&&window.CE_notifUI)setTimeout(CE_notifUI,0);if(k==="aide"&&window.CE_errUI)setTimeout(CE_errUI,0);if(k==="aide"&&window.CE_perfUI)setTimeout(CE_perfUI,0);G("sphome").hidden=!!k;document.querySelectorAll("#pfbox .sp").forEach(function(x){x.hidden=x.getAttribute("data-p")!==k});G("setback").hidden=!k;G("seth").textContent=k?SPT[k]:"Paramètres";try{G("pfbox").querySelector(".dwb").scrollTop=0}catch(e){}if(k==="parcours"&&!G("pnotes").value.trim()&&(CV.list||[]).length)parFill(false)}
 document.querySelectorAll("#pfbox .spr").forEach(function(b){b.onclick=function(){spGo(b.getAttribute("data-sp"))}});
-G("setback").onclick=function(){spGo("")};G("spguide").onclick=function(){closeSet();setTimeout(gdOpen,150)};
+G("setback").onclick=function(){spGo("")};G("pwgo").onclick=function(){var a=G("pw1").value,b=G("pw2").value,n=G("pwn"),ce=window.CE,sb=ce&&ce.supabase;
+if(!sb){n.textContent="Disponible une fois connecté.";return}if(a.length<8){n.textContent="Au moins 8 caractères.";return}if(a!==b){n.textContent="Les deux ne sont pas identiques.";return}
+var btn=G("pwgo");btn.disabled=true;n.textContent="Enregistrement…";
+sb.auth.updateUser({password:a}).then(function(r){btn.disabled=false;if(r.error){n.textContent=/different|same/i.test(r.error.message)?"C'est déjà ton mot de passe actuel.":"Impossible : "+r.error.message;return}
+G("pw1").value=G("pw2").value="";n.textContent="C'est fait. Utilise ce mot de passe sur tes autres appareils."},function(e){btn.disabled=false;n.textContent="Impossible pour l'instant (connexion ?)."})};
+G("spguide").onclick=function(){closeSet();setTimeout(gdOpen,150)};
 
 function closeSet(){var d=G("pfbox");if(d.open)d.close()}
 G("setb").onclick=openSet;G("setx").onclick=closeSet;
