@@ -22,8 +22,11 @@ async function prendre(cache, f) {
   return cache.put(key, res);
 }
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => Promise.all(CORE.map(f => prendre(c, f)))).then(() => self.skipWaiting()));
+  // La nouvelle version attend que l'app lui dise de prendre le relais (« ce-skip ») : à l'ouverture, avant
+  // l'animation, ou plus tard quand l'app est au repos. Sans fenêtre ouverte, elle s'active d'elle-même.
+  e.waitUntil(caches.open(VERSION).then(c => Promise.all(CORE.map(f => prendre(c, f)))));
 });
+self.addEventListener("message", e => { if (e.data === "ce-skip") self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION && k !== GEO_CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));

@@ -815,12 +815,28 @@ var w=s.querySelector(".sp-word"),txt="Candidature Express",h="";for(var i=0;i<t
 var P=s.querySelector(".sp-parts"),ph="";for(var k=0;k<14;k++){var r=function(a,b){return a+Math.random()*(b-a)};ph+='<i style="left:'+r(4,96).toFixed(1)+'%;top:'+r(8,94).toFixed(1)+'%;--s:'+r(2,4).toFixed(1)+'px;--o:'+r(.25,.65).toFixed(2)+';--t:'+r(3.2,5).toFixed(1)+'s;--d:'+r(0,1.4).toFixed(2)+'s;--k:'+k+'"></i>'}P.innerHTML=ph;
 var metas=[].slice.call(document.querySelectorAll('meta[name="theme-color"]')),old=metas.map(function(m){return m.content});metas.forEach(function(m){m.content="#5F52E2"});
 var t0=null,started=null,ready=new Promise(function(ok){started=ok}),done=false;
-function go(){if(t0)return;t0=Date.now();s.classList.add("go");started();
+function go(){if(t0||upd)return;t0=Date.now();s.classList.add("go");started();
   // Police du nom : Sora si elle est déjà chargée avant que les lettres n'apparaissent, sinon police du système (aucun saut).
   setTimeout(function(){try{if(document.fonts&&document.fonts.check("700 22px Sora"))w.classList.add("sora")}catch(e){}},900)}
-function start(){requestAnimationFrame(function(){requestAnimationFrame(go)})}
+// Avant l'animation : nouvelle version disponible ? Si oui, on recharge pendant que l'écran est encore fixe,
+// pour que l'animation ne se joue qu'une fois, déjà sur la bonne version. Vérification limitée à 0,6 s.
+var upd=false;
+function preCheck(){return new Promise(function(ok){try{var sw=navigator.serviceWorker;
+  if(/[?&]demo\b/.test(location.search)||!sw||!sw.controller||navigator.onLine===false)return ok();
+  try{if(Date.now()-(+sessionStorage.getItem("ce.upd")||0)<15000)return ok()}catch(e){}
+  var fin=false,end=function(){if(!fin){fin=true;clearTimeout(cap);ok()}},cap=setTimeout(end,600);
+  var take=function(w){if(!w||fin)return false;fin=true;upd=true;clearTimeout(cap);
+    var skip=function(){if(w.state==="installed"){try{sessionStorage.setItem("ce.upd",Date.now())}catch(e){}w.postMessage("ce-skip")}};
+    sw.addEventListener("controllerchange",function(){upd="reload";location.reload()});
+    w.addEventListener("statechange",function(){if(w.state==="redundant"&&upd===true){upd=false;ok()}skip()});skip();
+    setTimeout(function(){if(upd===true){upd=false;ok()}},5000);return true};
+  sw.getRegistration().then(function(r){if(!r)return end();
+    if(take(r.waiting||r.installing))return;
+    r.addEventListener("updatefound",function(){take(r.installing)});
+    r.update().then(function(){setTimeout(function(){if(!take(r.waiting||r.installing))end()},30)},end)},end)}catch(e){ok()}})}
+function start(){preCheck().then(function(){requestAnimationFrame(function(){requestAnimationFrame(go)})})}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
-setTimeout(go,1500);
+setTimeout(go,2000);
 window.CE_splashGate=function(){return ready.then(function(){var wt=reduce?0:Math.max(0,1750-(Date.now()-t0));return new Promise(function(ok){setTimeout(ok,wt)})})};
 window.CE_splashOut=function(){if(done)return;done=true;ready.then(function(){setTimeout(function(){s.classList.add("out");document.documentElement.classList.add("ce-enter");
   setTimeout(function(){s.remove();window.CE_splashGate=null;metas.forEach(function(m,i){m.content=old[i]});document.documentElement.classList.remove("ce-enter")},1250)},Math.max(0,(reduce?300:2200)-(Date.now()-t0)))})};

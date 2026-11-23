@@ -324,7 +324,14 @@
     // si tu n'es pas en train de faire quelque chose (aucune fenêtre ouverte, aucun champ en cours de saisie).
     var hadCtrl = !!navigator.serviceWorker.controller, pending = false, lastChk = Date.now();
     function idle() { return !document.querySelector("dialog[open]") && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) && !(window.CE_simActive && window.CE_simActive()); }
-    function reloadIfIdle() { if (pending && (document.hidden || idle())) { pending = false; location.reload(); } }
+    function reloadIfIdle() { if (pending && !document.getElementById("ce-splash") && (document.hidden || idle())) { pending = false; location.reload(); } }
+    // Nouvelle version prête (téléchargée pendant que l'app est ouverte) : on lui passe la main ; l'app se
+    // recharge ensuite au premier moment calme (jamais pendant l'animation d'ouverture).
+    function skipWhenReady(r) {
+      function go(w) { if (!w) return; var f = function () { if (w.state === "installed" && navigator.serviceWorker.controller) w.postMessage("ce-skip"); }; w.addEventListener("statechange", f); f(); }
+      go(r.waiting); go(r.installing); r.addEventListener("updatefound", function () { go(r.installing); });
+    }
+    navigator.serviceWorker.ready.then(function (r) { if (r) skipWhenReady(r); }).catch(function () {});
     navigator.serviceWorker.addEventListener("controllerchange", function () {
       if (!hadCtrl) { hadCtrl = true; return; } // première installation : rien à recharger
       pending = true; reloadIfIdle();
