@@ -50,7 +50,7 @@ const server = http.createServer((q, r) => {
   eq("limite d'expérience relevée à 6 ans", (await shown()).includes("Acheteur exigé 5 ans"), true);
   await p.selectOption("#cesort", "note"); await p.waitForTimeout(300);
   eq("tri par note", (await p.$eval("#sgl .sgc h3", (h) => h.textContent)).includes("Approvisionneur Brest"), true);
-  await p.click("#cesortdir"); await p.waitForTimeout(300);
+  await p.selectOption("#cesort", "note:inv"); await p.waitForTimeout(300);
   eq("tri inversé", (await p.$eval("#sgl .sgc h3", (h) => h.textContent)).includes("Approvisionneur Brest"), false);
   eq("même offre déjà candidatée via un autre site : masquée", (await p.evaluate(() => window.CE_sgAudit()))["déjà candidatée (même offre)"], 1);
   eq("décompte des motifs", (await p.evaluate(() => window.CE_sgAudit())).total, 11);

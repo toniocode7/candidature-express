@@ -23,6 +23,10 @@
     parts.push((s.ct || []).join(", ") || "aucun contrat");
     if (+s.salmin) parts.push("≥ " + s.salmin + " k€");
     parts.push("note ≥ " + v.minsc);
+    var n = 0; if (kw.length) n++; if (s.zf !== false && list(s.lieux).length) n++; if (s.zd !== false && list(s.drom).length) n++;
+    if (s.ze !== false && list(s.etr).length) n++; if (s.zc !== false && list(s.ent).length) n++; if ((s.ct || []).length) n++; if (+s.salmin) n++; if (list(s.excl).length) n++;
+    var cn = G("critn"); if (cn) { cn.textContent = n; cn.hidden = !n; }
+    var cb = G("critb"); if (cb) cb.title = parts.join(" · ");
     var el = document.querySelector("#sgcrit > summary");
     if (el) el.innerHTML = '<span class="cesum"><b>Critères de recherche</b><small>' + esc(parts.join(" · ")) + "</small></span>";
   }

@@ -647,7 +647,7 @@ dialog h3{font-size:1.12rem;margin-bottom:12px}
 .sgmeta li svg{width:16px;height:16px;margin-top:1px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
 .sgmeta li a{color:var(--brand)}
 .sgmeta li.xph{color:var(--warn)}.sgmeta li.sgold{color:var(--warn)}
-.cesortbox{display:flex;align-items:center;gap:8px;margin:2px 0 12px}.cesortrow{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.sgtop{display:flex;flex-direction:column;gap:12px;margin:2px 0 14px}.sgrun .note{margin:0}.sgrun .cesrc{margin-top:4px}.sgact{display:flex;gap:8px}.sgact #sggo{flex:1;min-width:0}.sgic{flex:none;width:50px;padding:0!important;justify-content:center}.sgic svg{margin:0!important}.sgbar{display:flex;gap:8px;align-items:center}.sgbar .srtw{margin:0;min-height:40px}.sgsortw{position:relative;min-width:0;overflow:hidden}.sgsortw>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sgsortw select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px;border:0;padding:0;margin:0}.sgsortw:focus-within{border-color:var(--brand);color:var(--brand)}#sgn:empty{display:none}.critn{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--brand);color:var(--onbrand);font-size:.7rem;font-weight:700;margin-left:2px}.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}#critd #sgcrit>summary{display:none}#critd #sgcrit{border:0;padding:0;margin:0;background:none}#critd #sgcrit>.altin{padding:0}.critmsg{color:var(--bad);font-weight:600;margin:12px 0 0}#critdays{margin:14px 0 6px}.cesortbox{display:flex;align-items:center;gap:8px;margin:2px 0 12px}.cesortrow{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
 .cesortrow label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.cesortrow select{flex:1;min-width:0;text-overflow:ellipsis;width:auto;padding:8px 30px 8px 12px;border-radius:999px;font-size:.92rem;font-weight:600}
 .cesortd{flex:0 1 auto;min-width:0}.cesortd .sb{white-space:nowrap}.cesortd .sb{padding:8px 12px;min-height:0;font-size:.84rem}
 @media (hover:none),(pointer:coarse){:focus-visible,:focus{outline:none!important}}
@@ -908,25 +908,10 @@ setTimeout(window.CE_splashOut,10000)})();
 <details class="sugd" id="sugbox">
 <summary class="sugsum"><span class="sgtl"><h2 id="sh2">Offres suggérées</h2><span class="sgcnt" id="sgcnt"></span></span><span class="lchev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></summary>
 <section class="sug sugin" aria-labelledby="sh2">
-  <div class="sugh"><div><button type="button" class="srtw mpbtn2" data-map="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>Voir sur la carte</button><p class="note cesrc" id="cesrc" hidden></p><p class="note" id="sgat">Des offres trouvées sur les sites d'emploi, LinkedIn et les sites des employeurs, en France, en outre-mer et à l'étranger, triées selon ton profil.</p></div><div class="row"><button class="sb pri" type="button" id="sggo" title="Cherche de nouvelles offres, puis actualise celles déjà affichées"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>Nouvelle recherche</button><button type="button" class="sb sec" id="sgchk" title="Actualise les offres déjà affichées sans en chercher de nouvelles : toujours en ligne, expérience exigée, métiers exclus, périmées, doublons"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>Actualiser les offres</button></div></div>
-  <details class="alt" id="sgcrit">
-    <summary>Critères de recherche</summary>
-    <div class="altin">
-      <div><label for="sgkw">Métiers ou mots-clés en français (séparés par des virgules)</label><input id="sgkw" autocapitalize="off"></div>
-      <div><label for="sgkwen">Mots-clés pour l'étranger, en anglais</label><input id="sgkwen" autocapitalize="off"></div>
-      <div><label for="sglieu">France : villes (et alentours)</label><input id="sglieu"></div>
-      <div><label for="sgdrom">Outre-mer</label><input id="sgdrom"></div>
-      <div><label for="sgetr">Étranger : pays ou villes</label><input id="sgetr"></div>
-      <div><label for="sgent">Entreprises à surveiller sur leur propre site carrière</label><input id="sgent"></div>
-      <div><label for="sgexcl">Métiers à exclure (jamais proposés)</label><textarea id="sgexcl" rows="3" autocapitalize="off"></textarea></div>
-      <div><span class="note" style="display:block;margin-bottom:6px;font-weight:600">Zones à inclure dans la recherche</span><div class="row"><label class="chk"><input type="checkbox" id="sgzf"> France</label><label class="chk"><input type="checkbox" id="sgzd"> Outre-mer</label><label class="chk"><input type="checkbox" id="sgze"> Étranger</label><label class="chk"><input type="checkbox" id="sgzc"> Entreprises surveillées</label></div></div>
-      <div><span class="note" style="display:block;margin-bottom:6px;font-weight:600">Contrats</span><div class="row" id="sgct"></div></div>
-      <p class="note">Sources : Indeed (connecteur officiel, sans crédit), HelloWork, LinkedIn, Welcome to the Jungle, Apec, France Travail, Meteojob, Glassdoor, les sites carrières des employeurs et le reste du web.</p>
-      <p class="note" id="sgcost"></p>
-    </div>
-  </details>
+  <div class="sgtop"><div class="sgrun"><p class="note" id="sgat">Des offres trouvées sur les sites d'emploi, LinkedIn et les sites des employeurs, triées selon ton profil.</p><p class="note cesrc" id="cesrc" hidden></p></div><div class="sgact"><button class="sb pri" type="button" id="sggo" title="Cherche de nouvelles offres, puis actualise celles déjà affichées"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>Nouvelle recherche</button><button type="button" class="sb sec sgic" id="sgchk" aria-label="Actualiser les offres" title="Actualise les offres déjà affichées sans en chercher de nouvelles : toujours en ligne, expérience exigée, métiers exclus, périmées, doublons"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></button></div><div class="sgbar"><button type="button" class="srtw mpbtn2" data-map="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>Carte</button><button type="button" class="srtw" id="critb" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Critères<span class="critn" id="critn" hidden></span></button><span class="sgsortw srtw"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg><span id="sgsortl">Tri</span><label for="cesort" class="vh">Trier les offres</label><select id="cesort"></select></span></div></div>
+
   <p class="note" id="sgn"></p>
-  <div class="cesortbox"><div class="cesortrow"><label for="cesort">Trier par</label><select id="cesort"></select></div><div class="cesortrow cesortd"><button type="button" class="sb" id="cesortdir"></button></div></div><div class="sgl" id="sgl"></div>
+  <div class="sgl" id="sgl"></div>
 </section>
 </details>
 
@@ -1071,6 +1056,27 @@ setTimeout(window.CE_splashOut,10000)})();
 </dialog>
 </div>
 
+<dialog id="critd" class="drawer" aria-labelledby="critt">
+<div class="dwh"><h2 id="critt">Critères de recherche</h2><button type="button" class="gear" id="critx" aria-label="Fermer les critères"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<div class="dwb"><p class="note critmsg" id="critmsg" role="status" hidden></p>
+<details class="alt" id="sgcrit">
+    <summary>Critères de recherche</summary>
+    <div class="altin">
+      <div><label for="sgkw">Métiers ou mots-clés en français (séparés par des virgules)</label><input id="sgkw" autocapitalize="off"></div>
+      <div><label for="sgkwen">Mots-clés pour l'étranger, en anglais</label><input id="sgkwen" autocapitalize="off"></div>
+      <div><label for="sglieu">France : villes (et alentours)</label><input id="sglieu"></div>
+      <div><label for="sgdrom">Outre-mer</label><input id="sgdrom"></div>
+      <div><label for="sgetr">Étranger : pays ou villes</label><input id="sgetr"></div>
+      <div><label for="sgent">Entreprises à surveiller sur leur propre site carrière</label><input id="sgent"></div>
+      <div><label for="sgexcl">Métiers à exclure (jamais proposés)</label><textarea id="sgexcl" rows="3" autocapitalize="off"></textarea></div>
+      <div><span class="note" style="display:block;margin-bottom:6px;font-weight:600">Zones à inclure dans la recherche</span><div class="row"><label class="chk"><input type="checkbox" id="sgzf"> France</label><label class="chk"><input type="checkbox" id="sgzd"> Outre-mer</label><label class="chk"><input type="checkbox" id="sgze"> Étranger</label><label class="chk"><input type="checkbox" id="sgzc"> Entreprises surveillées</label></div></div>
+      <div><span class="note" style="display:block;margin-bottom:6px;font-weight:600">Contrats</span><div class="row" id="sgct"></div></div>
+      <p class="note">Sources : Indeed (connecteur officiel, sans crédit), HelloWork, LinkedIn, Welcome to the Jungle, Apec, France Travail, Meteojob, Glassdoor, les sites carrières des employeurs et le reste du web.</p>
+      <p class="note" id="sgcost"></p>
+    </div>
+  </details>
+<p class="note" id="critdays"></p></div>
+</dialog>
 <dialog id="adv" class="drawer" aria-labelledby="advt">
 <div class="dwh"><h2 id="advt">Annonce</h2><button type="button" class="gear" id="advx" aria-label="Fermer l'annonce"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 <div class="dwb"><p class="note" id="advm" style="margin:14px 0 8px"></p><div class="row" style="margin-bottom:14px"><button type="button" class="sb sec" id="advc">Copier le lien de l'annonce</button></div><div id="advb" class="advb"></div></div>

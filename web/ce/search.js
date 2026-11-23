@@ -94,8 +94,9 @@
       var s = st[k], okc = s.ok ? "ok" : "ko";
       return '<span class="cesr ' + okc + '" title="' + (s.ok ? (s.n || 0) + " offres, " + ago(s.at) : "En pause : " + String(s.err || "").replace(/"/g, "") + ". Nouvel essai automatique au prochain passage.") + '"><i></i>' + LABEL[k] + "</span>";
     });
-    var run = st._run && st._run.at ? "Dernière recherche automatique " + ago(st._run.at) + ". " : "";
-    el.innerHTML = run + '<span class="cesrl">' + parts.join("") + "</span>";
+    window.CE_lastRun = st._run && st._run.at || "";
+    if (window.CE_sgAtUI) window.CE_sgAtUI();
+    el.innerHTML = '<span class="cesrl">' + parts.join("") + "</span>";
     el.hidden = !parts.length;
   };
 })();

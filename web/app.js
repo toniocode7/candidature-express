@@ -1321,13 +1321,19 @@ if(k==="conseil"){var a0=items.slice();return inv?a0.reverse():a0}
 var known=[],unk=[];items.forEach(function(x){(val(x)==null?unk:known).push(x)});
 var cmp=function(p,q){var a=val(p),b=val(q),r=typeof a==="string"?a.localeCompare(b,"fr",{sensitivity:"base"}):a-b;return inv?-r:r};
 known.sort(function(p,q){return cmp(p,q)||(q.pertinence||0)-(p.pertinence||0)});return known.concat(unk)}
-function ceSortUI(){var el=G("cesort"),bt=G("cesortdir");if(!el)return;var c=splitList(SG.lieux)[0]||"";
+var CESHORT={conseil:"Conseillé",note:"Note",pub:"Publication",fd:"Repérage",dist:"Distance",ent:"Entreprise",ville:"Ville"};
+function sgAgo(t){var m=Math.round((Date.now()-t)/60000);if(m<60)return "il y a "+Math.max(1,m)+" min";var h=Math.round(m/60);if(h<24)return "il y a "+h+" h";return "il y a "+Math.round(h/24)+" j"}
+function sgAtUI(){var e=G("sgat");if(!e)return;var t=Math.max(+SG.at||0,Date.parse(window.CE_lastRun||"")||0);e.textContent=t?"Dernière recherche "+sgAgo(t)+".":"Des offres trouvées sur les sites d'emploi, LinkedIn et les sites des employeurs, triées selon ton profil."}
+window.CE_sgAtUI=sgAtUI;
+function critOpen(msg){var d=G("critd"),c=G("sgcrit"),m=G("critmsg");if(m){m.textContent=msg||"";m.hidden=!msg}if(c&&!c.open)c.open=true;if(d&&!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}if(typeof noAutoFocus==="function")noAutoFocus()}}
+G("critb").onclick=function(){critOpen("")};G("critx").onclick=function(){G("critd").close()};
+G("critd").addEventListener("click",function(e){if(e.target===this)this.close()});
+G("critd").addEventListener("close",function(){var c=G("sgcrit");if(c)c.open=false;if(typeof sgUI==="function")sgUI()});
+function ceSortUI(){var el=G("cesort");if(!el)return;var c=splitList(SG.lieux)[0]||"";
 var keys=["conseil","note","pub","fd"].concat(c?["dist"]:[]).concat(["ent","ville"]);
-el.innerHTML=keys.map(function(k){return '<option value="'+k+'">'+esc(k==="dist"?"Distance de "+c:CESORT[k][0])+'</option>'}).join("");
-el.value=ceSortKey();if(el.value!==ceSortKey())el.value="conseil";var lab=CESORT[el.value]||CESORT.conseil,inv=ceSortInv();
-if(bt){bt.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg><span>'+esc(inv?lab[2]:lab[1])+'</span>';bt.setAttribute("aria-label","Sens du tri : "+(inv?lab[2]:lab[1])+". Toucher pour inverser.");
-bt.onclick=function(){try{localStorage.setItem("ce.sgdir",ceSortInv()?"":"inv")}catch(e){}sgUI()}}
-el.onchange=function(){try{localStorage.setItem("ce.sgsort",el.value);localStorage.setItem("ce.sgdir","")}catch(e){}sgUI()}}
+el.innerHTML=keys.map(function(k){var l=CESORT[k],g=k==="dist"?"Distance de "+c:l[0];return '<optgroup label="'+esc(g)+'">'+[1,2].map(function(i){return '<option value="'+k+(i===2?":inv":"")+'">'+esc(CESHORT[k]+" · "+l[i].charAt(0).toLowerCase()+l[i].slice(1))+'</option>'}).join("")+'</optgroup>'}).join("");
+var k0=keys.indexOf(ceSortKey())>=0?ceSortKey():"conseil";el.value=k0+(ceSortInv()?":inv":"");el.setAttribute("aria-label","Trier les offres");var sl=G("sgsortl");if(sl){sl.textContent=CESHORT[k0]+" "+(ceSortInv()?"↑":"↓");sl.parentNode.title="Tri : "+el.options[el.selectedIndex].textContent}
+el.onchange=function(){var v=el.value.split(":");try{localStorage.setItem("ce.sgsort",v[0]);localStorage.setItem("ce.sgdir",v[1]?"inv":"")}catch(e){}sgUI()}}
 function ceHiddenN(){try{return sgKeep0().length-sgKeep().length}catch(e){return 0}}
 function sgKeep0(rev){var mine=mineList(),hl=hidList(),lim=Date.now()-SGDAYS*864e5,known={},hid={};OFF.forEach(function(o){if(o.url)known[nurl(o.url)]=1});(SG.hidden||[]).forEach(function(u){hid[nurl(u)]=1});
 return (SG.items||[]).filter(function(x){if(!x.fd)x.fd=SG.at||Date.now();return x.fd>=lim&&!sgUrls(x).some(function(u){u=nurl(u);return known[u]||hid[u]})&&!sgStale(x)&&!sgIsMine(x,mine)&&!sgIsHid(x,hl)&&!sgExcl(x)&&(rev||!sgExpX(x)&&!xpOut(x))&&!sgStage(x)&&!sgLang(x)&&!x.lgReq&&!isCaIndeed(x)})}
@@ -1423,7 +1429,7 @@ function sgCost(){var el=G("sgcost");if(el)el.textContent=SG.zf===false&&SG.zd==
 function sgUI(){G("sgkw").value=SG.kw;G("sglieu").value=SG.lieux;sgFix();G("sgent").value=SG.ent;G("sgexcl").value=SG.excl;G("sgkwen").value=SG.kwen;G("sgdrom").value=SG.drom;G("sgetr").value=SG.etr;["zf","zd","ze","zc"].forEach(function(k){G("sg"+k).checked=SG[k]!==false});
 G("sgct").innerHTML=CTS.map(function(c){return '<label class="chk"><input type="checkbox" value="'+c+'"'+(SG.ct.indexOf(c)>=0?' checked':'')+'> '+c+'</label>'}).join("");
 G("sgct").querySelectorAll("input").forEach(function(x){x.onchange=function(){SG.ct=Array.prototype.filter.call(G("sgct").querySelectorAll("input"),function(y){return y.checked}).map(function(y){return y.value});sgSave()}});
-sgCost();G("sgat").textContent=SG.at?"Dernière recherche le "+new Date(SG.at).toLocaleDateString("fr-FR",{day:"numeric",month:"long"})+" à "+new Date(SG.at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})+". Les offres restent ici "+SGDAYS+" jours, tant que tu ne les as pas analysées ou supprimées.":"Des offres trouvées sur les sites d'emploi, LinkedIn et les sites des employeurs, triées selon ton profil.";
+sgCost();sgAtUI();if(G("critdays"))G("critdays").textContent="Les offres restent dans la liste "+SGDAYS+" jours, tant que tu ne les as pas analysées ou supprimées.";
 var known={};OFF.forEach(function(o){if(o.url)known[o.url]=1});var hid={};(SG.hidden||[]).forEach(function(u){hid[u]=1});
 try{ceSortUI()}catch(e){}var items=ceSort(sgKeep());var L=G("sgl");var nn=items.filter(function(x){return x.fd===SG.at}).length;G("sgcnt").textContent=items.length?items.length+(items.length>1?" offres":" offre")+" · "+(nn?nn+(nn>1?" nouvelles":" nouvelle")+" depuis la dernière recherche":"aucune nouvelle depuis la dernière recherche"):"";try{G("sh2").textContent="Offres suggérées"}catch(e){}
 if(!items.length){L.innerHTML='<div class="sgempty">'+(SG.at?"Aucune offre en attente : tu as traité toutes les suggestions, ou aucune ne correspond encore à tes critères. Les nouvelles arrivent avec la recherche automatique (à 0 h, 6 h, 12 h et 18 h, ou tout de suite avec « Nouvelle recherche ») et tu es prévenu par notification."+(ceHiddenN()?" "+ceHiddenN()+" offre"+(ceHiddenN()>1?"s sont masquées":" est masquée")+" par tes critères.":""):"Appuie sur « Nouvelle recherche » : je parcours les annonces récentes et je garde celles qui collent à ton profil.")+'</div>';return}
@@ -1480,10 +1486,10 @@ var after=sgKeep().length,other=Math.max(0,st.n-after-st.xp-(st.lg||0)-st.gone-s
 var parts=[];if(st.xp)parts.push(st.xp+" exigeant "+EXPMAX+" ans d'expérience ou plus");if(st.lg)parts.push(st.lg+" en langue étrangère ou exigeant une autre langue");if(st.gone)parts.push(st.gone+" plus en ligne");if(st.dup)parts.push(st.dup+" doublon"+(st.dup>1?"s":""));if(other)parts.push(other+" autre"+(other>1?"s":"")+" (périmées, métiers exclus, déjà traitées)");
 n.textContent="Actualisation terminée : "+st.n+" offres vérifiées. "+(parts.length?"Retirées : "+parts.join(", ")+". Il en reste "+after+".":"Aucune à retirer.")+(!mcp?" (Connecteurs indisponibles dans cette vue : seuls les extraits ont été vérifiés.)":"")};
 var SGGO=G("sggo").innerHTML;
-G("sggo").onclick=async function(){if(BUSY)return;var n=G("sgn");if(needCv(n))return;var kws=splitList(SG.kw),lieux=splitList(SG.lieux);if(!kws.length||!lieux.length){G("sgcrit").open=true;n.textContent="Indique au moins un mot-clé et une ville dans les critères.";return}
-if(!SG.ct.length){G("sgcrit").open=true;n.textContent="Coche au moins un type de contrat.";return}
+G("sggo").onclick=async function(){if(BUSY)return;var n=G("sgn");if(needCv(n))return;var kws=splitList(SG.kw),lieux=splitList(SG.lieux);if(!kws.length||!lieux.length){critOpen("Indique au moins un mot-clé et une ville dans les critères.");n.textContent="Indique au moins un mot-clé et une ville dans les critères.";return}
+if(!SG.ct.length){critOpen("Coche au moins un type de contrat.");n.textContent="Coche au moins un type de contrat.";return}
 var mcp=null,sample=null;try{mcp=await MCP();sample=await claude.use("sample")}catch(e){}if(!mcp||!sample){n.textContent="La recherche d'offres n'est pas disponible dans cette vue. Elle arrive dans la prochaine mise à jour.";return}
-sgFix();if(!SG.zf&&!SG.zd&&!SG.ze&&!SG.zc){G("sgcrit").open=true;n.textContent="Coche au moins une zone.";return}
+sgFix();if(!SG.zf&&!SG.zd&&!SG.ze&&!SG.zc){critOpen("Coche au moins une zone.");n.textContent="Coche au moins une zone.";return}
 function orOf(arr){return "("+arr.map(function(x){return /\s/.test(x)?'"'+x+'"':x}).join(" OR ")+")"}
 var ents=splitList(SG.ent),dro=splitList(SG.drom),etr=splitList(SG.etr),kwen=splitList(SG.kwen),orq=orOf(kws),ore=orOf(kwen.length?kwen:kws),orIndeed=kws.map(function(x){return /\s/.test(x)?'"'+x+'"':x}).join(" OR "),orIndeedEn=(kwen.length?kwen:kws).map(function(x){return /\s/.test(x)?'"'+x+'"':x}).join(" OR ");
 var OTH=["www.welcometothejungle.com","www.apec.fr","candidat.francetravail.fr","www.meteojob.com","www.glassdoor.fr","www.jobteaser.com","www.cadremploi.fr","www.regionsjob.com","emploi.ouest-france.fr","www.jobtransport.com"];
