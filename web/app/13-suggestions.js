@@ -167,7 +167,7 @@ function xpSet(x,t){if(!x.fpFull&&String(t||"").length>300)x.fpFull=fpOf(t);var 
 /* Titre lisible : sans « Voir offre de », ni lieu, entreprise ou contrat recopiés dans le titre (HelloWork),
    ni « ok » collé à la fin (certaines annonces France Travail). */
 function ofTitle(t){t=String(t||"").trim();var o=t;t=t.replace(/^voir (l['’])?offre (de |d['’])/i,"").replace(/,\s*chez\s.*$/i,"").replace(/\s+-\s+(CDI|CDD|Int[ée]rim|Stage|Alternance|Freelance|Ind[ée]pendant)\b.*$/i,"")
-.replace(/\s+à\s+[A-ZÀ-Ý][\wÀ-ÿ'’ .-]*?(\s*-\s*\d{2,3}[AB]?)?$/,"").replace(/([a-zà-ÿ]{4,}[^o])ok$/,"$1").replace(/\s{2,}/g," ").trim();return t.length>=3?t:o}
+.replace(/\s+à\s+[A-ZÀ-Ý][\wÀ-ÿ'’ .-]*?(\s*-\s*\d{2,3}[AB]?)?$/,"").replace(/([a-zà-ÿ]{4,}[^o])ok$/,"$1").replace(/\s*[(\[]\s*[hfx]\s*\/\s*[hfx](\s*\/\s*[hfx])?\s*[)\]]\s*$/i,"").replace(/\s+[hf]\s*\/\s*[hf](\s*\/\s*x)?\s*$/i,"").replace(/\s{2,}/g," ").trim();return t.length>=3?t:o}
 /* Contrat : sans « Non renseigné » ; quand le titre annonce un autre contrat que la fiche, celui du titre l'emporte. */
 function ofContrat(x){var c=String(x.contrat||"").replace(/\s*-\s*non renseign[ée].*$/i,"").replace(/\s*-\s*temps plein\b/i,"").replace(/\s*-\s*temps partiel\b/i," · temps partiel").trim();
 var m=/\b(?:pour un |en )?(CDI|CDD|int[ée]rim|alternance|stage)\b/i.exec(String(x.otitre||x.titre||"")),k=m?m[1].toUpperCase().replace("INTÉRIM","Intérim").replace("INTERIM","Intérim").replace("ALTERNANCE","Alternance").replace("STAGE","Stage"):"";

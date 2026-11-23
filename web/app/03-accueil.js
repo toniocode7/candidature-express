@@ -45,7 +45,7 @@ appBadge();var bs=G("bdgs"),bo=G("bdgo");if(bs){bs.hidden=!sn;bs.textContent=sn>
 
 /* ---------- Accueil : quoi de neuf ---------- */
 function homeFeed(){var F=G("hfeed");if(!F)return;var lim=Date.now()-30*864e5,ev=[];
-OFF.forEach(function(o){var h=o.hist||[],lastS=-1;for(var i=h.length-1;i>=0;i--){if(h[i].s!=null){lastS=i;break}}var e=coName(o)||"",p=dInfo(o).poste||"";
+OFF.forEach(function(o){var h=o.hist||[],lastS=-1;for(var i=h.length-1;i>=0;i--){if(h[i].s!=null){lastS=i;break}}var e=coName(o)||"",p=ofTitle(dInfo(o).poste||"");
 h.forEach(function(x,i){if(!x||x.t<lim)return;var t="",c="";if(x.s!=null){if(x.s===0)return;if(x.s===1){t="Candidature envoyée";c=""}else if(x.s===4){t="Premier contact";c="b"}else if(x.s===2){if(x.ir){t="Non retenu après l'entretien";c="r"}else{t="Entretien obtenu";c="g"}}else if(x.s===3){t=i===lastS&&o.expRef?"Annonce retirée, passée en Refusée":i===lastS&&o.autoRef?"Sans réponse, passée en Refusée":"Refus reçu";c="r"}}
 else if(x.x){if(/^Mail :/.test(x.x))return;t=x.x;c=/^Entretien|^Appel/.test(x.x)?"g":""}if(t)ev.push({t:x.t,l:t,c:c,e:e,p:p,id:o.id,k:x.s!=null?o.id+"|s"+x.s+(x.s===2&&x.ir?"r":""):o.id+"|x|"+x.x,ok:o.id+"|"+x.t+"|"+t})})});
 try{if(SG.at&&SG.at>lim){var n=(SG.items||[]).filter(function(x){return x.fd===SG.at}).length;if(n)ev.push({t:SG.at,k:"sug|"+SG.at,l:n+" nouvelle"+(n>1?"s":"")+" offre"+(n>1?"s":"")+" suggérée"+(n>1?"s":""),c:"o",sug:1})}}catch(e){}

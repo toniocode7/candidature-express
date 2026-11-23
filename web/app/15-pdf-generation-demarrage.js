@@ -127,10 +127,18 @@ it.forEach(function(x){if(by[x.url]){x.fpFull=by[x.url];n++}});if(n&&!BUSY){sgSa
 window.CE_xpBackfill=async function(max){if(BUSY||!window.CE_AI)return 0;var list=sgKeep().filter(function(x){return x.xpmin==null&&!x.web&&!x.xpTry}).slice(0,max||20),n=0;
 for(var i=0;i<list.length;i++){if(BUSY)break;var x=list[i];try{var t=await ceReadAd(x,null);if(t&&t.length>200&&!GONE.test(t.slice(0,3000))){xpSet(x,t);n++}else x.xpTry=1}catch(e){x.xpTry=1}}
 if(list.length&&!BUSY){sgSave();try{sgUI()}catch(e){}}return n};
+/* Candidatures sans aucune note (ajoutées par une ancienne version sans garder la note) : note calculée une fois,
+   sur la même échelle que les suggestions, en un seul appel. La note est rangée comme celle d'une suggestion. */
+window.CE_noteBackfill=async function(){if(BUSY||!window.CE_AI)return 0;var L=OFF.filter(function(o){return dInfo(o).score==null&&!o.noteTry&&(o.txt||dInfo(o).poste)}).slice(0,20);if(!L.length)return 0;
+var sample=null;try{sample=await claude.use("sample")}catch(e){}if(!sample)return 0;var cv="";try{cv=String(cvFor("fr").text||"").slice(0,1800)}catch(e){}
+var list=L.map(function(o,i){var d=dInfo(o);return i+". "+[ofTitle(d.poste),(o.an&&o.an.entreprise)||(o.meta&&o.meta.entreprise)||(o.sug&&o.sug.entreprise)||"",d.lieu,d.contrat].filter(Boolean).join(" | ")+" | annonce : "+String(o.txt||"").replace(/\s+/g," ").slice(0,300)}).join("\n");
+var r=null;try{r=await sample.json("Voici le CV d'un candidat puis des offres d'emploi. Pour chaque offre, donne une pertinence de 0 à 100 estimée d'après l'intitulé, l'annonce et le CV (85 et plus : métier qu'il a déjà exercé ; 60 à 84 : proche de son parcours ; en dessous : plus éloigné). Réponds en JSON seulement : {\"notes\":[{\"i\":0,\"pertinence\":0}]}\n\nCV :\n"+cv+"\n\nOFFRES :\n"+list,{cache:false})}catch(e){return 0}
+var n=0;L.forEach(function(o){o.noteTry=1});((r&&r.notes)||[]).forEach(function(x){var o=L[+x.i],v=Math.round(+x.pertinence);if(!o||!(v>=0&&v<=100))return;o.sug=Object.assign({},o.sug||{},{pert:v,pertAuto:1});touch(o);mark("o_"+o.id);n++});
+UNDOSKIP=true;try{saveOff()}finally{UNDOSKIP=false}if(n)renderList();return n};
 window.CE_crit={SG:function(){sgFix();return SG},save:function(){SG.critAt=Date.now();sgSave();try{sgUI()}catch(e){}try{todoUI()}catch(e){}},SETV:SETV,saveSet:saveSet,hidden:ceHiddenN,geo:function(l){return geoOf(l)},EXCLDEF:EXCLDEF};
 /* ---------- Démarrage ---------- */
 OFF.sort(function(a,b){return b.ct-a.ct});
-autoRefuse();pfUI();cvUI();renderList();sgUI();
+autoRefuse();pfUI();cvUI();renderList();sgUI();setTimeout(function(){try{window.CE_noteBackfill()}catch(e){}},9000);
 if(OFF.length&&OFF[0].an&&OFF[0].st==null){CUR=OFF[0].id;renderRes();renderList()}
 
 })();
