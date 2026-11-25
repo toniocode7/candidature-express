@@ -158,6 +158,19 @@ const server = http.createServer((q, r) => {
   const mlShown = await p.evaluate((id) => { const c = document.querySelector('.mlc[data-mid="t-ref"]'); if (!c) return false; c.querySelector("[data-sel]").value = id; c.querySelector("[data-ok]").click(); return true; }, rid);
   await p.waitForTimeout(400);
   eq("mail rattaché à une candidature déjà refusée : message sans plantage", mlShown && /déjà en Refusée/.test(await p.textContent("#mln")), true);
+  // Recherche : une analyse dont le résumé est un texte (ancienne sauvegarde, réponse IA) ne casse plus la recherche.
+  {
+    const c2 = await b.newContext({ ...devices["iPhone 15"], locale: "fr-FR", serviceWorkers: "block" }); const q = await c2.newPage(); q.on("pageerror", (e) => errs.push(e.message));
+    await q.goto(base + "/?demo"); const [fc2] = await Promise.all([q.waitForEvent("filechooser"), q.click("#ce-pick")]); await fc2.setFiles(FIX);
+    await q.waitForFunction(() => !document.querySelector(".ce-gate"), null, { timeout: 20000 }); await q.waitForTimeout(1500);
+    await q.evaluate(() => { const L = JSON.parse(localStorage.getItem("candexp.off")); const o = L.find((x) => x.an); o.an.resume = "Résumé en texte seul"; o.an.motscles = "SAP"; o.mt = Date.now() + 1e9; localStorage.setItem("candexp.off", JSON.stringify(L)); });
+    await q.reload(); await q.waitForTimeout(2500);
+    await q.evaluate(() => document.querySelector('.bnav [data-go="histbox"]').click()); await q.waitForTimeout(500);
+    if (!(await q.isVisible("#fq"))) await q.evaluate(() => { const x = [...document.querySelectorAll("button")].find((y) => /Rechercher/.test(y.textContent) && y.offsetParent); x.click(); });
+    await q.waitForTimeout(300); await q.fill("#fq", "seul"); await q.waitForTimeout(500);
+    eq("recherche : résumé en texte seul retrouvé, sans plantage", await q.locator("#list .oi").count(), 1);
+    await c2.close();
+  }
   eq("aucune erreur JavaScript", errs, []);
   await b.close(); server.close();
   done("App en démo (iPhone)");

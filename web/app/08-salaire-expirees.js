@@ -50,7 +50,7 @@ var v=ns.map(function(x){if(k&&x<500)x*=1000;if(hr||(x<60&&!k))return x*1607;if(
 function kfmt(x){return (Math.round(x/100)/10).toLocaleString("fr-FR",{maximumFractionDigits:1})+" k€"}
 function mfmt(x){return (Math.round(x/12/50)*50).toLocaleString("fr-FR")+" €"}
 function salAI(a){var m=a&&(a.salaire_marche||a.sm);if(!m)return null;var b=+m.bas,h=+m.haut;if(!(b>=12&&h>=b&&h<=250))return null;return {lo:b*1000,hi:h*1000,why:String(m.explication||"")}}
-function salCalc(o){var a=o.an||o.meta||{},i=dInfo(o),f=salFam(i.poste)||salFam(i.poste+" "+(a.resume||[]).slice(0,1).join(" ")),rg=salReg(i.lieu),ann=salParse(a.salaire),ai=salAI(a);
+function salCalc(o){var a=o.an||o.meta||{},i=dInfo(o),f=salFam(i.poste)||salFam(i.poste+" "+arr(a.resume).slice(0,1).join(" ")),rg=salReg(i.lieu),ann=salParse(a.salaire),ai=salAI(a);
 var glo=f&&rg&&!rg.x?Math.round(f.lo*rg.c*2)/2*1000:0,ghi=f&&rg&&!rg.x?Math.round(f.hi*rg.c*2)/2*1000:0,lo=0,hi=0,src="";
 if(ai&&glo){lo=Math.max(ai.lo,glo*0.75);hi=Math.min(Math.max(ai.hi,lo),ghi*1.3);src="ia+grille"}else if(ai){lo=ai.lo;hi=ai.hi;src="ia"}else if(glo){lo=glo;hi=ghi;src="grille"}
 return {f:f,rg:rg,ann:ann,ai:ai,ctr:norm(i.contrat||a.contrat||""),lo:Math.round(lo/500)*500,hi:Math.round(hi/500)*500,glo:glo,ghi:ghi,src:src}}
