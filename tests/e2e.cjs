@@ -149,6 +149,15 @@ const server = http.createServer((q, r) => {
   await p.click("#setb, [aria-label*=Param], button[title*=Param]").catch(() => {});
   await p.waitForTimeout(500);
   eq("aucun message de l'ancien artefact (compte Claude, Firecrawl)", await p.evaluate(() => /compte Claude|crédits Firecrawl|connecteurs de Claude/.test(document.body.innerText)), false);
+  // Mail de refus rattaché à la main à une candidature déjà refusée : message clair, pas de plantage.
+  const rid = await p.evaluate(() => { const L = JSON.parse(localStorage.getItem("candexp.off")); L[0].st = 3; localStorage.setItem("candexp.off", JSON.stringify(L));
+    const m = JSON.parse(localStorage.getItem("candexp.mail") || "{}"); m.pend = [{ mid: "t-ref", type: "refus", from: "rh@exemple.fr", subj: "Votre candidature", date: Date.now(), why: "Refus", proof: "nous ne donnerons pas suite" }]; m.mt = Date.now() + 1e9;
+    localStorage.setItem("candexp.mail", JSON.stringify(m)); return L[0].id; });
+  await p.reload(); await p.waitForTimeout(2500);
+  await p.evaluate(() => document.querySelector('.bnav [data-go="histbox"]').click()); await p.waitForTimeout(600);
+  const mlShown = await p.evaluate((id) => { const c = document.querySelector('.mlc[data-mid="t-ref"]'); if (!c) return false; c.querySelector("[data-sel]").value = id; c.querySelector("[data-ok]").click(); return true; }, rid);
+  await p.waitForTimeout(400);
+  eq("mail rattaché à une candidature déjà refusée : message sans plantage", mlShown && /déjà en Refusée/.test(await p.textContent("#mln")), true);
   eq("aucune erreur JavaScript", errs, []);
   await b.close(); server.close();
   done("App en démo (iPhone)");
