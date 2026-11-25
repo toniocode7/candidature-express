@@ -7,19 +7,19 @@ html.ce-gated body>.page,html.ce-gated .bnav{visibility:hidden}
 .ce-lead{margin:0;color:var(--mute);line-height:1.5}
 .ce-form{display:flex;flex-direction:column;gap:8px;margin-top:8px}.ce-form label{margin:6px 0 0}
 .ce-form button.main{margin-top:10px;min-height:46px}
-.ce-msg{margin:4px 0 0;font-size:.92rem;color:var(--mute);min-height:1.3em}
+.ce-msg{margin:4px 0 0;font-size:.9375rem;color:var(--mute);min-height:1.3em}
 @media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea,[contenteditable]{-webkit-user-select:text;user-select:text}}
 /* iOS 26, app installée : quand la page est plus courte que l'écran, iOS raccourcit
    la zone d'affichage de la hauteur de la barre d'état, et la barre de navigation
    du bas remonte. Une page au moins aussi haute que l'écran rétablit la pleine hauteur. */
 @media (display-mode:standalone){html{min-height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}}
-.ab .ceboth{width:100%;min-height:46px;font-size:.92rem}
+.ab .ceboth{width:100%;min-height:46px;font-size:.9375rem}
 .ceclaude{border-color:#D97757!important;color:#C2410C!important}
 :root[data-theme="dark"] .ceclaude{color:#F0A27F!important}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ceclaude{color:#F0A27F!important}}
 @media (max-width:560px){#dd>.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}#dd>.row>button{width:100%;min-width:0;padding-inline:10px}#dd>.row>#dgo{grid-column:1/-1}}
-.ceq{display:flex;flex-direction:column;gap:8px;margin:6px 0}.ceqr{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.ceqr b{font-size:.92rem}.ceqr span{font-size:.84rem}.ceqr small{font-size:.76rem;color:var(--mute)}
-.cesrc{font-size:.76rem!important;line-height:1.5}.cesrl{display:inline-flex;flex-wrap:wrap;gap:4px 10px;vertical-align:middle}
+.ceq{display:flex;flex-direction:column;gap:8px;margin:6px 0}.ceqr{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.ceqr b{font-size:.9375rem}.ceqr span{font-size:.875rem}.ceqr small{font-size:.8125rem;color:var(--mute)}
+.cesrc{font-size:.8125rem!important;line-height:1.5}.cesrl{display:inline-flex;flex-wrap:wrap;gap:4px 10px;vertical-align:middle}
 .cesr{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--mute)}.cesr i{width:7px;height:7px;border-radius:50%;background:var(--good)}.cesr.ko i{background:var(--warn)}
 .ceng{padding:12px 14px;display:flex;flex-direction:column;gap:10px}.cenrow{display:flex;flex-wrap:wrap;gap:8px}.cenrow .sb{flex:1 1 auto}
 .cenk{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-weight:500;color:var(--ink);margin:0}.cenk:last-child{border-bottom:0}
@@ -32,22 +32,22 @@ dialog.drawer{max-height:100dvh!important}
 .cecount{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;padding:0 .35em;margin-left:.3em;border-radius:.8em;background:var(--brand);color:var(--onbrand);font-size:.62em;vertical-align:.18em;font-variant-numeric:tabular-nums;letter-spacing:0}
 /* Critères de recherche */
 #sgcrit .ceold{display:none!important}
-.cesum{display:flex;flex-direction:column;gap:3px;min-width:0}.cesum small{font-weight:500;font-size:.84rem;color:var(--mute);line-height:1.35}
+.cesum{display:flex;flex-direction:column;gap:3px;min-width:0}.cesum small{font-weight:500;font-size:.875rem;color:var(--mute);line-height:1.35}
 .cecrit{display:flex;flex-direction:column;gap:12px}.cehint{margin:0}#cehid:empty{display:none}#cehid{color:var(--warn);font-weight:600;margin:0}
 .cesec{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--card);display:flex;flex-direction:column;gap:10px}
 .cesec.off>*:not(.cesh){opacity:.45;pointer-events:none}
-.cesh{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.cesh h4{margin:0;font:700 1rem var(--fd)}.cesh .note{margin:3px 0 0;font-size:.84rem}
+.cesh{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.cesh h4{margin:0;font:700 1rem var(--fd)}.cesh .note{margin:3px 0 0;font-size:.875rem}
 .cetog{margin:0;flex:none;padding:0;border:0}
 .cesub{display:flex;flex-direction:column;gap:8px;padding-top:6px}.cesub+.cesub{border-top:1px solid var(--line);padding-top:12px}
-.cel{display:block;margin:4px 0 0;font-size:.84rem;font-weight:600;color:var(--mute)}
+.cel{display:block;margin:4px 0 0;font-size:.875rem;font-weight:600;color:var(--mute)}
 .cechips{display:flex;flex-wrap:wrap;gap:6px}.cechips:empty{display:none}
-.cechip{display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 11px;border-radius:999px;background:var(--tint);color:var(--chip);font:600 .84rem var(--fb)}
+.cechip{display:inline-flex;align-items:center;gap:4px;padding:5px 4px 5px 11px;border-radius:999px;background:var(--tint);color:var(--chip);font:600 .875rem var(--fb)}
 .cechip.unk{background:var(--warnbg);color:var(--warn)}
 .cechip button{border:0;background:transparent;color:inherit;width:24px;height:24px;min-height:0;padding:0;border-radius:50%;font:700 1rem/1 var(--fb);cursor:pointer}
 .ceadd{display:flex;gap:8px}.ceadd input{flex:1;min-width:0;padding:9px 12px}.ceadd .sb{flex:none}
 .cerow{display:flex;flex-direction:column;gap:4px}.cerow select{width:100%}
 .cechks{display:flex;flex-wrap:wrap;gap:8px}
-.cesortrow{display:flex;align-items:center;gap:10px;margin:2px 0 4px}.cesortrow label{margin:0;flex:none;font-size:.92rem}.cesortrow select{flex:1;min-width:0;padding:9px 12px;border-radius:999px;font-weight:600}
+.cesortrow{display:flex;align-items:center;gap:10px;margin:2px 0 4px}.cesortrow label{margin:0;flex:none;font-size:.9375rem}.cesortrow select{flex:1;min-width:0;padding:9px 12px;border-radius:999px;font-weight:600}
 .cesortd{margin-top:0}.cesortd .sb{width:100%;min-height:40px}.cesortd svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cesortbox{display:flex;flex-direction:column;gap:8px}.cesortbox .cesortrow{margin:0}
 
@@ -57,4 +57,4 @@ html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-si
 @supports (-webkit-touch-callout: none) {
   input, select, textarea { font-size: 16px !important; }
 }
-.ce-link{display:block;margin:10px auto 0;padding:8px 10px;background:none;border:0;color:var(--brand);font:inherit;font-size:.92rem;font-weight:600;cursor:pointer}
+.ce-link{display:block;margin:10px auto 0;padding:8px 10px;background:none;border:0;color:var(--brand);font:inherit;font-size:.9375rem;font-weight:600;cursor:pointer}
