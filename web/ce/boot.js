@@ -275,6 +275,8 @@
       .replace(/\{\{AFF\}\}/g, JSON.stringify(p.aff || {}));
     // Laisse l'écran d'ouverture tracer son cercle avant de démarrer l'app (le démarrage occupe le processeur).
     var waited = 0;
+    // Ouverture mise en pause par l'iPhone (app quittée aussitôt, lancée en arrière-plan) : la pause compterait
+    // comme du temps de chargement. Cette ouverture-là n'est pas mesurée.
     if (window.CE_splashGate) { var w0 = performance.now(); try { await window.CE_splashGate(); } catch (e) {} waited = performance.now() - w0; }
     hideGate();
     var s = document.createElement("script");
@@ -286,7 +288,7 @@
     requestAnimationFrame(function () { requestAnimationFrame(function () {
       document.documentElement.classList.remove("ce-boot");
       // Vitesse : temps écoulé depuis le lancement jusqu'à l'app affichée et utilisable (noté une fois par ouverture).
-      try { window.CE_perf && window.CE_perf(performance.now() - waited, exec); } catch (e) {}
+      try { if (!window.CE_PAUSED && document.visibilityState === "visible" && window.CE_perf) window.CE_perf(performance.now() - waited, exec); } catch (e) {}
     }); });
     realtime();
     setTimeout(function () { try { window.CE_srcUI && window.CE_srcUI(); } catch (e) {} }, 1500);

@@ -814,6 +814,7 @@ var reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").match
 var w=s.querySelector(".sp-word"),txt="Candidature Express",h="";for(var i=0;i<txt.length;i++)h+='<span style="--i:'+i+'"'+(i>11?' class="x"':'')+'>'+(txt[i]===" "?" ":txt[i])+'</span>';w.innerHTML=h;
 var P=s.querySelector(".sp-parts"),ph="";for(var k=0;k<14;k++){var r=function(a,b){return a+Math.random()*(b-a)};ph+='<i style="left:'+r(4,96).toFixed(1)+'%;top:'+r(8,94).toFixed(1)+'%;--s:'+r(2,4).toFixed(1)+'px;--o:'+r(.25,.65).toFixed(2)+';--t:'+r(3.2,5).toFixed(1)+'s;--d:'+r(0,1.4).toFixed(2)+'s;--k:'+k+'"></i>'}P.innerHTML=ph;
 var metas=[].slice.call(document.querySelectorAll('meta[name="theme-color"]')),old=metas.map(function(m){return m.content});metas.forEach(function(m){m.content="#5F52E2"});
+window.CE_PAUSED=document.visibilityState!=="visible";document.addEventListener("visibilitychange",function(){if(document.hidden)window.CE_PAUSED=true});
 var t0=null,started=null,ready=new Promise(function(ok){started=ok}),done=false;
 function go(){if(t0||upd)return;t0=Date.now();s.classList.add("go");started();
   // Police du nom : Sora si elle est déjà chargée avant que les lettres n'apparaissent, sinon police du système (aucun saut).
