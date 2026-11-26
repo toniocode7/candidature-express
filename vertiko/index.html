@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vertiko · Tes shorts, faits pour toi</title>
+<meta name="description" content="Vertiko écrit, anime et monte tes shorts en 3D, en dessin animé ou en schéma animé. Publie chaque jour, même sans savoir monter. Un seul paiement, sans abonnement.">
+<meta property="og:title" content="Vertiko, l'app qui fabrique tes shorts">
+<meta property="og:description" content="Des shorts soignés chaque jour, même sans savoir monter. Un seul paiement, sans abonnement.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F6F3; --bg-2:#FFFFFF; --ink:#101014; --ink-2:#55555E; --line:#E6E3DD;
+  --brand:#6D4AFF; --brand-2:#8B6CFF; --brand-soft:#EEE9FF; --accent:#FFB020;
+  --ok:#17A34A; --radius:18px; --shadow:0 14px 40px rgba(16,16,20,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D0D11; --bg-2:#17171D; --ink:#F4F4F6; --ink-2:#A5A5B0; --line:#2A2A33;
+    --brand-soft:#221B44; --shadow:0 14px 40px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D0D11; --bg-2:#17171D; --ink:#F4F4F6; --ink-2:#A5A5B0; --line:#2A2A33;
+  --brand-soft:#221B44; --shadow:0 14px 40px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Geist,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;font-size:18px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;padding-bottom:84px}
+img{max-width:100%;display:block}
+a{color:var(--brand)}
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+section{padding:96px 0}
+h1,h2,h3{line-height:1.08;letter-spacing:-.025em;margin:0}
+h1{font-size:clamp(44px,7.4vw,92px);font-weight:800}
+h2{font-size:clamp(32px,4.4vw,52px);font-weight:800;max-width:900px}
+h3{font-size:22px;font-weight:700}
+.lead{font-size:clamp(18px,2vw,22px);color:var(--ink-2);max-width:700px}
+.lead b,.muted b{color:var(--ink)}
+.muted{color:var(--ink-2)}
+.center{text-align:center}.center h2,.center .lead{margin-left:auto;margin-right:auto}
+.hl{color:var(--brand)}
+.kicker{display:inline-flex;gap:8px;align-items:center;font-size:14px;font-weight:600;padding:6px 14px;border-radius:999px;background:var(--brand-soft);color:var(--brand)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:inherit;font-weight:700;font-size:18px;padding:18px 30px;border-radius:999px;border:0;cursor:pointer;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 12px 34px rgba(109,74,255,.35)}
+.btn-primary:hover{box-shadow:0 16px 40px rgba(109,74,255,.5);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--ink)}
+.card{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+/* Header */
+header.top{position:sticky;top:0;z-index:40;backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);background:color-mix(in srgb,var(--bg) 80%,transparent);border-bottom:1px solid transparent;transition:border-color .2s}
+header.top.scrolled{border-color:var(--line)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:-.03em;color:var(--ink);text-decoration:none}
+.logo-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(160deg,var(--brand-2),var(--brand));position:relative;box-shadow:0 6px 16px rgba(109,74,255,.35)}
+.logo-mark::after{content:"";position:absolute;left:11px;top:7px;border-left:11px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent}
+header .btn{padding:11px 20px;font-size:15px}
+nav.links{display:flex;gap:26px;font-size:15px;font-weight:500}
+nav.links a{color:var(--ink-2);text-decoration:none}nav.links a:hover{color:var(--ink)}
+@media(max-width:820px){nav.links{display:none}}
+
+/* Hero */
+.hero{padding:70px 0 30px;text-align:center}
+.hero h1 .line2{display:block;color:var(--brand)}
+.hero .lead{margin:26px auto 34px}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero-note{margin-top:18px;font-size:15px;color:var(--ink-2)}
+.founder-quote{display:inline-flex;align-items:center;gap:14px;margin-top:34px;padding:12px 20px 12px 12px;border-radius:999px;text-align:left;font-size:15px}
+.avatar{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--accent),var(--brand))}
+.notify{display:flex;gap:8px;max-width:460px;margin:26px auto 0}
+.notify input{flex:1;min-width:0;font:inherit;font-size:16px;padding:15px 20px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg-2);color:var(--ink)}
+.notify input:focus{outline:none;border-color:var(--brand)}
+.notify .btn{padding:14px 22px;font-size:16px}
+.form-msg{font-size:14px;color:var(--ink-2);margin-top:10px}
+.form-ok{color:var(--ok);font-weight:600}
+
+/* Shorts (visuels générés en CSS) */
+.short{position:relative;aspect-ratio:9/16;border-radius:16px;overflow:hidden;flex:none;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.18);isolation:isolate}
+.short .scene{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(40px,5vw,64px)}
+.short .scene span{filter:drop-shadow(0 10px 14px rgba(0,0,0,.35));transform:translateY(-8%)}
+.short .cap{position:absolute;left:10px;right:10px;bottom:34px;font-weight:800;font-size:13px;line-height:1.2;text-align:center;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.short .tag{position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+.short .bar{position:absolute;left:10px;right:10px;bottom:14px;height:3px;border-radius:3px;background:rgba(255,255,255,.3)}
+.short .bar::after{content:"";position:absolute;inset:0;width:var(--p,40%);background:#fff;border-radius:3px}
+.short.s3d .scene::before{content:"";position:absolute;width:70%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.55),transparent 60%);top:18%}
+.short.toon .scene{background-image:radial-gradient(rgba(255,255,255,.18) 1.5px,transparent 1.6px);background-size:14px 14px}
+.short.schema .scene{background-image:linear-gradient(rgba(255,255,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px);background-size:22px 22px}
+
+/* Mur de shorts défilant */
+.wall{position:relative;height:520px;overflow:hidden;margin-top:60px;display:flex;gap:16px;justify-content:center;-webkit-mask-image:linear-gradient(transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(transparent,#000 14%,#000 86%,transparent)}
+.wall .col{display:flex;flex-direction:column;gap:16px;width:170px;flex:none;animation:up 40s linear infinite}
+.wall .col:nth-child(even){animation-name:down;animation-duration:46s}
+.wall .col .short{width:100%}
+@keyframes up{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+@keyframes down{from{transform:translateY(-50%)}to{transform:translateY(0)}}
+@media(max-width:700px){.wall{height:420px;gap:12px}.wall .col{width:calc((100% - 24px)/3);gap:12px}.wall .col:nth-child(n+4){display:none}}
+
+/* Prix par paliers */
+.promo{background:var(--ink);color:var(--bg);border-radius:32px;padding:56px 28px;text-align:center}
+.promo h2{color:var(--bg);margin:0 auto}
+.promo .muted{color:color-mix(in srgb,var(--bg) 65%,transparent)}
+.count{display:flex;gap:12px;justify-content:center;margin:30px 0}
+.count div{min-width:82px;padding:14px 8px;border-radius:16px;background:color-mix(in srgb,var(--bg) 10%,transparent)}
+.count b{display:block;font-size:38px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.count small{font-size:13px;opacity:.7}
+.tiers{list-style:none;padding:0;margin:0 auto 34px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:780px}
+.tiers li{padding:16px 10px;border-radius:16px;border:1.5px solid color-mix(in srgb,var(--bg) 18%,transparent);font-size:14px}
+.tiers li b{display:block;font-size:26px}
+.tiers li em{display:block;font-style:normal;font-size:12px;margin-top:6px;opacity:.75}
+.tiers li.done{opacity:.4;text-decoration:line-through}
+.tiers li.now{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.tiers li.now em{color:var(--accent);opacity:1;font-weight:700}
+.places{display:inline-block;margin-top:10px;font-weight:700;color:var(--accent)}
+@media(max-width:640px){.tiers{grid-template-columns:repeat(2,1fr)}.count div{min-width:64px}.count b{font-size:28px}}
+
+/* Carrousel horizontal */
+.marquee{overflow:hidden;margin-top:50px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.marquee .track{display:flex;gap:16px;width:max-content;animation:left 50s linear infinite}
+.marquee.rev .track{animation-direction:reverse;animation-duration:58s}
+.marquee + .marquee{margin-top:16px}
+.marquee .short{width:180px}
+@keyframes left{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Avis */
+.reviews{columns:3 300px;column-gap:18px;margin-top:50px}
+.review{break-inside:avoid;margin-bottom:18px;padding:24px}
+.review blockquote{margin:0 0 18px;font-size:18px}
+.review .who{display:flex;align-items:center;gap:12px;font-size:14px}
+.review .who .avatar{width:38px;height:38px;font-size:14px}
+.demo-badge{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--brand-soft);color:var(--brand)}
+
+/* Démo vidéo */
+.video{position:relative;margin:50px auto 0;max-width:960px;aspect-ratio:16/9;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#1c1640,#6D4AFF 60%,#FFB020);display:grid;place-items:center;cursor:pointer}
+.video .play{width:92px;height:92px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 20px 50px rgba(0,0,0,.35);transition:transform .2s}
+.video:hover .play{transform:scale(1.07)}
+.video .play::after{content:"";margin-left:6px;border-left:26px solid var(--brand);border-top:16px solid transparent;border-bottom:16px solid transparent}
+.video .len{position:absolute;bottom:18px;right:18px;color:#fff;font-weight:700;font-size:14px;background:rgba(0,0,0,.4);padding:6px 12px;border-radius:999px}
+.video iframe,.video video{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* Étapes / maquette de l'app */
+.steps-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:56px;margin-top:60px;align-items:start}
+.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+.steps li{counter-increment:s;padding:22px 22px 22px 70px;position:relative;border-radius:var(--radius);cursor:pointer;transition:background .2s}
+.steps li::before{content:counter(s);position:absolute;left:20px;top:22px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;background:var(--brand-soft);color:var(--brand)}
+.steps li.on{background:var(--bg-2);box-shadow:var(--shadow)}
+.steps li.on::before{background:var(--brand);color:#fff}
+.steps li p{margin:8px 0 0;color:var(--ink-2);font-size:16px}
+.steps li small{display:block;margin-top:8px;font-size:13px;color:var(--ink-2)}
+.app{position:sticky;top:90px;padding:22px;min-height:470px}
+.app-head{display:flex;gap:6px;margin-bottom:18px}.app-head i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.pane{display:none;animation:fade .35s ease}.pane.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pane h4{margin:0 0 14px;font-size:15px}
+.topic{display:flex;gap:12px;align-items:center;padding:10px;border-radius:14px;border:1.5px solid var(--line);margin-bottom:10px}
+.topic .short{width:46px;border-radius:8px}.topic .short .cap,.topic .short .bar,.topic .short .tag{display:none}.topic .short .scene{font-size:22px}
+.topic b{display:block;font-size:15px;line-height:1.25}.topic span{font-size:13px;color:var(--ink-2)}
+.topic.pick{border-color:var(--brand);background:var(--brand-soft)}
+.topic .chip{margin-left:auto;font-size:12px;font-weight:700;color:var(--brand)}
+.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em}
+.field div{font-size:16px;padding:10px 12px;border-radius:12px;background:var(--bg);margin-top:4px}
+.seg{display:flex;gap:6px;margin-bottom:16px}.seg span{flex:1;text-align:center;font-size:13px;font-weight:600;padding:8px;border-radius:10px;background:var(--bg);color:var(--ink-2)}.seg span.on{background:var(--brand);color:#fff}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.checks{list-style:none;padding:0;margin:16px 0 0}.checks li{padding:6px 0 6px 30px;position:relative;font-size:15px}
+.checks li::before{content:"✓";position:absolute;left:0;top:5px;width:20px;height:20px;border-radius:50%;background:var(--ok);color:#fff;font-size:12px;display:grid;place-items:center;font-weight:800}
+.frames{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.frames .short{border-radius:8px}.frames .short .cap,.frames .short .bar,.frames .short .tag{display:none}.frames .short .scene{font-size:20px}
+.platforms{list-style:none;padding:0;margin:14px 0 0}.platforms li{display:flex;justify-content:space-between;padding:12px 14px;border-radius:12px;background:var(--bg);margin-bottom:8px;font-size:15px}.platforms em{font-style:normal;color:var(--ok);font-weight:700}
+@media(max-width:900px){.steps-grid{grid-template-columns:1fr}.app{position:relative;top:0}}
+
+/* Atouts */
+.perks{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:40px}
+.perk{padding:28px}
+.perk p{margin:10px 0 0;color:var(--ink-2);font-size:16px}
+.perk .demo{margin-bottom:20px;min-height:90px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bubble{background:var(--brand);color:#fff;padding:12px 16px;border-radius:18px 18px 4px 18px;font-size:15px;margin-left:auto}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--bg);font-size:14px;font-weight:600}
+.dur{display:flex;gap:8px;align-items:flex-end}.dur .short{width:52px}.dur .short:first-child{width:120px;aspect-ratio:16/9}.dur .short .cap{bottom:6px;font-size:11px}.dur .short .bar,.dur .short .tag{display:none}.dur .short .scene{font-size:22px}
+@media(max-width:760px){.perks{grid-template-columns:1fr}}
+
+/* Fondateur */
+.founder{display:grid;grid-template-columns:320px 1fr;gap:50px;align-items:center;margin-top:50px}
+.founder .portrait{aspect-ratio:4/5;border-radius:28px;background:linear-gradient(160deg,var(--accent),var(--brand));display:grid;place-items:center;font-size:110px;font-weight:800;color:#fff}
+.founder p{font-size:20px}
+.mini-shorts{display:flex;gap:10px;margin-top:24px}.mini-shorts .short{width:74px}.mini-shorts .short .cap,.mini-shorts .short .tag{display:none}.mini-shorts .short .scene{font-size:26px}
+@media(max-width:820px){.founder{grid-template-columns:1fr}.founder .portrait{max-width:260px}}
+
+/* Entreprises & inspiration */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:50px;align-items:center}
+.numbered{list-style:none;padding:0;margin:0}
+.numbered li{display:grid;grid-template-columns:52px 1fr;gap:6px 14px;padding:18px 0;border-bottom:1px solid var(--line)}
+.numbered li:last-child{border:0}
+.numbered .n{grid-row:span 2;font-size:15px;font-weight:800;color:var(--brand);padding-top:3px}
+.numbered p{margin:0;color:var(--ink-2);font-size:16px}
+.biz-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.biz-tabs button{font:inherit;font-size:14px;font-weight:600;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg-2);color:var(--ink);cursor:pointer}
+.biz-tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.biz-stage{display:flex;gap:12px;justify-content:center}.biz-stage .short{width:30%;max-width:170px}
+.compare{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.compare .short{width:100%}
+.compare .arrow{font-size:28px;color:var(--brand)}
+.compare figcaption{font-size:13px;color:var(--ink-2);text-align:center;margin-top:8px}
+.kept{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.kept div{padding:16px;border-radius:14px;background:var(--bg-2);border:1px solid var(--line);font-size:14px}
+.kept ul{margin:8px 0 0;padding-left:18px}
+@media(max-width:860px){.split{grid-template-columns:1fr}}
+
+/* Tableau comparatif */
+.table{margin-top:44px;overflow:hidden}
+.trow{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:10px;padding:18px 24px;border-bottom:1px solid var(--line);align-items:center;font-size:16px}
+.trow:last-child{border:0}
+.trow.head{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.trow small{display:block;color:var(--ink-2);font-size:13px}
+.trow .y{font-weight:700}
+.trow.us{background:var(--brand-soft)}
+.trow.us .y{color:var(--brand)}
+.foot-note{font-size:13px;color:var(--ink-2);margin-top:10px}
+
+/* Offre */
+.offer{max-width:640px;margin:44px auto 0;padding:38px}
+.price{display:flex;align-items:baseline;gap:14px;margin:12px 0}
+.price b{font-size:64px;font-weight:800;letter-spacing:-.04em}
+.price s{font-size:24px;color:var(--ink-2)}
+.offer ul.ticks{list-style:none;padding:0;margin:24px 0}
+.offer ul.ticks li{padding:7px 0 7px 32px;position:relative;font-size:16px}
+.offer ul.ticks li::before{content:"✓";position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:800;font-size:12px;display:grid;place-items:center}
+.total{border-top:1px solid var(--line);padding-top:18px;font-size:15px}
+.total div{display:flex;justify-content:space-between;padding:4px 0}
+.offer .btn{width:100%;margin-top:22px}
+.offer .small{font-size:14px;color:var(--ink-2);margin-top:14px}
+
+/* FAQ */
+.faq{max-width:820px;margin:44px auto 0}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;padding:22px 40px 22px 0;font-weight:600;font-size:19px;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:4px;top:16px;font-size:28px;font-weight:400;color:var(--brand);transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin:0 0 22px;color:var(--ink-2)}
+.faq .extra{display:none}.faq.all .extra{display:block}
+.more{display:block;margin:24px auto 0}
+
+/* Final */
+.final{text-align:center;position:relative;overflow:hidden}
+.final .floating{display:flex;gap:14px;justify-content:center;margin-bottom:40px}
+.final .floating .short{width:110px}
+.final .floating .short:nth-child(odd){transform:rotate(-6deg) translateY(14px)}
+.final .floating .short:nth-child(even){transform:rotate(5deg)}
+@media(max-width:640px){.final .floating .short:nth-child(n+5){display:none}.final .floating .short{width:76px}}
+
+footer{padding:40px 0;border-top:1px solid var(--line);font-size:14px;color:var(--ink-2)}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+footer a{color:var(--ink-2)}
+
+/* Barre collante */
+.sticky{position:fixed;left:12px;right:12px;bottom:12px;z-index:50;max-width:760px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:10px 10px 10px 20px;border-radius:999px;background:color-mix(in srgb,var(--bg-2) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);box-shadow:var(--shadow);transform:translateY(140%);transition:transform .35s ease}
+.sticky.show{transform:none}
+.sticky .txt{flex:1;font-size:14px;line-height:1.3}
+.sticky .btn{padding:12px 20px;font-size:15px}
+@media(max-width:560px){.sticky .txt span{display:none}}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+</style>
+</head>
+<body id="haut">
+
+<header class="top" id="topbar">
+  <div class="wrap">
+    <a class="logo" href="#haut" aria-label="Vertiko, retour en haut"><span class="logo-mark"></span><span data-c="brand">Vertiko</span></a>
+    <nav class="links" aria-label="Sections">
+      <a href="#comment">Comment ça marche</a>
+      <a href="#prix">Prix</a>
+      <a href="#faq">Questions</a>
+    </nav>
+    <a class="btn btn-primary" href="#prix">Obtenir <span data-c="brand">Vertiko</span></a>
+  </div>
+</header>
+
+<main>
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="wrap">
+    <span class="kicker">● Pour Mac et Windows · sans abonnement</span>
+    <h1 style="margin-top:22px">Tes shorts sortent<span class="line2">tout seuls.</span></h1>
+    <p class="lead">Vertiko trouve tes idées, écrit le texte, anime et monte <b>des shorts soignés</b> en 3D, en dessin animé ou en schéma animé. Publie chaque jour, <b>même si tu n'as jamais monté une vidéo</b>.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#prix">Obtenir Vertiko</a>
+      <a class="btn btn-ghost" href="#demo">Voir la démo</a>
+    </div>
+    <p class="hero-note"><b>Un seul paiement.</b> Tu paies une fois, tu le gardes pour toujours.</p>
+
+    <div class="founder-quote card">
+      <span class="avatar" data-c="founderInitial">A</span>
+      <span>« Je passais mes soirées à monter. Maintenant je valide ma semaine en une demi-heure. »<br><b data-c="founderLine">Antoine, créateur de Vertiko</b></span>
+    </div>
+
+    <form class="notify js-notify" novalidate>
+      <input type="email" name="email" placeholder="ton@email.fr" aria-label="Ton e-mail" required>
+      <button class="btn btn-primary" type="submit">Me prévenir</button>
+    </form>
+    <p class="form-msg">Ton e-mail sert seulement à te prévenir de la sortie.</p>
+
+    <div class="wall" id="wall" aria-hidden="true"></div>
+  </div>
+</section>
+
+<!-- ============ PROMO À PALIERS ============ -->
+<section id="prix-promo" style="padding-top:40px">
+  <div class="wrap">
+    <div class="promo reveal">
+      <span class="kicker" style="background:rgba(255,176,32,.16);color:var(--accent)">Offre de lancement</span>
+      <h2 style="margin-top:18px">Le prix monte à chaque palier rempli.</h2>
+      <span class="places" id="placesLeft"></span>
+      <div class="count js-count" aria-live="polite">
+        <div><b data-u="d">--</b><small>jours</small></div>
+        <div><b data-u="h">--</b><small>heures</small></div>
+        <div><b data-u="m">--</b><small>minutes</small></div>
+        <div><b data-u="s">--</b><small>secondes</small></div>
+      </div>
+      <ol class="tiers" id="tiers"></ol>
+      <a class="btn btn-primary js-buy" href="#">Obtenir Vertiko</a>
+      <p class="muted" style="margin-top:16px;font-size:15px"><b style="color:inherit">Paiement unique, sans abonnement.</b> Mac et Windows. Mises à jour comprises.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GALERIE ============ -->
+<section>
+  <div class="wrap center">
+    <h2 class="reveal">Des shorts qui ont l'air pros, <span class="hl">quel que soit ton sujet.</span></h2>
+    <p class="lead reveal" style="margin-top:18px">Chaque short est <b>regardé image par image</b> et comparé à ce que tu as demandé avant de t'être livré.</p>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="track" id="m1"></div></div>
+  <div class="marquee rev" aria-hidden="true"><div class="track" id="m2"></div></div>
+</section>
+
+<!-- ============ AVIS ============ -->
+<section>
+  <div class="wrap">
+    <h2 class="reveal center" style="margin:0 auto">Ce qu'en disent <span class="hl">les premiers testeurs.</span></h2>
+    <div class="reviews" id="reviews"></div>
+  </div>
+</section>
+
+<!-- ============ DÉMO ============ -->
+<section id="demo">
+  <div class="wrap center">
+    <h2 class="reveal">Gagne en visibilité avec un short soigné <span class="hl">chaque jour.</span></h2>
+    <p class="lead reveal" style="margin-top:18px">En moins de 4 minutes, je te montre comment je prépare <b>toute ma semaine de shorts</b>, de l'idée à la publication.</p>
+    <div class="video reveal" id="video" role="button" tabindex="0" aria-label="Lire la vidéo de démonstration">
+      <span class="play"></span><span class="len" data-c="demoLength">3 min 40</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMMENT ÇA MARCHE ============ -->
+<section id="comment">
+  <div class="wrap">
+    <h2 class="reveal">Jamais fait de short ? <span class="hl">Vertiko s'occupe de tout, de l'idée au short fini.</span></h2>
+    <p class="lead reveal" style="margin-top:18px">Chaque short t'arrive <b>terminé</b>. Rien n'est publié <b>tant que tu ne l'as pas validé</b>.</p>
+
+    <div class="steps-grid">
+      <ol class="steps" id="steps">
+        <li class="on" data-pane="0"><h3>Il trouve tes idées</h3><p>Il repère <b>ce qui buzze dans ton thème</b> et ce qui a déjà marché sur ta chaîne et chez les comptes que tu suis.</p></li>
+        <li data-pane="1"><h3>Il écrit avec tes mots</h3><p>Il peut apprendre <b>ta façon de parler</b> à partir de tes vidéos, et soigne chaque titre comme une accroche.</p></li>
+        <li data-pane="2"><h3>Il fabrique le short que tu imagines</h3><p>En <b>3D</b>, en <b>dessin animé</b> ou en <b>schéma animé</b>. Montre-lui un exemple et il reprend le style.</p><small>Une voix gratuite est incluse. Ta propre voix est possible en option.</small></li>
+        <li data-pane="3"><h3>Il vérifie tout</h3><p>Il regarde le short <b>du début à la fin</b>, le compare à ta demande et te dit ce qu'il a vu.</p></li>
+        <li data-pane="4"><h3>Il prépare la publication</h3><p>Titre et description <b>prêts à poster</b> sur TikTok, Instagram et YouTube Shorts.</p><small>Avec un outil de programmation en option, tout part seul à l'heure prévue.</small></li>
+      </ol>
+
+      <div class="app card reveal" aria-label="Aperçu de l'application">
+        <div class="app-head"><i></i><i></i><i></i></div>
+        <div class="pane on">
+          <h4>Idées proposées cette semaine</h4>
+          <div class="topic"><div class="short s3d" data-s="g"></div><div><b>Le vrai poisson caché dans ton jeu préféré</b><span>A cartonné chez un compte que tu suis</span></div></div>
+          <div class="topic pick"><div class="short toon" data-s="o"></div><div><b>Pourquoi les poulpes ont trois cœurs</b><span>Sujet tendance dans ton thème</span></div><span class="chip">Choisi</span></div>
+          <div class="topic"><div class="short schema" data-s="b"></div><div><b>Ce que fait ton cerveau quand tu dors</b><span>Proche de ton short le plus vu</span></div></div>
+        </div>
+        <div class="pane">
+          <h4>Texte du short, avec tes expressions</h4>
+          <div class="field"><label>Titre</label><div>3 cœurs pour un seul poulpe ?</div></div>
+          <div class="field"><label>Accroche</label><div>« Ton cœur bat seul. Celui du poulpe a deux renforts. »</div></div>
+          <div class="field"><label>La suite</label><div>Deux cœurs pompent le sang vers les branchies, le troisième vers le reste du corps. Et quand il nage, ce dernier s'arrête.</div></div>
+          <div class="field"><label>Ta demande</label><div>Un poulpe en dessin animé, ton fun, fin avec une question.</div></div>
+        </div>
+        <div class="pane">
+          <h4>Choisis le style</h4>
+          <div class="seg"><span>3D</span><span class="on">Dessin animé</span><span>Schéma animé</span></div>
+          <div class="trio"><div class="short toon" data-s="o"></div><div class="short toon" data-s="w"></div><div class="short toon" data-s="f"></div></div>
+        </div>
+        <div class="pane">
+          <h4>Vérification du début à la fin</h4>
+          <div class="frames"><div class="short toon" data-s="o"></div><div class="short toon" data-s="w"></div><div class="short toon" data-s="o"></div><div class="short toon" data-s="f"></div><div class="short toon" data-s="o"></div><div class="short toon" data-s="q"></div></div>
+          <ul class="checks"><li>Le texte reste lisible sur chaque image</li><li>La voix colle à ce qu'on voit</li><li>Le short répond à ta demande</li></ul>
+        </div>
+        <div class="pane">
+          <h4>Prêt à publier</h4>
+          <div class="field"><label>Titre</label><div>3 cœurs pour un seul poulpe ?</div></div>
+          <div class="field"><label>Description</label><div>Deux cœurs pour respirer, un pour vivre. Tu le savais ? #science #animaux</div></div>
+          <ul class="platforms"><li><b>TikTok</b><em>Prêt</em></li><li><b>Instagram</b><em>Prêt</em></li><li><b>YouTube Shorts</b><em>Prêt</em></li></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="perks">
+      <div class="perk card reveal"><div class="demo"><span class="bubble">refais l'accroche du short de jeudi, plus punchy</span></div><h3>Tu corriges avec tes mots</h3><p>Tu écris ce qui ne va pas, il retouche <b>uniquement ce point</b> et garde le reste.</p></div>
+      <div class="perk card reveal"><div class="demo"><span class="pill">🎮 Jeux vidéo</span><span class="pill">🐙 Animaux</span><span class="pill">📜 Histoire</span><span class="pill">💶 Finance</span></div><h3>Il s'adapte à ton thème</h3><p>Il crée des shorts <b>dans l'univers de ta chaîne</b>, quel que soit ton sujet.</p></div>
+      <div class="perk card reveal"><div class="demo dur"><div class="short schema" data-s="b" data-cap="12 min 05"></div><div class="short schema" data-s="b" data-cap="0:48"></div><div class="short schema" data-s="q" data-cap="0:31"></div><div class="short schema" data-s="g" data-cap="0:22"></div></div><h3>Tes vidéos longues deviennent des shorts</h3><p>Dépose une vidéo filmée, <b>même longue</b>, il en tire plusieurs shorts dans le montage que tu aimes.</p></div>
+      <div class="perk card reveal"><div class="demo"><span class="pill">📈 Ta meilleure recette</span><span class="pill">⏱ 1re seconde</span><span class="pill">🎵 Rythme</span></div><h3>Tu progresses chaque semaine</h3><p>Il analyse <b>pourquoi tes meilleurs shorts ont marché</b> et s'en sert pour la semaine suivante.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FONDATEUR ============ -->
+<section>
+  <div class="wrap">
+    <h2 class="reveal">Monter mes shorts me prenait des heures. <span class="hl">J'ai créé Vertiko pour le faire à ma place.</span></h2>
+    <div class="founder">
+      <div class="portrait reveal" data-c="founderInitial">A</div>
+      <div class="reveal">
+        <p data-c="founderStory">Moi, c'est Antoine. Je passais mes soirées à chercher des idées, écrire et monter mes shorts, <b>plus de 10 heures par semaine</b>. Aujourd'hui, Vertiko prépare <b>toute ma semaine</b>. Je regarde, je valide, et c'est fini en <b>30 minutes</b>.</p>
+        <div class="mini-shorts"><div class="short s3d" data-s="g"></div><div class="short toon" data-s="o"></div><div class="short schema" data-s="b"></div><div class="short s3d" data-s="f"></div><div class="short toon" data-s="w"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ENTREPRISES ============ -->
+<section>
+  <div class="wrap">
+    <h2 class="reveal">Tu as une entreprise et pas le temps de filmer ? <span class="hl">Vertiko crée tes shorts pour toi.</span></h2>
+    <p class="lead reveal" style="margin-top:18px">Décris ton activité et ton offre. Il en tire des shorts qui donnent <b>un vrai conseil de ton métier</b>, puis présentent <b>ton entreprise</b>.</p>
+    <div class="split">
+      <ol class="numbered reveal" id="bizSteps"></ol>
+      <div class="reveal">
+        <div class="biz-tabs" id="bizTabs" role="tablist"></div>
+        <div class="biz-stage" id="bizStage"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ S'INSPIRER ============ -->
+<section>
+  <div class="wrap">
+    <h2 class="reveal">Profite des shorts qui marchent. <span class="hl">Vertiko en tire des shorts 100 % neufs.</span></h2>
+    <p class="lead reveal" style="margin-top:18px">Quand un short fait <b>2 fois plus de vues</b> que d'habitude sur un compte, sa recette a fonctionné. Vertiko garde la recette et <b>raconte une autre histoire</b>.</p>
+    <div class="split">
+      <ol class="numbered reveal">
+        <li><span class="n">01</span><h3>Tu choisis des comptes de ta niche</h3><p><b>Jusqu'à 5 comptes</b> TikTok ou YouTube.</p></li>
+        <li><span class="n">02</span><h3>Il repère leurs shorts qui explosent</h3><p>Ceux qui font <b>au moins 2 fois</b> leurs vues habituelles.</p></li>
+        <li><span class="n">03</span><h3>Un clic, et ton short est prêt</h3><p>Il analyse les images <b>du début à la fin</b>, garde la structure et change tout le reste.</p></li>
+      </ol>
+      <div class="reveal">
+        <div class="compare">
+          <figure style="margin:0"><div class="short s3d" data-s="q" data-cap="1,9 M de vues"></div><figcaption>Le short qui a cartonné</figcaption></figure>
+          <span class="arrow">→</span>
+          <figure style="margin:0"><div class="short toon" data-s="o" data-cap="Ta version"></div><figcaption>La version Vertiko</figcaption></figure>
+        </div>
+        <div class="kept">
+          <div><b>La recette gardée</b><ul><li>L'accroche en question</li><li>Le rythme rapide</li><li>Le chiffre à l'écran</li><li>La chute finale</li></ul></div>
+          <div><b>Ce qui change</b><ul><li>L'histoire</li><li>Le texte</li><li>Les images</li><li>La voix</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARATIF ============ -->
+<section>
+  <div class="wrap">
+    <h2 class="reveal center" style="margin:0 auto">Les autres outils se louent chaque mois. <span class="hl">Vertiko s'achète une fois.</span></h2>
+    <div class="table card reveal" id="table"></div>
+    <p class="foot-note" data-c="compareNote"></p>
+  </div>
+</section>
+
+<!-- ============ OFFRE ============ -->
+<section id="prix">
+  <div class="wrap">
+    <div class="offer card reveal">
+      <span class="kicker">Paiement unique, sans abonnement</span>
+      <div class="price"><b class="js-price">97 €</b><s class="js-old"></s><span class="muted">une seule fois</span></div>
+      <p class="muted" style="margin:0">Fin de l'offre dans <b class="js-count-inline">--</b></p>
+      <ul class="ticks">
+        <li>Ta semaine de shorts écrite, fabriquée et vérifiée</li>
+        <li>Des shorts en 3D, dessin animé ou schéma animé</li>
+        <li>Tes vidéos filmées, même longues, découpées en shorts</li>
+        <li>Des shorts inspirés de ce qui marche dans ta niche, en 1 clic</li>
+        <li>Publication automatique en option, ou à la main</li>
+        <li>L'app Mac et Windows dans le même achat</li>
+        <li>Toutes les mises à jour, sans abonnement</li>
+        <li>100 % en français, et c'est moi qui réponds à tes questions</li>
+      </ul>
+      <div class="total">
+        <div><span>Vertiko</span><b class="js-price-text">97 €, une seule fois</b></div>
+        <div><span>Ton abonnement à l'IA utilisée par l'app</span><span>à part</span></div>
+      </div>
+      <a class="btn btn-primary js-buy" href="#">Obtenir Vertiko</a>
+      <p class="small">Juste après le paiement, tu crées ton compte et tu télécharges l'app. Un assistant installe tout. Paiement sécurisé, facture par e-mail.</p>
+      <p class="small">Pas encore décidé ? <a href="#prevenir">Laisse ton e-mail, je te préviens.</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq">
+  <div class="wrap">
+    <h2 class="reveal center" style="margin:0 auto">Les questions qu'on se pose avant d'acheter</h2>
+    <p class="muted center" style="margin-top:14px">Une autre question ? Écris-moi à <a class="js-mail" href="#"></a>, c'est moi qui réponds.</p>
+    <div class="faq" id="faqList"></div>
+    <button class="btn btn-ghost more" id="faqMore" type="button"></button>
+  </div>
+</section>
+
+<!-- ============ FINAL ============ -->
+<section class="final" id="prevenir">
+  <div class="wrap">
+    <div class="floating" id="floating" aria-hidden="true"></div>
+    <h2 class="reveal" style="margin:0 auto">Publie des shorts soignés <span class="hl">dès cette semaine.</span></h2>
+    <p class="lead reveal" style="margin:18px auto 30px">Tu peux continuer à monter le soir, ou louer un outil chaque mois. Ou payer Vertiko <b>une seule fois</b>.</p>
+    <a class="btn btn-primary js-buy" href="#">Obtenir Vertiko</a>
+    <form class="notify js-notify" novalidate>
+      <input type="email" name="email" placeholder="ton@email.fr" aria-label="Ton e-mail" required>
+      <button class="btn btn-ghost" type="submit">Me prévenir</button>
+    </form>
+    <p class="form-msg">Ton e-mail sert seulement à te prévenir de la sortie. Désinscription en un clic.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year"></span> <span data-c="brand">Vertiko</span> · Paiement unique, sans abonnement</span>
+    <span><a class="js-mail" href="#"></a> · <a href="#">Mentions légales</a> · <a href="#">CGV</a></span>
+  </div>
+</footer>
+
+<div class="sticky" id="sticky">
+  <div class="txt"><b data-c="brand">Vertiko</b> <span class="js-price-text">97 €, une seule fois</span><br><span class="muted">Mac et Windows · sans abonnement</span></div>
+  <a class="btn btn-primary js-buy" href="#">Obtenir</a>
+</div>
+
+<script>
+/* =====================================================================
+   RÉGLAGES : modifie ici ton nom, tes prix, tes liens et tes textes.
+   ===================================================================== */
+const CONFIG = {
+  brand: "Vertiko",
+  founderName: "Antoine",
+  contactEmail: "contact@vertiko.fr",          // ← ton adresse
+  buyUrl: "#prix",                              // ← ton lien de paiement (Stripe, Lemon Squeezy…)
+  // Adresse qui reçoit les inscriptions (Formspree, Brevo, Supabase…). Vide = message local seulement.
+  notifyEndpoint: "",
+  demoVideoUrl: "",                             // ← lien YouTube « embed » ou fichier .mp4
+  demoLength: "3 min 40",
+  // Fin de l'offre (heure de Paris). Laisse vide pour masquer le compte à rebours.
+  offerEnds: "2026-12-07T20:00:00+01:00",
+  regularPrice: 97,
+  // Paliers : le premier non « complet » est le palier en cours.
+  tiers: [
+    { price: 49, seats: 20, sold: 20 },
+    { price: 59, seats: 20, sold: 20 },
+    { price: 69, seats: 20, sold: 7 },
+    { price: 97, seats: null, sold: 0 }  // prix normal
+  ],
+  // ⚠️ Exemples à remplacer par de VRAIS avis (avec l'accord des personnes) avant de publier.
+  // Tant que demo: true, un badge « exemple » s'affiche.
+  reviews: [
+    { text: "J'ai sorti 7 shorts la première semaine. Avant, j'en faisais un par mois.", name: "Prénom N.", where: "Testeur, chaîne gaming", demo: true },
+    { text: "Le dessin animé rend super bien, mes abonnés pensaient que j'avais embauché un monteur.", name: "Prénom N.", where: "Testeuse, chaîne animaux", demo: true },
+    { text: "Ce qui m'a convaincu : rien ne part sans que je valide. Je garde la main.", name: "Prénom N.", where: "Testeur, compte finance", demo: true },
+    { text: "La fonction qui s'inspire des shorts qui marchent dans ma niche est redoutable.", name: "Prénom N.", where: "Testeuse, chaîne histoire", demo: true },
+    { text: "Simple à installer, et le support répond vraiment.", name: "Prénom N.", where: "Testeur, artisan", demo: true }
+  ],
+  // ⚠️ Prix publics indicatifs : vérifie-les à la date de publication.
+  compare: [
+    { name: "Outil de shorts depuis un texte", note: "Abonnement mensuel", month: 39 },
+    { name: "Outil d'avatars IA", note: "Crédits limités par mois", month: 29 },
+    { name: "Outil de découpe en clips", note: "Nombre de vidéos limité", month: 29 },
+    { name: "Outil de sous-titres", note: "15 vidéos par mois", month: 19 }
+  ],
+  compareNote: "Prix mensuels moyens constatés pour des outils de ce type, donnés à titre indicatif.",
+  business: {
+    "Un opticien": { steps: [
+      ["Le short démarre sur un geste que tout le monde fait", "Une passante plisse les yeux pour lire un panneau au loin."],
+      ["Il explique avec un vrai chiffre", "La myopie progresse fortement dans le monde depuis 30 ans."],
+      ["Ton entreprise arrive à la fin, avec ton offre", "Le nom de la boutique n'apparaît qu'à la fin, avec un réglage de lunettes offert."]
+    ], s: ["b","b","q"], caps: ["Tu plisses les yeux ?","1 personne sur 3","Réglage offert"] },
+    "Un garage": { steps: [
+      ["Un bruit que tout conducteur connaît", "Un grincement au freinage en arrivant au feu rouge."],
+      ["Il explique ce qui se passe", "Des plaquettes usées allongent la distance de freinage."],
+      ["Ton garage arrive à la fin", "Contrôle des freins gratuit, sans rendez-vous."]
+    ], s: ["g","q","g"], caps: ["Ce bruit-là ?","+ 10 m pour freiner","Contrôle gratuit"] },
+    "Une boulangerie": { steps: [
+      ["Une scène du matin", "Une baguette qu'on casse en deux au petit-déjeuner."],
+      ["Le secret du métier", "Une pâte qui repose toute une nuit développe plus de goût."],
+      ["Ta boulangerie arrive à la fin", "La tradition du jour sort du four à 7 h."]
+    ], s: ["f","o","f"], caps: ["Le bruit du croustillant","18 h de repos","Sortie du four à 7 h"] },
+    "Un coiffeur": { steps: [
+      ["Un geste du quotidien", "Quelqu'un qui se sèche les cheveux à fond, tous les matins."],
+      ["Le conseil de pro", "Une chaleur trop forte abîme la fibre du cheveu."],
+      ["Ton salon arrive à la fin", "Diagnostic offert à ta prochaine coupe."]
+    ], s: ["w","b","w"], caps: ["Tu fais ça chaque matin ?","Trop chaud = cheveux secs","Diagnostic offert"] }
+  },
+  faq: [
+    ["Combien ça coûte, tout compris ?", "<b>Vertiko se paie une seule fois.</b> À côté, il te faut seulement l'abonnement à l'IA utilisée par l'app. Les services en plus (voix personnalisée, images, publication automatique) sont optionnels et passent par tes propres comptes. Rien n'est dépensé sans ton accord."],
+    ["C'est quoi exactement, Vertiko ?", "<b>Une app que tu installes sur ton ordinateur</b>, Mac ou Windows. Elle trouve tes idées, écrit, fabrique, vérifie et prépare tes shorts pour la publication. Tout se fait chez toi, avec tes comptes : c'est pour ça qu'il n'y a <b>pas d'abonnement Vertiko</b>."],
+    ["Je ne suis pas à l'aise avec la technique. Je vais m'en sortir ?", "<b>Oui.</b> Au premier lancement, <b>un assistant te guide pas à pas</b> et installe ce qu'il faut. Ensuite, l'accueil te dit toujours quoi faire. Et si tu bloques, tu m'écris."],
+    ["S'inspirer d'un short qui marche, c'est copier sa vidéo ?", "<b>Non.</b> Vertiko garde la structure (l'accroche, le rythme, la chute) et écrit une histoire neuve. <b>Rien de la vidéo d'origine n'est réutilisé</b> : ni images, ni texte, ni voix."],
+    ["YouTube et TikTok pénalisent-ils les shorts faits avec l'IA ?", "<b>Pas parce qu'ils sont faits avec l'IA.</b> Les plateformes écartent surtout les contenus répétitifs ou repris sans apport. Vertiko écrit une histoire neuve pour chaque short, et rien ne part sans ta validation. Pense à indiquer qu'une vidéo est générée par IA quand la plateforme le demande."],
+    ["Est-ce que ça va vraiment me faire des vues ?", "<b>Personne ne peut honnêtement te promettre un nombre de vues.</b> Ce que Vertiko change, c'est ta régularité : des shorts soignés toutes les semaines, partant de ce qui marche déjà dans ton thème."],
+    ["Combien de temps pour un short ?", "<b>Tu y passes quelques minutes</b> : décrire, regarder, valider. L'app, elle, travaille seule de 15 minutes à une heure selon le style demandé."],
+    ["Est-ce que mes shorts parleront comme moi ?", "<b>Oui, si tu veux.</b> Vertiko peut apprendre ta façon de parler à partir de tes vidéos. C'est facultatif et effaçable à tout moment."],
+    ["Ça publie tout seul ?", "<b>Oui, avec un outil de programmation en option.</b> Sinon, l'app te donne chaque short avec son texte, prêt à copier."],
+    ["Sur quel ordinateur ça tourne ?", "<b>Mac</b> (puce Apple ou Intel) et <b>PC Windows 10 ou 11</b>. Pas sur téléphone ni tablette."],
+    ["Il y a un abonnement Vertiko ?", "<b>Non.</b> Tu paies une fois, mises à jour comprises."],
+    ["Si j'ai un problème, je parle à qui ?", "<b>À moi directement.</b> Écris à l'adresse en haut de cette section, je te réponds."]
+  ],
+  faqVisible: 6
+};
+
+/* ===================== Visuels des shorts (CSS) ===================== */
+const SCENES = {
+  g:{bg:"linear-gradient(160deg,#2B1B6B,#6D4AFF)",e:"🎮"},
+  o:{bg:"linear-gradient(160deg,#FF7A59,#FFB020)",e:"🐙"},
+  b:{bg:"linear-gradient(160deg,#0F3D5E,#22A6B3)",e:"🧠"},
+  f:{bg:"linear-gradient(160deg,#5B2A86,#E0559B)",e:"🦊"},
+  w:{bg:"linear-gradient(160deg,#155E3B,#7BD389)",e:"🐳"},
+  q:{bg:"linear-gradient(160deg,#3A1C1C,#E4572E)",e:"🚀"},
+  m:{bg:"linear-gradient(160deg,#1E2A78,#5DA9E9)",e:"🪐"},
+  d:{bg:"linear-gradient(160deg,#4A3B12,#F2C14E)",e:"🦖"},
+  c:{bg:"linear-gradient(160deg,#173F35,#2EC4B6)",e:"💶"},
+  h:{bg:"linear-gradient(160deg,#432818,#BB9457)",e:"🏛️"}
+};
+const STYLES = [["s3d","3D"],["toon","Dessin animé"],["schema","Schéma animé"]];
+const CAPS = ["Il existe vraiment ?","Personne ne sait ça","Regarde jusqu'au bout","Ce chiffre va te choquer","Tu le savais ?","L'erreur que tout le monde fait","3 secondes pour comprendre","Le vrai secret"];
+const keys = Object.keys(SCENES);
+
+function paint(el){
+  const k = el.dataset.s || keys[Math.floor(Math.random()*keys.length)];
+  const sc = SCENES[k];
+  el.style.background = sc.bg;
+  el.style.setProperty("--p", (20+Math.random()*70).toFixed(0)+"%");
+  const style = STYLES.find(s=>el.classList.contains(s[0]));
+  el.innerHTML = `<div class="scene"><span>${sc.e}</span></div>${style?`<span class="tag">${style[1]}</span>`:""}<div class="cap">${el.dataset.cap||""}</div><div class="bar"></div>`;
+}
+function makeShort(i){
+  const el = document.createElement("div");
+  const st = STYLES[i % 3];
+  el.className = "short " + st[0];
+  el.dataset.s = keys[(i*7) % keys.length];
+  el.dataset.cap = CAPS[(i*5) % CAPS.length];
+  paint(el);
+  return el;
+}
+document.querySelectorAll(".short[data-s]").forEach(paint);
+
+// Mur vertical (contenu doublé pour une boucle sans à-coup)
+const wall = document.getElementById("wall");
+for(let c=0;c<5;c++){
+  const col = document.createElement("div"); col.className="col";
+  const items = []; for(let i=0;i<5;i++) items.push(makeShort(c*5+i+c));
+  [...items, ...items.map(n=>n.cloneNode(true))].forEach(n=>col.appendChild(n));
+  wall.appendChild(col);
+}
+// Carrousels horizontaux
+["m1","m2"].forEach((id,r)=>{
+  const t = document.getElementById(id);
+  const items = []; for(let i=0;i<10;i++) items.push(makeShort(i*3+r*11));
+  [...items, ...items.map(n=>n.cloneNode(true))].forEach(n=>t.appendChild(n));
+});
+const fl = document.getElementById("floating");
+for(let i=0;i<6;i++) fl.appendChild(makeShort(i*2+1));
+
+/* ===================== Textes depuis CONFIG ===================== */
+const $ = s=>document.querySelector(s), $$ = s=>[...document.querySelectorAll(s)];
+$$('[data-c="brand"]').forEach(e=>e.textContent=CONFIG.brand);
+$$('[data-c="founderInitial"]').forEach(e=>e.textContent=CONFIG.founderName[0]);
+$$('[data-c="founderLine"]').forEach(e=>e.textContent=`${CONFIG.founderName}, créateur de ${CONFIG.brand}`);
+$$('[data-c="demoLength"]').forEach(e=>e.textContent=CONFIG.demoLength);
+$$('[data-c="compareNote"]').forEach(e=>e.textContent=CONFIG.compareNote);
+$$(".js-mail").forEach(a=>{a.textContent=CONFIG.contactEmail;a.href="mailto:"+CONFIG.contactEmail});
+$$(".js-buy").forEach(a=>{a.href=CONFIG.buyUrl;if(/^https?:/.test(CONFIG.buyUrl)){a.target="_blank";a.rel="noopener"}});
+$("#year").textContent = new Date().getFullYear();
+
+/* ===================== Paliers & prix ===================== */
+const offerOn = CONFIG.offerEnds && new Date(CONFIG.offerEnds) > new Date();
+const cur = offerOn ? CONFIG.tiers.findIndex(t=>t.seats===null || t.sold < t.seats) : CONFIG.tiers.length-1;
+const tier = CONFIG.tiers[cur];
+const left = tier.seats===null ? null : tier.seats - tier.sold;
+$("#tiers").innerHTML = CONFIG.tiers.map((t,i)=>{
+  const cls = i<cur ? "done" : i===cur ? "now" : "";
+  const label = t.seats===null ? "Prix normal" : i<cur ? "Complet" : i===cur ? "En cours" : "À venir";
+  return `<li class="${cls}"><b>${t.price} €</b>${t.seats===null?"Ensuite":t.seats+" places"}<em>${label}</em></li>`;
+}).join("");
+$("#placesLeft").textContent = left===null ? "Les places à prix réduit sont parties." : `Plus que ${left} place${left>1?"s":""} à ${tier.price} €`;
+$$(".js-price").forEach(e=>e.textContent=tier.price+" €");
+$$(".js-old").forEach(e=>e.textContent= tier.price<CONFIG.regularPrice ? CONFIG.regularPrice+" €" : "");
+$$(".js-price-text").forEach(e=>e.textContent=`${tier.price} €, une seule fois`);
+$$(".js-buy").forEach(a=>{ if(a.textContent.startsWith("Obtenir ")) a.textContent=`Obtenir ${CONFIG.brand} pour ${tier.price} €`; });
+if(!offerOn){ $("#prix-promo").style.display="none"; $$(".js-count-inline").forEach(e=>e.parentElement.style.display="none"); }
+
+/* ===================== Compte à rebours ===================== */
+function tick(){
+  if(!offerOn) return;
+  let ms = Math.max(0, new Date(CONFIG.offerEnds) - new Date());
+  const d=Math.floor(ms/864e5), h=Math.floor(ms/36e5)%24, m=Math.floor(ms/6e4)%60, s=Math.floor(ms/1e3)%60;
+  const p=n=>String(n).padStart(2,"0");
+  $$(".js-count").forEach(c=>{c.querySelector('[data-u="d"]').textContent=p(d);c.querySelector('[data-u="h"]').textContent=p(h);c.querySelector('[data-u="m"]').textContent=p(m);c.querySelector('[data-u="s"]').textContent=p(s)});
+  $$(".js-count-inline").forEach(e=>e.textContent=`${d} j ${p(h)} h ${p(m)} min`);
+}
+tick(); setInterval(tick,1000);
+
+/* ===================== Avis ===================== */
+$("#reviews").innerHTML = CONFIG.reviews.map(r=>`
+  <figure class="review card reveal" style="margin:0 0 18px">
+    <blockquote>« ${r.text} »</blockquote>
+    <figcaption class="who"><span class="avatar">${r.name[0]}</span><span><b>${r.name}</b>${r.demo?'<span class="demo-badge">exemple</span>':""}<br><span class="muted">${r.where}</span></span></figcaption>
+  </figure>`).join("");
+
+/* ===================== Démo vidéo ===================== */
+const video = $("#video");
+function playDemo(){
+  if(!CONFIG.demoVideoUrl){ video.querySelector(".len").textContent="Vidéo bientôt disponible"; return; }
+  video.innerHTML = /\.mp4($|\?)/.test(CONFIG.demoVideoUrl)
+    ? `<video src="${CONFIG.demoVideoUrl}" controls autoplay playsinline></video>`
+    : `<iframe src="${CONFIG.demoVideoUrl}${CONFIG.demoVideoUrl.includes("?")?"&":"?"}autoplay=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen title="Démo"></iframe>`;
+}
+video.addEventListener("click",playDemo);
+video.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();playDemo()}});
+
+/* ===================== Étapes interactives ===================== */
+const steps = $$("#steps li"), panes = $$(".pane");
+let stepIdx = 0, stepTimer;
+function showStep(i){
+  stepIdx = i;
+  steps.forEach((s,j)=>s.classList.toggle("on",j===i));
+  panes.forEach((p,j)=>p.classList.toggle("on",j===i));
+}
+function autoSteps(){ clearInterval(stepTimer); stepTimer=setInterval(()=>showStep((stepIdx+1)%steps.length),4500); }
+steps.forEach((s,i)=>s.addEventListener("click",()=>{showStep(i);autoSteps()}));
+autoSteps();
+
+/* ===================== Entreprises ===================== */
+const bizNames = Object.keys(CONFIG.business);
+function showBiz(name){
+  const b = CONFIG.business[name];
+  $$("#bizTabs button").forEach(btn=>{const on=btn.textContent===name;btn.classList.toggle("on",on);btn.setAttribute("aria-selected",on)});
+  $("#bizSteps").innerHTML = b.steps.map((s,i)=>`<li><span class="n">0${i+1}</span><h3>${s[0]}</h3><p>${s[1]}</p></li>`).join("");
+  $("#bizStage").innerHTML = b.s.map((k,i)=>`<div class="short ${STYLES[i%3][0]}" data-s="${k}" data-cap="${b.caps[i]}"></div>`).join("");
+  $$("#bizStage .short").forEach(paint);
+}
+$("#bizTabs").innerHTML = bizNames.map(n=>`<button type="button" role="tab">${n}</button>`).join("");
+$$("#bizTabs button").forEach(b=>b.addEventListener("click",()=>showBiz(b.textContent)));
+showBiz(bizNames[0]);
+
+/* ===================== Comparatif ===================== */
+$("#table").innerHTML = `<div class="trow head"><span>L'outil</span><span>Par mois</span><span>Sur un an</span></div>` +
+  CONFIG.compare.map(c=>`<div class="trow"><span><b>${c.name}</b><small>${c.note}</small></span><span>${c.month} €</span><span class="y">${c.month*12} €<small>chaque année</small></span></div>`).join("") +
+  `<div class="trow us"><span><b>${CONFIG.brand}</b><small>Tes shorts écrits, fabriqués et vérifiés sur ton ordinateur</small></span><span>0 €</span><span class="y js-price">${tier.price} €<small>une seule fois</small></span></div>`;
+$("#table .us .js-price").innerHTML = `${tier.price} €<small>une seule fois</small>`;
+
+/* ===================== FAQ ===================== */
+const faq = $("#faqList");
+faq.innerHTML = CONFIG.faq.map((q,i)=>`<details class="${i>=CONFIG.faqVisible?"extra":""}"><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join("");
+const more = $("#faqMore"), extra = CONFIG.faq.length - CONFIG.faqVisible;
+if(extra>0){
+  more.textContent = `Voir les ${extra} autres questions`;
+  more.addEventListener("click",()=>{faq.classList.toggle("all");more.textContent=faq.classList.contains("all")?"Voir moins de questions":`Voir les ${extra} autres questions`});
+} else more.remove();
+
+/* ===================== Inscription e-mail ===================== */
+$$(".js-notify").forEach(f=>f.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const input = f.querySelector("input"), msg = f.nextElementSibling;
+  const email = input.value.trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ msg.textContent="Vérifie ton adresse e-mail."; msg.className="form-msg"; input.focus(); return; }
+  try{
+    if(CONFIG.notifyEndpoint){
+      const r = await fetch(CONFIG.notifyEndpoint,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({email})});
+      if(!r.ok) throw new Error();
+    }
+    f.style.display="none";
+    msg.textContent="C'est noté. Tu reçois un e-mail le jour de la sortie.";
+    msg.className="form-msg form-ok";
+  }catch{ msg.textContent="Oups, l'envoi a échoué. Réessaie dans un instant."; msg.className="form-msg"; }
+}));
+
+/* ===================== En-tête, barre collante, apparitions ===================== */
+const topbar = $("#topbar"), sticky = $("#sticky");
+addEventListener("scroll",()=>{
+  topbar.classList.toggle("scrolled",scrollY>10);
+  const nearEnd = innerHeight+scrollY > document.body.scrollHeight-500;
+  sticky.classList.toggle("show",scrollY>700 && !nearEnd);
+},{passive:true});
+const io = new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add("in");io.unobserve(en.target)}}),{threshold:.12});
+$$(".reveal").forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
