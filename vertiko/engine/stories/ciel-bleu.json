@@ -1,0 +1,9 @@
+{"id":"ciel-bleu","title":"Pourquoi le ciel est bleu","style":"schema",
+"scenes":[
+{"say":"Pourquoi le ciel est bleu, et pas violet ou blanc ?","visual":{"kind":"title","emoji":"🌤️","text":"Pourquoi le ciel est bleu ?"}},
+{"say":"La lumière du Soleil contient toutes les couleurs.","visual":{"kind":"steps","items":[{"emoji":"☀️","label":"Lumière blanche"},{"emoji":"🌈","label":"= toutes les couleurs"}]}},
+{"say":"En traversant l'air, le bleu est dispersé presque 6 fois plus que le rouge.","visual":{"kind":"bars","title":"Lumière dispersée par l'air","unit":"×","items":[{"label":"Rouge","value":1,"emoji":"🔴"},{"label":"Bleu","value":6,"emoji":"🔵"}]}},
+{"say":"Ce bleu rebondit partout dans le ciel, et arrive dans tes yeux de toutes les directions.","visual":{"kind":"fact","emoji":"👀","kicker":"Résultat","text":"Le bleu vient de partout à la fois."}},
+{"say":"Le soir, la lumière traverse beaucoup plus d'air. Le bleu se perd en route, il reste l'orange et le rouge.","visual":{"kind":"compare","left":{"emoji":"🏙️","label":"Midi : bleu"},"right":{"emoji":"🌇","label":"Soir : orange"}}},
+{"say":"Alors, pourquoi pas violet ? Dis-moi ce que tu en penses.","visual":{"kind":"question","text":"Et pourquoi pas violet ?"}}],
+"publish":{"title":"Pourquoi le ciel est bleu (en 30 secondes)","description":"La diffusion de la lumière expliquée simplement.","hashtags":["science","physique","ciel","apprendre","lesaviezvous"]}}

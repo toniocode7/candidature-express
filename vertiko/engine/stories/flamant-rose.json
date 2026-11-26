@@ -1,0 +1,9 @@
+{"id":"flamant-rose","title":"Les flamants roses naissent gris","style":"toon","palette":"sunset",
+"scenes":[
+{"say":"Les flamants roses ne naissent pas roses.","visual":{"kind":"title","emoji":"🦩","text":"Né… gris ?!"}},
+{"say":"À la naissance, les poussins sont gris ou blancs.","visual":{"kind":"emoji","items":["🐣","🩶"],"label":"Bébé : tout gris"}},
+{"say":"Leur couleur vient de ce qu'ils mangent : des petites crevettes et des algues pleines de pigments.","visual":{"kind":"steps","items":[{"emoji":"🦐","label":"Petites crevettes"},{"emoji":"🌿","label":"Algues"},{"emoji":"🎨","label":"Pigments roses"}]}},
+{"say":"Ces pigments s'accumulent dans leurs plumes, et ils deviennent roses en grandissant.","visual":{"kind":"compare","left":{"emoji":"🐣","label":"Poussin gris"},"right":{"emoji":"🦩","label":"Adulte rose"},"verdict":"Tu deviens ce que tu manges !"}},
+{"say":"Sans ces aliments, leurs plumes repâlissent.","visual":{"kind":"fact","emoji":"🤍","kicker":"Le saviez-vous","text":"Sans ces aliments, ils repâlissent."}},
+{"say":"Et toi, tu serais de quelle couleur avec ce que tu manges ?","visual":{"kind":"question","text":"Tu serais de quelle couleur ?"}}],
+"publish":{"title":"Les flamants roses naissent gris 🦩","description":"Leur couleur vient entièrement de leur assiette.","hashtags":["animaux","flamantrose","nature","lesaviezvous"]}}

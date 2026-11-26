@@ -1,0 +1,88 @@
+{
+  "id": "venus-jour-annee",
+  "title": "Sur Vénus, un jour dure plus qu'un an",
+  "style": "3d",
+  "scenes": [
+    {
+      "say": "Sur Vénus, une journée dure plus longtemps qu'une année.",
+      "visual": {
+        "kind": "title",
+        "emoji": "🪐",
+        "text": "1 jour > 1 an ?"
+      }
+    },
+    {
+      "say": "Pour faire le tour du Soleil, Vénus met 225 jours terrestres.",
+      "visual": {
+        "kind": "counter",
+        "to": 225,
+        "suffix": " j",
+        "label": "pour faire le tour du Soleil",
+        "emoji": "☀️"
+      }
+    },
+    {
+      "say": "Mais pour tourner une seule fois sur elle-même, il lui en faut 243.",
+      "visual": {
+        "kind": "bars",
+        "title": "Jours terrestres",
+        "items": [
+          {
+            "label": "Une année",
+            "value": 225,
+            "emoji": "☀️"
+          },
+          {
+            "label": "Une journée",
+            "value": 243,
+            "emoji": "🔄"
+          }
+        ]
+      }
+    },
+    {
+      "say": "Et elle tourne à l'envers : là-bas, le Soleil se lève à l'ouest.",
+      "visual": {
+        "kind": "compare",
+        "left": {
+          "emoji": "🌍",
+          "label": "Terre : à l'est"
+        },
+        "right": {
+          "emoji": "🌕",
+          "label": "Vénus : à l'ouest"
+        },
+        "verdict": "Le Soleil se lève à l'ouest"
+      }
+    },
+    {
+      "say": "Avec plus de 400 °C au sol, c'est la planète la plus chaude du système solaire.",
+      "visual": {
+        "kind": "counter",
+        "to": 465,
+        "suffix": " °C",
+        "label": "au sol, en moyenne",
+        "emoji": "🔥"
+      }
+    },
+    {
+      "say": "Tu savais que le Soleil pouvait se lever à l'ouest ?",
+      "visual": {
+        "kind": "question",
+        "emoji": "🤯",
+        "text": "Tu le savais ?"
+      }
+    }
+  ],
+  "publish": {
+    "title": "Sur Vénus, une journée dure plus qu'une année",
+    "description": "225 jours pour faire le tour du Soleil, 243 pour tourner sur elle-même, et un Soleil qui se lève à l'ouest.",
+    "hashtags": [
+      "espace",
+      "venus",
+      "astronomie",
+      "science",
+      "lesaviezvous"
+    ]
+  }
+}

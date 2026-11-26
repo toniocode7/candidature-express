@@ -1,0 +1,8 @@
+{"id":"chat-sommeil","title":"Pourquoi ton chat dort autant","style":"toon",
+"scenes":[
+{"say":"Ton chat dort entre 12 et 16 heures par jour. Et c'est normal.","visual":{"kind":"title","emoji":"😺","text":"16 h de sieste ?!"}},
+{"say":"C'est un prédateur : il garde son énergie pour chasser, par petites explosions.","visual":{"kind":"steps","items":[{"emoji":"😴","label":"Il recharge"},{"emoji":"🐭","label":"Il chasse"},{"emoji":"⚡","label":"Gros effort court"}]}},
+{"say":"Il est surtout actif à l'aube et au crépuscule. C'est pour ça qu'il te réveille à 5 heures.","visual":{"kind":"fact","emoji":"⏰","kicker":"Le mystère résolu","text":"Il est actif à l'aube et au crépuscule."}},
+{"say":"Comparé à toi, il dort presque le double.","visual":{"kind":"bars","title":"Heures de sommeil par jour","unit":" h","items":[{"label":"Toi","value":8,"emoji":"🧑"},{"label":"Ton chat","value":15,"emoji":"🐱"}]}},
+{"say":"Il te réveille à quelle heure, le tien ?","visual":{"kind":"question","text":"Il te réveille à quelle heure ?"}}],
+"publish":{"title":"Pourquoi ton chat dort 16 heures par jour","description":"Rien d'anormal : c'est un chasseur qui économise son énergie.","hashtags":["chat","animaux","chats","lesaviezvous"]}}

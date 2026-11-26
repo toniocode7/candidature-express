@@ -1,0 +1,9 @@
+{"id":"pacman-niveau-256","title":"Le niveau impossible de Pac-Man","style":"3d",
+"scenes":[
+{"say":"Dans Pac-Man, il existe un niveau que personne ne peut finir.","visual":{"kind":"title","emoji":"🕹️","text":"Le niveau impossible"}},
+{"say":"C'est le niveau 256.","visual":{"kind":"counter","to":256,"label":"le dernier niveau","emoji":"👾"}},
+{"say":"Le jeu compte les niveaux sur un seul octet. Après 255, le compteur déborde.","visual":{"kind":"bars","title":"Valeur max d'un octet","items":[{"label":"Niveau 255","value":255,"emoji":"✅"},{"label":"Niveau 256","value":256,"emoji":"💥"}]}},
+{"say":"Résultat : la moitié droite de l'écran se transforme en symboles illisibles.","visual":{"kind":"compare","left":{"emoji":"🟡","label":"Moitié normale"},"right":{"emoji":"🔣","label":"Moitié buguée"},"verdict":"L'écran est coupé en deux"}},
+{"say":"Le score parfait, en mangeant absolument tout, est de 3 333 360 points.","visual":{"kind":"counter","to":3333360,"label":"points : le score parfait","emoji":"🏆"}},
+{"say":"Tu y arriverais, toi ?","visual":{"kind":"question","emoji":"😤","text":"Tu tiendrais jusqu'au 256 ?"}}],
+"publish":{"title":"Le niveau 256 de Pac-Man est impossible","description":"Un bug de compteur rend le dernier niveau infranchissable.","hashtags":["jeuxvideo","retrogaming","pacman","gaming","bug"]}}

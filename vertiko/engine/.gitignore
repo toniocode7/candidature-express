@@ -1,0 +1,4 @@
+out/
+voices/*.onnx
+voices/*.onnx.json
+voices/MODEL_CARD

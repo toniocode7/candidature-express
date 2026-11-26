@@ -1,0 +1,9 @@
+{"id":"pain-rassis","title":"Pourquoi le pain durcit","style":"toon",
+"scenes":[
+{"say":"Ton pain durcit en un jour. Mais ce n'est pas parce qu'il sèche.","visual":{"kind":"title","emoji":"🥖","text":"Il ne sèche pas !"}},
+{"say":"En refroidissant, l'amidon du pain se réorganise et devient dur. Même dans un sac fermé.","visual":{"kind":"steps","items":[{"emoji":"🔥","label":"Sortie du four"},{"emoji":"❄️","label":"Il refroidit"},{"emoji":"🪨","label":"L'amidon durcit"}]}},
+{"say":"L'astuce : quelques minutes au four, et l'amidon redevient tendre.","visual":{"kind":"fact","emoji":"♨️","kicker":"Astuce de boulanger","text":"5 minutes au four, et il redevient croustillant."}},
+{"say":"Et le frigo ? C'est la pire idée : il fait durcir le pain plus vite.","visual":{"kind":"compare","left":{"emoji":"🧊","label":"Frigo : non !"},"right":{"emoji":"🧺","label":"Torchon : oui"}}},
+{"say":"À La Fournée de Léa, on cuit la tradition toute la journée, pour que tu l'aies toujours tiède.","visual":{"kind":"emoji","items":["🥖","👩‍🍳"],"label":"La Fournée de Léa · cuisson toute la journée"}},
+{"say":"Tu le ranges où, ton pain ?","visual":{"kind":"question","text":"Tu le ranges où, ton pain ?"}}],
+"publish":{"title":"Pourquoi ton pain durcit (et l'astuce pour le sauver)","description":"Exemple de short pour un commerce : un conseil utile, puis l'offre à la fin. (Boulangerie fictive.)","hashtags":["boulangerie","astuce","pain","cuisine"]}}

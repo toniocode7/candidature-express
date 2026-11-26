@@ -1,0 +1,102 @@
+{
+  "id": "interets-composes",
+  "title": "100 € par mois pendant 30 ans",
+  "style": "schema",
+  "scenes": [
+    {
+      "say": "100 € par mois. Pendant 30 ans. Combien tu as à la fin ?",
+      "visual": {
+        "kind": "title",
+        "emoji": "💶",
+        "text": "100 € par mois, 30 ans"
+      }
+    },
+    {
+      "say": "Si tu les gardes sous le matelas, tu as mis 36 000 € de côté. Point.",
+      "visual": {
+        "kind": "counter",
+        "to": 36000,
+        "suffix": " €",
+        "label": "versés en 30 ans",
+        "emoji": "🛏️"
+      }
+    },
+    {
+      "say": "Mais si ton argent rapporte 7 % par an, les gains produisent à leur tour des gains.",
+      "visual": {
+        "kind": "steps",
+        "items": [
+          {
+            "emoji": "💶",
+            "label": "Tu places 100 €"
+          },
+          {
+            "emoji": "🌱",
+            "label": "Ils rapportent"
+          },
+          {
+            "emoji": "🔁",
+            "label": "Les gains rapportent aussi"
+          }
+        ]
+      }
+    },
+    {
+      "say": "Résultat : environ 122 000 €.",
+      "visual": {
+        "kind": "counter",
+        "to": 122000,
+        "suffix": " €",
+        "label": "au bout de 30 ans (hypothèse 7 %/an)",
+        "emoji": "🚀"
+      }
+    },
+    {
+      "say": "Et regarde bien : plus de 86 000 € viennent juste des intérêts.",
+      "visual": {
+        "kind": "bars",
+        "title": "D'où vient l'argent ?",
+        "unit": " €",
+        "items": [
+          {
+            "label": "Ce que tu as versé",
+            "value": 36000,
+            "emoji": "💶"
+          },
+          {
+            "label": "Les intérêts",
+            "value": 86000,
+            "emoji": "✨"
+          }
+        ]
+      }
+    },
+    {
+      "say": "Le vrai secret, c'est le temps. Commencer 10 ans plus tard coûte très cher.",
+      "visual": {
+        "kind": "fact",
+        "emoji": "⏳",
+        "kicker": "À retenir",
+        "text": "Le temps compte plus que le montant."
+      }
+    },
+    {
+      "say": "Tu as commencé à quel âge, toi ?",
+      "visual": {
+        "kind": "question",
+        "text": "Tu as commencé à quel âge ?"
+      }
+    }
+  ],
+  "publish": {
+    "title": "100 €/mois pendant 30 ans : le calcul qui surprend",
+    "description": "La magie des intérêts composés en 40 secondes. Exemple pédagogique avec un rendement hypothétique de 7 % par an, non garanti. Pas un conseil en investissement.",
+    "hashtags": [
+      "finance",
+      "argent",
+      "epargne",
+      "interetscomposes",
+      "investir"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "vertiko-engine",
+  "version": "1.0.0",
+  "description": "Moteur Vertiko : du scénario au short vidéo prêt à publier",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "make": "node make.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
+    "@react-three/fiber": "^9.8.2",
+    "@remotion/bundler": "^4.0.547",
+    "@remotion/cli": "^4.0.547",
+    "@remotion/renderer": "^4.0.547",
+    "@remotion/three": "^4.0.547",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.547",
+    "three": "^0.187.0",
+    "zod": "^4.6.7"
+  },
+  "private": true,
+  "type": "module"
+}

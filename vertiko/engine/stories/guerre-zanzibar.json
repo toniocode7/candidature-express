@@ -1,0 +1,9 @@
+{"id":"guerre-zanzibar","title":"La guerre la plus courte de l'histoire","style":"schema","palette":"chalk",
+"scenes":[
+{"say":"La guerre la plus courte de l'histoire a duré moins d'une heure.","visual":{"kind":"title","emoji":"⚔️","text":"Une guerre de moins d'1 heure"}},
+{"say":"Le 27 août 1896, le Royaume-Uni affronte le sultanat de Zanzibar, en Afrique de l'Est.","visual":{"kind":"compare","left":{"emoji":"🇬🇧","label":"Royaume-Uni"},"right":{"emoji":"🏝️","label":"Zanzibar"},"verdict":"27 août 1896"}},
+{"say":"Un nouveau sultan prend le pouvoir sans l'accord des Britanniques. Ils lui donnent un ultimatum.","visual":{"kind":"steps","items":[{"emoji":"👑","label":"Nouveau sultan"},{"emoji":"📜","label":"Ultimatum"},{"emoji":"⏰","label":"9 h : fin du délai"}]}},
+{"say":"À 9 heures, les navires ouvrent le feu. Moins de 45 minutes plus tard, c'est fini.","visual":{"kind":"counter","to":45,"suffix":" min","label":"au maximum","emoji":"⏱️"}},
+{"say":"Le sultan s'enfuit, et un autre sultan est installé à sa place le jour même.","visual":{"kind":"fact","emoji":"🏃","kicker":"La fin","text":"Le sultan s'enfuit le jour même."}},
+{"say":"Tu connais une guerre encore plus absurde ?","visual":{"kind":"question","text":"Tu en connais une plus absurde ?"}}],
+"publish":{"title":"La guerre la plus courte de l'histoire : moins de 45 minutes","description":"La guerre anglo-zanzibarite du 27 août 1896.","hashtags":["histoire","guerre","culture","lesaviezvous"]}}

@@ -1,0 +1,8 @@
+{"id":"etoile-neutrons","title":"Une cuillère d'étoile à neutrons","style":"3d","palette":"ocean",
+"scenes":[
+{"say":"Une seule cuillère de cette étoile pèserait environ 1 milliard de tonnes.","visual":{"kind":"title","emoji":"🥄","text":"1 cuillère = 1 milliard de tonnes"}},
+{"say":"C'est une étoile à neutrons : ce qui reste d'une étoile géante après son explosion.","visual":{"kind":"emoji","items":["💥"],"label":"Le cœur d'une étoile qui a explosé"}},
+{"say":"Elle a plus de masse que notre Soleil, mais elle ne mesure qu'une vingtaine de kilomètres.","visual":{"kind":"compare","left":{"emoji":"☀️","label":"Soleil : 1,4 million de km"},"right":{"emoji":"⚪","label":"Elle : environ 20 km"},"verdict":"Plus lourde, mais minuscule"}},
+{"say":"Et elle peut tourner sur elle-même plus de 700 fois par seconde.","visual":{"kind":"counter","to":716,"label":"tours par seconde (record connu)","emoji":"🌀"}},
+{"say":"Tu imagines la taille de la cuillère ?","visual":{"kind":"question","emoji":"🤯","text":"Tu la soulèverais ?"}}],
+"publish":{"title":"Une cuillère de cette étoile pèse 1 milliard de tonnes","description":"Les étoiles à neutrons, les objets les plus denses qu'on puisse observer.","hashtags":["espace","astronomie","science","etoile","lesaviezvous"]}}

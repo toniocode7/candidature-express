@@ -1,0 +1,19 @@
+{
+  "id": "poulpe-trois-coeurs",
+  "title": "Le poulpe a trois cœurs",
+  "style": "toon",
+  "scenes": [
+    { "say": "Ton cœur bat tout seul. Le poulpe, lui, en a trois.", "visual": { "kind": "title", "emoji": "🐙", "text": "3 cœurs ?!" } },
+    { "say": "Deux petits cœurs envoient le sang dans ses branchies, pour respirer.", "visual": { "kind": "emoji", "items": ["❤️", "❤️"], "label": "2 cœurs pour respirer" } },
+    { "say": "Le troisième envoie le sang dans tout le reste du corps.", "visual": { "kind": "emoji", "items": ["❤️"], "label": "1 cœur pour le corps" } },
+    { "say": "Et quand il nage, ce troisième cœur s'arrête de battre. C'est pour ça qu'il préfère ramper.", "visual": { "kind": "compare", "left": { "emoji": "🏊", "label": "Il nage" }, "right": { "emoji": "🐌", "label": "Il rampe" }, "verdict": "Nager le fatigue vite !" } },
+    { "say": "Autre bizarrerie : son sang est bleu, à cause du cuivre qu'il contient.", "visual": { "kind": "fact", "emoji": "💙", "kicker": "Bonus", "text": "Son sang est bleu, grâce au cuivre." } },
+    { "say": "Et les deux tiers de ses neurones sont dans ses bras.", "visual": { "kind": "counter", "to": 66, "suffix": " %", "label": "de ses neurones sont dans ses bras", "emoji": "🧠" } },
+    { "say": "À ton avis, quel animal a le plus de cœurs ?", "visual": { "kind": "question", "text": "Quel animal a le plus de cœurs ?" } }
+  ],
+  "publish": {
+    "title": "Le poulpe a 3 cœurs (et un s'arrête quand il nage)",
+    "description": "Trois cœurs, du sang bleu et des neurones dans les bras : le poulpe est un extraterrestre.",
+    "hashtags": ["poulpe", "animaux", "lesaviezvous", "science", "nature"]
+  }
+}
