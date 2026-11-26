@@ -1,0 +1,98 @@
+diff --git a/web/index.html b/web/index.html
+index dae2fad..62bddc7 100644
+--- a/web/index.html
++++ b/web/index.html
+@@ -11,8 +11,8 @@
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+ <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+-<meta name="theme-color" content="#F4F5F9" media="(prefers-color-scheme: light)">
+-<meta name="theme-color" content="#0E1016" media="(prefers-color-scheme: dark)">
++<meta name="theme-color" content="#E9E4FB" media="(prefers-color-scheme: light)">
++<meta name="theme-color" content="#3A2AA8" media="(prefers-color-scheme: dark)">
+ <style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+ <style>html.ce-boot body>.page,html.ce-boot .bnav{visibility:hidden}</style>
+ <link rel="stylesheet" href="ce/ce.css">
+@@ -782,6 +782,82 @@ dialog[open]::backdrop{animation:rfFade .2s var(--ease-out)}
+ .toast:not([hidden]){animation:rfToast .26s var(--ease-out)}
+ details:not(.sugd)[open]>:not(summary){animation:rfReveal .18s var(--ease-out)}
+ </style>
++<style id="liquid">
++/* ===== Liquid Glass (apparence seulement) ===== */
++/* Couleurs : clair (fond pastel, verre blanc) et sombre (fond vivant, verre clair) ; l'indigo de l'app reste la couleur d'action. */
++:root{--fd:-apple-system,BlinkMacSystemFont,"SF Pro Display","Instrument Sans",system-ui,sans-serif;--fb:-apple-system,BlinkMacSystemFont,"SF Pro Text","Instrument Sans",system-ui,sans-serif;
++ --bg:rgba(255,255,255,.38);--card:rgba(255,255,255,.58);--solid:#F6F4FE;--ink:#15151C;--mute:#4E4F63;--line:rgba(40,30,110,.10);--line2:rgba(40,30,110,.18);
++ --brand:#4338CA;--brandh:#3730A3;--onbrand:#fff;--tint:rgba(67,56,202,.10);--chip:#3F37B5;--track:rgba(40,30,110,.10);
++ --rim:rgba(255,255,255,.95);--rim2:rgba(255,255,255,.55);--edge:rgba(255,255,255,.7);--glassfill:rgba(255,255,255,.55);--glassfloat:rgba(255,255,255,.62);
++ --sh:0 1px 2px rgba(40,30,110,.06),0 8px 24px rgba(40,30,110,.08);--shh:0 18px 44px rgba(40,30,110,.18);--ov:rgba(30,24,80,.28);
++ --wall:radial-gradient(70% 40% at 0% 0%,#C7C0FF 0%,transparent 70%),radial-gradient(60% 40% at 100% 22%,#FFC9EC 0%,transparent 70%),radial-gradient(70% 40% at 0% 62%,#BFE3FF 0%,transparent 70%),radial-gradient(60% 40% at 100% 92%,#FFD9BE 0%,transparent 70%),#EEEBFA}
++@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:rgba(14,10,52,.30);--card:rgba(255,255,255,.10);--solid:#2A2272;--ink:#FFFFFF;--mute:rgba(236,234,255,.76);--line:rgba(255,255,255,.16);--line2:rgba(255,255,255,.26);
++ --brand:#B7B0FF;--brandh:#D2CDFF;--onbrand:#16114F;--tint:rgba(255,255,255,.14);--chip:#E4E1FF;--track:rgba(255,255,255,.14);
++ --good:#7CF0AE;--goodbg:rgba(91,228,149,.16);--warn:#FFC27A;--warnbg:rgba(255,179,92,.16);--bad:#FF9AA6;--badbg:rgba(255,90,110,.16);--ochre:#FFC27A;--ochrebg:rgba(255,179,92,.16);
++ --goodtx:var(--good);--ochretx:var(--ochre);--warntx:var(--warn);--badtx:var(--bad);--onbad:#2B0F0C;
++ --rim:rgba(255,255,255,.9);--rim2:rgba(255,255,255,.45);--edge:rgba(255,255,255,.26);--glassfill:rgba(255,255,255,.10);--glassfloat:rgba(70,56,190,.30);
++ --sh:0 10px 30px rgba(10,6,50,.28),0 1px 2px rgba(10,6,50,.2);--shh:0 20px 50px rgba(5,3,30,.5);--ov:rgba(8,5,35,.45);
++ --wall:radial-gradient(60% 38% at 0% 0%,#8F7CFF 0%,#4338CA 45%,transparent 75%),radial-gradient(55% 36% at 100% 24%,#FF8FD8 0%,#B04BE0 45%,transparent 75%),radial-gradient(60% 38% at 0% 64%,#5BD6FF 0%,#3A6BF0 45%,transparent 75%),radial-gradient(55% 34% at 100% 94%,#FFB36B 0%,#FF5F8A 45%,transparent 75%),#2A1F8F;color-scheme:dark}}
++[data-theme="dark"]{--bg:rgba(14,10,52,.30);--card:rgba(255,255,255,.10);--solid:#2A2272;--ink:#FFFFFF;--mute:rgba(236,234,255,.76);--line:rgba(255,255,255,.16);--line2:rgba(255,255,255,.26);
++ --brand:#B7B0FF;--brandh:#D2CDFF;--onbrand:#16114F;--tint:rgba(255,255,255,.14);--chip:#E4E1FF;--track:rgba(255,255,255,.14);
++ --good:#7CF0AE;--goodbg:rgba(91,228,149,.16);--warn:#FFC27A;--warnbg:rgba(255,179,92,.16);--bad:#FF9AA6;--badbg:rgba(255,90,110,.16);--ochre:#FFC27A;--ochrebg:rgba(255,179,92,.16);
++ --goodtx:var(--good);--ochretx:var(--ochre);--warntx:var(--warn);--badtx:var(--bad);--onbad:#2B0F0C;
++ --rim:rgba(255,255,255,.9);--rim2:rgba(255,255,255,.45);--edge:rgba(255,255,255,.26);--glassfill:rgba(255,255,255,.10);--glassfloat:rgba(70,56,190,.30);
++ --sh:0 10px 30px rgba(10,6,50,.28),0 1px 2px rgba(10,6,50,.2);--shh:0 20px 50px rgba(5,3,30,.5);--ov:rgba(8,5,35,.45);
++ --wall:radial-gradient(60% 38% at 0% 0%,#8F7CFF 0%,#4338CA 45%,transparent 75%),radial-gradient(55% 36% at 100% 24%,#FF8FD8 0%,#B04BE0 45%,transparent 75%),radial-gradient(60% 38% at 0% 64%,#5BD6FF 0%,#3A6BF0 45%,transparent 75%),radial-gradient(55% 34% at 100% 94%,#FFB36B 0%,#FF5F8A 45%,transparent 75%),#2A1F8F;color-scheme:dark}
++
++/* Fond d'écran fixe (Safari ne gère pas background-attachment:fixed : calque fixe derrière tout) */
++html,body{background:transparent!important}
++html{background:#2A1F8F}
++body::before{content:"";position:fixed;inset:-10vh -10vw;z-index:-1;background:var(--wall);pointer-events:none}
++
++/* Verre : bord de lumière + reflet (toutes les surfaces) */
++.oi,.sgc,.recap,.goal,.spgrp,.spcard,.dcard,.mlbox,.tdo>div:not(.tdh):not(.fdh),.paste,.res,.ofsec,.cesec,.dmore,.mpsec,.mpcity,details.pf,.sugd>section .sgl>article,.calbox,.fqbox,.hq{
++ background:var(--card)!important;border-color:var(--edge)!important;
++ box-shadow:inset 0 0 0 1px var(--edge),inset 1.5px 1.5px 0 -.5px var(--rim),inset -1.5px -1.5px 0 -.5px var(--rim2),var(--sh)!important}
++.oi,.sgc,.spgrp,.recap,.goal{position:relative}
++.sgc::after,.oi::after,.recap::after,.goal::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 15% 0%,rgba(255,255,255,.22),rgba(255,255,255,0) 45%)}
++.oi>*{position:relative;z-index:1}
++/* Surfaces opaques nécessaires (masques) */
++.oi.swing .it{background:var(--solid)!important}
++.ring::before{background:var(--solid)!important}
++
++/* Ce qui flotte : vrai flou du verre */
++.bnav,.gear,.toast,dialog,.ptr{-webkit-backdrop-filter:blur(26px) saturate(190%);backdrop-filter:blur(26px) saturate(190%)}
++.bnav{background:var(--glassfloat)!important;border:0!important;border-radius:32px!important;padding:6px!important;
++ box-shadow:inset 0 0 0 1px var(--edge),inset 1.5px 1.5px 0 -.5px var(--rim),inset -1.5px -1.5px 0 -.5px var(--rim2),0 12px 34px rgba(10,6,50,.3)!important}
++.bnav button{border-radius:26px!important}
++.bnav button.on{background:rgba(255,255,255,.24)!important;color:var(--ink)!important;box-shadow:inset 0 0 0 1px var(--edge),inset 1px 1px 0 -.5px var(--rim),0 6px 14px rgba(10,6,50,.2)}
++:root:not([data-theme="dark"]) .bnav button.on{color:var(--brand)!important;background:rgba(255,255,255,.85)!important}
++@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bnav button.on{color:#fff!important;background:rgba(255,255,255,.24)!important}}
++.gear{background:var(--glassfloat)!important;border:0!important;box-shadow:inset 0 0 0 1px var(--edge),inset 1.5px 1.5px 0 -.5px var(--rim),inset -1.5px -1.5px 0 -.5px var(--rim2),0 6px 18px rgba(10,6,50,.18)!important}
++dialog{background:var(--glassfloat)!important;border:0!important;box-shadow:inset 0 0 0 1px var(--edge),inset 1.5px 1.5px 0 -.5px var(--rim),var(--shh)!important;-webkit-backdrop-filter:blur(40px) saturate(190%);backdrop-filter:blur(40px) saturate(190%)}
++@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) dialog{background:rgba(42,32,120,.62)!important}}
++[data-theme="dark"] dialog{background:rgba(42,32,120,.62)!important}
++:root:not([data-theme="dark"]) dialog{background:rgba(248,246,255,.78)!important}
++@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) dialog{background:rgba(42,32,120,.62)!important}}
++dialog::backdrop{background:var(--ov);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
++.toast{background:rgba(20,16,60,.78)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),inset 1px 1px 0 -.5px rgba(255,255,255,.7),0 14px 34px rgba(10,6,50,.35)!important}
++.toast button{color:#fff!important}
++
++/* Boutons d'action : verre teinté indigo */
++.sb.pri,button.main,.ce-form button.main{background:linear-gradient(180deg,#5B50E6,#4338CA)!important;border-color:transparent!important;color:#fff!important;
++ box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.15),0 8px 20px rgba(67,56,202,.35)!important}
++.cmdb{background:linear-gradient(180deg,#5B50E6,#4338CA)!important;border-color:transparent!important;color:#fff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 8px 20px rgba(67,56,202,.35)!important}
++.sb:not(.pri),.srtw,.tab,.fbty button,.oftb,.dper{background:var(--card)!important;border-color:var(--edge)!important;box-shadow:inset 0 0 0 1px var(--edge),inset 1px 1px 0 -.5px var(--rim)!important}
++.sb.sec{color:var(--brand)!important}
++.sb.ok{color:var(--goodtx)!important}.sb.no{color:var(--badtx)!important}
++.tab[aria-selected="true"],.oftb button[aria-selected="true"],.dper button.on{background:rgba(255,255,255,.9)!important;color:#15151C!important;box-shadow:inset 0 1px 0 #fff,0 4px 12px rgba(10,6,50,.18)!important}
++input,select,textarea{background:var(--bg)!important;border-color:var(--line2)!important;color:var(--ink)!important}
++::placeholder{color:var(--mute);opacity:.8}
++
++/* Typographie à la manière d'Apple : gros titres serrés */
++.page>details.sugd>summary h2,.mph h2,.paste h2,.greet,#hello{letter-spacing:-.04em!important;font-weight:700!important}
++.page>details.sugd>summary h2{font-size:2.1rem!important;line-height:1.05!important}
++.tdh,.goal h3,.mpsec h3{letter-spacing:-.02em!important}
++.sgcnt{background:var(--card)!important;color:var(--ink)!important;box-shadow:inset 0 0 0 1px var(--edge)}
++a{color:var(--brand)}
++</style>
+ </head>
+ <body>
+ <!-- Écran d'ouverture animé : un cercle se dessine, s'ouvre en C sous la poussée de la flèche, le nom apparaît,
