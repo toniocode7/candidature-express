@@ -83,7 +83,8 @@ window.CE_errUI = function () {
 
 /* Vitesse de l'app : temps d'ouverture envoyé une fois par lancement (table app_perf, moyenne par jour et par appareil). */
 window.CE_perf = function (openMs, execMs) {
-  if (window.CE_BG || /[?&]demo\b/.test(location.search)) return;
+  // Plus de 30 s : l'iPhone a mis l'app en pause pendant le lancement, ce n'est pas une vraie ouverture.
+  if (window.CE_BG || /[?&]demo\b/.test(location.search) || openMs > 30000 || execMs > 30000) return;
   var ua = navigator.userAgent, dev = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Macintosh/.test(ua) ? (navigator.maxTouchPoints > 1 ? "iPad" : "Mac") : /Android/.test(ua) ? "Android" : "autre";
   var n = 0;
   try { n = (JSON.parse(localStorage.getItem("candexp.off") || "[]") || []).length; } catch (e) {}
