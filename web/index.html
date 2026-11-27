@@ -787,7 +787,7 @@ details:not(.sugd)[open]>:not(summary){animation:rfReveal .18s var(--ease-out)}
 <!-- Écran d'ouverture « la roue » : le logo arrive en roulant depuis la gauche, freine, son C finit de tourner,
      la flèche se charge puis part écrire « Candidature Express », une nouvelle flèche se remet en place,
      et le logo va se poser à sa place dans l'en-tête pendant que l'app apparaît.
-     - 1,3 s, une seule fois par session (rejoué seulement après une fermeture complète de l'app).
+     - 1,45 s, une seule fois par session (rejoué seulement après une fermeture complète de l'app).
      - Un toucher passe l'animation.
      - « Réduire les animations » : logo fixe puis simple fondu.
      - Uniquement des déplacements, tailles, rotations et transparences (Web Animations, pris en charge par la puce
@@ -820,9 +820,9 @@ var seen=false;try{seen=sessionStorage.getItem("ce.op")==="1"}catch(e){}
 if(seen){s.remove();return}
 var reduce=!s.animate;try{reduce=reduce||matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
 var OUT="cubic-bezier(.23,1,.32,1)",IO="cubic-bezier(.77,0,.175,1)",DR="cubic-bezier(.32,.72,0,1)";
-var T=1040,HOLD=860,A=[],bg=s.querySelector(".sp-bg"),hl=null,m=null;
+var T=1040,HOLD=860,K=1.25,A=[],bg=s.querySelector(".sp-bg"),hl=null,m=null;
 function an(el,fr,d,o){var kf=fr.map(function(f){var k={};for(var p in f)if(p!=="t")k[p]=f[p];k.offset=Math.min(1,f.t/(d||T));return k});
-  var a=el.animate(kf,Object.assign({duration:d||T,fill:"both"},o||{}));A.push(a);return a}
+  var a=el.animate(kf,Object.assign({duration:d||T*K,fill:"both"},o||{}));A.push(a);return a}
 function tr(x,y,sx,sy){return "translate("+x+"px,"+y+"px) scale("+sx+","+(sy==null?sx:sy)+")"}
 function el(c,h){var d=document.createElement("div");d.className=c;if(h)d.innerHTML=h;s.appendChild(d);return d}
 var t0=null,started=null,ready=new Promise(function(ok){started=ok}),appOk=false,held=false,phase="wait",done=false,upd=false;
@@ -861,10 +861,20 @@ function dock(){if(phase!=="wait"||done)return;phase="dock";
   // (la barre du bas n'est pas déplacée : elle reste collée au bas de l'écran)
   [].forEach.call(document.querySelectorAll("body>.page>:not(.bnav):not(script):not(dialog)"),function(e){e.animate([{transform:"translateY(10px)"},{transform:"none"}],{duration:340,delay:40,easing:OUT,fill:"backwards"})});
   setTimeout(finishSplash,390)}
-function tryDock(){if(held&&appOk)dock()}
+// App pas encore prête quand le logo s'arrête : le C continue de rouler doucement (jamais d'image figée),
+// puis termine son tour dès que l'app est prête.
+var spin=[];
+function wait(){var c=m&&m.querySelector(".sp-c");if(!c||spin.length)return;
+  spin.push(c.animate([{transform:"rotate(0deg)"},{transform:"rotate(360deg)"}],{duration:1000,delay:200,easing:"cubic-bezier(.5,0,.8,.75)",fill:"both"}));
+  spin.push(c.animate([{transform:"rotate(0deg)"},{transform:"rotate(360deg)"}],{duration:800,delay:1200,iterations:Infinity}))}
+function unspin(){if(!spin.length)return;var c=m.querySelector(".sp-c"),mt=getComputedStyle(c).transform,a=0;
+  try{var v=mt.match(/matrix\(([^)]+)\)/)[1].split(",").map(parseFloat);a=Math.atan2(v[1],v[0])*180/Math.PI}catch(e){}
+  if(a<0)a+=360;var to=a>270?720:360;spin.forEach(function(x){x.cancel()});spin=[];
+  c.animate([{transform:"rotate("+a+"deg)"},{transform:"rotate("+to+"deg)"}],{duration:Math.max(260,Math.min(620,(to-a)*1.7)),easing:OUT,fill:"both"})}
+function tryDock(){if(held&&appOk){unspin();dock()}}
 function go(){if(t0||upd)return;t0=Date.now();s.classList.add("go");try{sessionStorage.setItem("ce.op","1")}catch(e){}
   hl=document.querySelector("header .logo");if(hl)hl.style.visibility="hidden";
-  build();started();setTimeout(function(){held=true;tryDock()},reduce?250:HOLD)}
+  build();started();setTimeout(function(){held=true;if(!appOk&&!reduce)wait();tryDock()},reduce?250:HOLD*K)}
 // Un toucher (ou une touche du clavier) passe l'animation : le logo va tout de suite se poser (dès que l'app est prête).
 function skip(){if(!t0||done)return;
   if(phase==="wait"){A.forEach(function(a){try{a.finish()}catch(e){}});held=true;tryDock()}
