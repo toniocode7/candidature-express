@@ -23,9 +23,11 @@ N.addEventListener("click",function(e){if(N.dataset.skip){e.stopPropagation();e.
 document.addEventListener("touchstart",function(e){var d=e.target.closest&&e.target.closest("dialog.sheet[open]");S=null;if(!d||innerWidth>=700||e.touches.length>1)return;
 if(e.target.closest("input,textarea,select,.simrec,.mpbox,.calg"))return;if(d.scrollTop>2&&!e.target.closest(".shh"))return;
 S={d:d,y0:e.touches[0].clientY,x0:e.touches[0].clientX,dy:0,t0:Date.now(),on:false}},{passive:true});
-document.addEventListener("touchmove",function(e){if(!S)return;var dy=e.touches[0].clientY-S.y0,dx=e.touches[0].clientX-S.x0;
+function mv(e){if(!S)return;var dy=e.touches[0].clientY-S.y0,dx=e.touches[0].clientX-S.x0;
 if(!S.on){if(dy>10&&dy>Math.abs(dx)*1.3&&S.d.scrollTop<=2){S.on=true;S.d.style.transition="none"}else if(Math.abs(dx)>12||dy<-6){S=null;return}else return}
-e.preventDefault();S.dy=Math.max(0,dy);S.d.style.transform="translateY("+S.dy+"px)"},{passive:false});
+e.preventDefault();S.dy=Math.max(0,dy);S.d.style.transform="translateY("+S.dy+"px)"}
+// Écouteur posé sur les fenêtres seulement (et non sur toute la page) : le défilement de la page n'attend jamais le code.
+document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("touchmove",mv,{passive:false})});
 function end(){if(!S||!S.on){S=null;return}var d=S.d,v=S.dy/Math.max(1,Date.now()-S.t0);S=null;
 if(d.style.transform&&(parseFloat(d.style.transform.slice(11))>130||(v>0.7&&parseFloat(d.style.transform.slice(11))>45))){buzz();d.style.transition="transform .2s ease-in";d.style.transform="translateY(105%)";setTimeout(function(){d.close();d.style.transform="";d.style.transition=""},190)}
 else{d.style.transition="transform .22s cubic-bezier(.2,.8,.2,1)";d.style.transform="";setTimeout(function(){d.style.transition=""},230)}}
@@ -43,8 +45,8 @@ busy=true;pill("Actualisation...",true);try{await pull();pill("À jour",true)}ca
 
 /* Transitions : l'onglet qui arrive glisse légèrement depuis le côté d'où l'on vient. */
 (function(){var ORDER=["home","pastewrap","sugbox","histbox","dashbox"],_sv=setView;
-setView=function(v){var from=VIEW,r=_sv.apply(this,arguments);try{if(!RMOT&&!window.CE_BG&&from!==VIEW&&VIEWS[VIEW]){var c=ORDER.indexOf(VIEW)>=ORDER.indexOf(from)?"vin-n":"vin-p";
-VIEWS[VIEW].forEach(function(id){var e=G(id);if(!e)return;e.classList.remove("vin-n","vin-p");void e.offsetWidth;e.classList.add(c)});if(VIEW==="dashbox")calUI()}}catch(e){}return r}})();
+setView=function(v){var from=VIEW,r=_sv.apply(this,arguments);if(VIEW==="home"&&from!=="home"){try{todoUI();homeUI()}catch(e){}}try{if(!RMOT&&!window.CE_BG&&from!==VIEW&&VIEWS[VIEW]){var c=ORDER.indexOf(VIEW)>=ORDER.indexOf(from)?"vin-n":"vin-p";
+var dx=c==="vin-n"?26:-26;VIEWS[VIEW].forEach(function(id){var e=G(id);if(!e||!e.animate)return;e.animate([{opacity:0,transform:"translateX("+dx+"px)"},{opacity:1,transform:"none"}],{duration:240,easing:"cubic-bezier(.2,.8,.2,1)"})});if(VIEW==="dashbox")calUI()}}catch(e){}return r}})();
 
 /* Fête : confettis quand une candidature passe en Entretien (une seule fois par candidature, sur chaque appareil). */
 function confetti(){if(RMOT)return;var c=document.createElement("canvas"),x=c.getContext("2d"),W=innerWidth,H=innerHeight,dpr=Math.min(2,devicePixelRatio||1);c.className="cnf";c.width=W*dpr;c.height=H*dpr;document.body.appendChild(c);x.scale(dpr,dpr);
