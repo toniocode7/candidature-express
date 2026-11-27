@@ -75,15 +75,19 @@ const eq = (label, got, want) => { n++; if (JSON.stringify(got) !== JSON.stringi
   });
   const q1 = await ctx2.newPage();
   await q1.goto(base + "/"); await q1.evaluate(async () => { await navigator.serviceWorker.ready; }); await q1.waitForTimeout(2500);
-  await q1.evaluate(() => sessionStorage.removeItem("ceT"));
+  await q1.evaluate(() => { sessionStorage.removeItem("ceT"); sessionStorage.removeItem("ce.op"); }); // nouvelle ouverture = nouvelle session
   root = B;
   await q1.goto(base + "/"); await q1.waitForTimeout(4000);
   const tl = await q1.evaluate(() => JSON.parse(sessionStorage.getItem("ceT") || "[]"));
   eq("ouverture avec mise à jour : une seule animation, sur la nouvelle version", tl.filter((x) => x.startsWith("anim")), ["anim:v2"]);
   eq("ouverture avec mise à jour : rechargé avant l'animation", tl, ["load", "load", "anim:v2"]);
+  await q1.evaluate(() => sessionStorage.removeItem("ce.op"));
   await q1.goto(base + "/"); await q1.waitForTimeout(3000);
   const tl2 = await q1.evaluate(() => JSON.parse(sessionStorage.getItem("ceT") || "[]"));
   eq("ouverture sans mise à jour : pas de rechargement", tl2.slice(tl.length), ["load", "anim:v2"]);
+  await q1.reload(); await q1.waitForTimeout(2000);
+  const tl3 = await q1.evaluate(() => JSON.parse(sessionStorage.getItem("ceT") || "[]"));
+  eq("rechargement dans la même session : pas de nouvelle animation", tl3.slice(tl.length + tl2.slice(tl.length).length), ["load"]);
   await ctx2.close();
 
   await b.close(); server.close(); fs.rmSync(tmp, { recursive: true, force: true });

@@ -784,127 +784,94 @@ details:not(.sugd)[open]>:not(summary){animation:rfReveal .18s var(--ease-out)}
 </style>
 </head>
 <body>
-<!-- Écran d'ouverture animé : un cercle se dessine, s'ouvre en C sous la poussée de la flèche, le nom apparaît,
-     puis la flèche est décochée vers la droite et l'app apparaît dans son sillage.
-     Fluidité : l'animation démarre seulement quand la page est affichée ; tout ce qui démarre (tracé, flèche, lettres)
-     a lieu avant que l'app ne démarre ; ensuite seuls tournent des déplacements et fondus pris en charge par la puce
-     graphique. Positions fixes : rien ne bouge quand la police du nom finit de se charger. -->
-<div id="ce-splash" aria-hidden="true">
-  <div class="sp-bg"><i class="sp-edge"></i><div class="sp-halo"></div><div class="sp-parts"></div></div>
-  <div class="sp-mark">
-    <div class="sp-glow"></div>
-    <div class="sp-wave"></div><div class="sp-wave w2"></div>
-    <div class="sp-cwrap"><div class="sp-cin"><svg viewBox="0 0 52 52">
-      <path class="sp-c" pathLength="100" d="M33.5 17.2A12 12 0 1 0 33.5 34.8"/>
-      <path class="sp-gap" pathLength="100" d="M33.5 34.8A12 12 0 0 0 33.5 17.2"/>
-    </svg></div></div>
-    <div class="sp-fly">
-      <div class="sp-lines"><i></i><i></i><i></i></div>
-      <div class="sp-awrap"><svg viewBox="0 0 52 52"><path class="sp-shaft" d="M24 26h13.5"/><path class="sp-head" d="M32.5 20.8L37.8 26l-5.3 5.2"/></svg></div>
-    </div>
-    <div class="sp-flash"></div>
-  </div>
-  <div class="sp-word"></div>
-</div>
+<!-- Écran d'ouverture « la roue » : le logo arrive en roulant depuis la gauche, freine, son C finit de tourner,
+     la flèche se charge puis part écrire « Candidature Express », une nouvelle flèche se remet en place,
+     et le logo va se poser à sa place dans l'en-tête pendant que l'app apparaît.
+     - 1,3 s, une seule fois par session (rejoué seulement après une fermeture complète de l'app).
+     - Un toucher passe l'animation.
+     - « Réduire les animations » : logo fixe puis simple fondu.
+     - Uniquement des déplacements, tailles, rotations et transparences (Web Animations, pris en charge par la puce
+       graphique) : l'app peut démarrer pendant l'animation sans la saccader. Fond et couleurs suivent clair/sombre. -->
+<div id="ce-splash" aria-hidden="true"><div class="sp-bg"></div></div>
 <style>
-#ce-splash{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100lvh;z-index:9999;pointer-events:none;overflow:hidden;contain:strict;
-  --cy:46lvh;--cy:calc(46vh);background:transparent}
-@supports (height:100lvh){#ce-splash{--cy:46lvh}}
-#ce-splash:not(.go) *,#ce-splash:not(.go) *::before,#ce-splash:not(.go) *::after{animation-play-state:paused!important}
-#ce-splash .sp-bg{position:absolute;left:0;top:0;bottom:0;width:140vw;will-change:transform;
-  background:radial-gradient(90vw 70lvh at 50vw var(--cy),#7E72F8 0%,#6153E4 45%,#4F42D6 75%,#4A3DD2 100%)}
-#ce-splash .sp-edge{position:absolute;top:0;bottom:0;left:-36vw;width:36vw;background:linear-gradient(90deg,rgba(74,61,210,0),rgba(74,61,210,.85) 70%,#4A3DD2)}
-#ce-splash .sp-halo{position:absolute;left:calc(50vw - 300px);top:calc(var(--cy) - 300px);width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.22) 0%,rgba(255,255,255,.06) 40%,rgba(255,255,255,0) 68%);will-change:transform,opacity;animation:spHalo 3.4s ease-in-out infinite}
-#ce-splash .sp-parts{position:absolute;left:0;top:0;width:100vw;height:100%}
-#ce-splash .sp-parts i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:0;will-change:transform,opacity;animation:spDust var(--t) var(--d) ease-in-out infinite}
-#ce-splash .sp-mark{position:absolute;left:calc(50vw - 68px);top:calc(var(--cy) - 68px);width:136px;height:136px}
-#ce-splash svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-#ce-splash path{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round}
-#ce-splash .sp-glow{position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.3) 0%,rgba(255,255,255,.09) 45%,rgba(255,255,255,0) 70%);opacity:0;will-change:opacity,transform;animation:spGlowIn .9s .15s ease-out forwards}
-#ce-splash .sp-cwrap,#ce-splash .sp-cin,#ce-splash .sp-awrap,#ce-splash .sp-fly{position:absolute;inset:0;will-change:transform,opacity}
-#ce-splash .sp-cwrap{transform-origin:48.7% 50%;animation:spSpin 1s .05s cubic-bezier(.25,0,.15,1) both}
-#ce-splash .sp-cin{transform-origin:48.7% 50%;animation:spBreath 2.6s 1.7s ease-in-out infinite}
-#ce-splash .sp-c,#ce-splash .sp-gap{stroke-width:4.4;stroke-dasharray:100 200;stroke-dashoffset:100;opacity:0}
-#ce-splash .sp-c{animation:spDraw .62s .1s cubic-bezier(.5,0,.3,1) forwards}
-#ce-splash .sp-gap{animation:spDraw .16s .72s linear forwards,spGapOut .16s .98s ease-in forwards}
-#ce-splash .sp-shaft,#ce-splash .sp-head{stroke-width:4}
-#ce-splash .sp-awrap{opacity:0;transform-origin:72% 50%;animation:spArrowIn .55s .96s cubic-bezier(.18,1.45,.35,1) forwards,spReady 2.6s 1.7s ease-in-out infinite}
-#ce-splash .sp-flash{position:absolute;left:60%;top:50%;width:80px;height:80px;margin:-40px 0 0 -40px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.9),rgba(255,255,255,0) 70%);opacity:0;will-change:transform,opacity;animation:spFlash .55s 1.16s ease-out both}
-#ce-splash .sp-wave{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.45);opacity:0;will-change:transform,opacity;animation:spWave 2.6s 1.3s ease-out infinite}
-#ce-splash .sp-wave.w2{animation-delay:2.6s}
-#ce-splash .sp-word{position:absolute;left:0;width:100vw;top:calc(var(--cy) + 96px);height:30px;text-align:center;white-space:pre;color:#fff;
-  font:700 22px/30px -apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;letter-spacing:-.2px}
-#ce-splash .sp-word.sora{font-family:Sora,-apple-system,system-ui,sans-serif;letter-spacing:-.3px}
-#ce-splash .sp-word span{display:inline-block;opacity:0;transform:translateY(12px);will-change:transform,opacity;animation:spLetter .5s calc(1.12s + var(--i) * 26ms) cubic-bezier(.2,.8,.2,1) forwards}
-#ce-splash .sp-word span.x{color:#DCD7FF}
-#ce-splash .sp-lines{position:absolute;right:70%;top:50%;width:46vw;height:0}
-#ce-splash .sp-lines i{position:absolute;right:0;width:100%;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.85));opacity:0;transform:scaleX(0);transform-origin:100% 50%;will-change:transform,opacity}
-#ce-splash .sp-lines i:nth-child(1){top:-14px}#ce-splash .sp-lines i:nth-child(2){top:-1px;height:3px}#ce-splash .sp-lines i:nth-child(3){top:12px}
-@keyframes spHalo{0%,100%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
-@keyframes spDust{0%,100%{opacity:0;transform:translateY(0)}40%{opacity:var(--o)}100%{transform:translateY(-36px)}}
-@keyframes spDraw{0%{opacity:0;stroke-dashoffset:100}1%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
-@keyframes spGapOut{to{opacity:0}}
-@keyframes spSpin{from{transform:rotate(-150deg) scale(.84)}to{transform:none}}
-@keyframes spBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-@keyframes spReady{0%,100%{transform:translateX(0)}50%{transform:translateX(2.5px)}}
-@keyframes spGlowIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
-@keyframes spArrowIn{0%{opacity:0;transform:translateX(-16px) scale(.6)}25%{opacity:1}100%{opacity:1;transform:none}}
-@keyframes spFlash{0%{opacity:0;transform:scale(.3)}30%{opacity:.8}100%{opacity:0;transform:scale(1.6)}}
-@keyframes spWave{0%{opacity:.42;transform:scale(.9)}100%{opacity:0;transform:scale(2.3)}}
-@keyframes spLetter{to{opacity:1;transform:none}}
-/* Départ (1,15 s) : le nom s'efface, l'arc se tend (flèche qui recule, C qui se contracte), la flèche est décochée
-   avec ses traînées et sort de l'écran ; le panneau violet glisse vers la droite derrière elle et découvre l'app,
-   qui arrive elle-même d'un léger glissement. */
-#ce-splash.out .sp-bg{animation:spSlide .86s .3s cubic-bezier(.65,0,.3,1) forwards}
-#ce-splash.out .sp-halo{animation:none;opacity:.9}
-#ce-splash.out .sp-word span{opacity:1;transform:none;animation:spWordOut .28s calc(var(--i) * 10ms) ease-in forwards}
-#ce-splash.out .sp-wave{animation:none;opacity:0}
-#ce-splash.out .sp-c{opacity:1;stroke-dashoffset:0;animation:none}
-#ce-splash.out .sp-gap{opacity:0;animation:none}
-#ce-splash.out .sp-cin{animation:none}
-#ce-splash.out .sp-awrap{opacity:1;transform:none;animation:none}
-#ce-splash.out .sp-glow{opacity:1;animation:spFade .4s .2s forwards}
-#ce-splash.out .sp-cwrap{animation:spCOut .55s cubic-bezier(.4,0,.2,1) forwards}
-#ce-splash.out .sp-fly{animation:spFly .72s cubic-bezier(.55,-.08,.8,.3) forwards}
-#ce-splash.out .sp-lines i{animation:spLine .38s .3s ease-out forwards}
-#ce-splash.out .sp-lines i:nth-child(2){animation-delay:.27s}#ce-splash.out .sp-lines i:nth-child(3){animation-delay:.33s}
-#ce-splash.out .sp-parts i{animation:spSuck .7s calc(.22s + var(--k) * 24ms) cubic-bezier(.6,0,.9,.4) forwards}
-@keyframes spWordOut{to{opacity:0;transform:translateY(-6px)}}
-@keyframes spCOut{0%{transform:none}35%{transform:scale(.9) rotate(8deg)}100%{transform:scale(.72) rotate(-35deg);opacity:0}}
-@keyframes spFly{0%{transform:none}32%{transform:translateX(-9px) scaleX(.92)}46%{transform:translateX(16px) scaleX(1.2)}100%{transform:translateX(95vw) scaleX(2.3)}}
-@keyframes spLine{0%{opacity:0;transform:scaleX(0)}30%{opacity:1}100%{opacity:0;transform:scaleX(1)}}
-@keyframes spSuck{0%{opacity:var(--o)}100%{opacity:0;transform:translate(70vw,0) scaleX(6)}}
-@keyframes spSlide{from{transform:translateX(0)}to{transform:translateX(150vw)}}
-@keyframes spFade{to{opacity:0}}
-html.ce-enter body>.page{animation:spAppIn .8s .38s cubic-bezier(.2,.8,.2,1) both}
-@keyframes spAppIn{from{transform:translateX(-14px);opacity:.55}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){#ce-splash *{animation:none!important}#ce-splash .sp-c{opacity:1;stroke-dashoffset:0}#ce-splash .sp-awrap,#ce-splash .sp-glow{opacity:1}
-  #ce-splash .sp-gap,#ce-splash .sp-wave,#ce-splash .sp-parts,#ce-splash .sp-flash{display:none}#ce-splash .sp-word span{opacity:1;transform:none}
-  #ce-splash.out{animation:spFade .35s forwards!important}html.ce-enter body>.page{animation:none}}
+#ce-splash{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100lvh;z-index:9999;overflow:hidden;contain:strict;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+#ce-splash .sp-bg{position:absolute;inset:0;background:var(--bg)}
+#ce-splash .sp-m,#ce-splash .sp-t,#ce-splash .sp-f,#ce-splash .sp-tr{position:absolute;left:0;top:0;will-change:transform,opacity}
+#ce-splash .sp-m{width:44px;height:44px;transform-origin:0 0;opacity:0}
+#ce-splash .sp-m>*{position:absolute;left:0;top:0;width:44px;height:44px;overflow:visible}
+#ce-splash .sp-tile{border-radius:12.7px;background:var(--brand)}
+#ce-splash .sp-m path{fill:none;stroke:var(--onbrand);stroke-linecap:round;stroke-linejoin:round}
+#ce-splash .sp-c,#ce-splash .sp-a{transform-origin:21.7px 22px;will-change:transform,opacity}
+#ce-splash .sp-t{font:700 26px/1.1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;letter-spacing:-.02em;color:var(--ink);white-space:nowrap}
+#ce-splash .sp-t.sora{font-family:Sora,-apple-system,system-ui,sans-serif}
+#ce-splash .sp-t em{font-style:normal;color:var(--brand)}
+#ce-splash .sp-t span{display:inline-block;opacity:0}
+#ce-splash .sp-f{width:64px;height:20px;opacity:0}
+#ce-splash .sp-f svg{width:64px;height:20px;overflow:visible}
+#ce-splash .sp-f path{fill:none;stroke:var(--brand);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+#ce-splash .sp-tr{width:120px;height:3px;border-radius:2px;background:var(--brand);transform-origin:100% 50%;opacity:0}
 </style>
 <script>
-/* Écran d'ouverture.
-   - Démarre (classe go) une fois la page affichée, pour ne sauter aucune image.
-   - CE_splashGate : l'app attend que tout ce qui démarre dans l'animation ait démarré (1,75 s) avant de se lancer.
-   - Se retire dès que l'app (ou l'écran de connexion) est prête, au plus tôt à 2,2 s.
-   - Pendant l'animation, la barre d'état de l'iPhone prend la couleur du fond (plus de voile sombre en haut).
-   - Jamais pendant le tri automatique en arrière-plan. */
 (function(){var s=document.getElementById("ce-splash");if(!s)return;
 if(/[?&]bg=1\b/.test(location.search)){s.remove();return}
-var reduce=false;try{reduce=matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
-var w=s.querySelector(".sp-word"),txt="Candidature Express",h="";for(var i=0;i<txt.length;i++)h+='<span style="--i:'+i+'"'+(i>11?' class="x"':'')+'>'+(txt[i]===" "?" ":txt[i])+'</span>';w.innerHTML=h;
-var P=s.querySelector(".sp-parts"),ph="";for(var k=0;k<14;k++){var r=function(a,b){return a+Math.random()*(b-a)};ph+='<i style="left:'+r(4,96).toFixed(1)+'%;top:'+r(8,94).toFixed(1)+'%;--s:'+r(2,4).toFixed(1)+'px;--o:'+r(.25,.65).toFixed(2)+';--t:'+r(3.2,5).toFixed(1)+'s;--d:'+r(0,1.4).toFixed(2)+'s;--k:'+k+'"></i>'}P.innerHTML=ph;
-var metas=[].slice.call(document.querySelectorAll('meta[name="theme-color"]')),old=metas.map(function(m){return m.content});metas.forEach(function(m){m.content="#5F52E2"});
 window.CE_PAUSED=document.visibilityState!=="visible";document.addEventListener("visibilitychange",function(){if(document.hidden)window.CE_PAUSED=true});
-var t0=null,started=null,ready=new Promise(function(ok){started=ok}),done=false;
-function go(){if(t0||upd)return;t0=Date.now();s.classList.add("go");started();
-  // Police du nom : Sora si elle est déjà chargée avant que les lettres n'apparaissent, sinon police du système (aucun saut).
-  setTimeout(function(){try{if(document.fonts&&document.fonts.check("700 22px Sora"))w.classList.add("sora")}catch(e){}},900)}
+var seen=false;try{seen=sessionStorage.getItem("ce.op")==="1"}catch(e){}
+// Déjà jouée pendant cette session (rechargement, mise à jour) : pas d'animation.
+if(seen){s.remove();return}
+var reduce=!s.animate;try{reduce=reduce||matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
+var OUT="cubic-bezier(.23,1,.32,1)",IO="cubic-bezier(.77,0,.175,1)",DR="cubic-bezier(.32,.72,0,1)";
+var T=1040,HOLD=860,A=[],bg=s.querySelector(".sp-bg"),hl=null,m=null;
+function an(el,fr,d,o){var kf=fr.map(function(f){var k={};for(var p in f)if(p!=="t")k[p]=f[p];k.offset=Math.min(1,f.t/(d||T));return k});
+  var a=el.animate(kf,Object.assign({duration:d||T,fill:"both"},o||{}));A.push(a);return a}
+function tr(x,y,sx,sy){return "translate("+x+"px,"+y+"px) scale("+sx+","+(sy==null?sx:sy)+")"}
+function el(c,h){var d=document.createElement("div");d.className=c;if(h)d.innerHTML=h;s.appendChild(d);return d}
+var t0=null,started=null,ready=new Promise(function(ok){started=ok}),appOk=false,held=false,phase="wait",done=false,upd=false;
+function build(){
+  var W=innerWidth,H=s.getBoundingClientRect().height||innerHeight,S=W<520?3.1:3.4,CX=W/2-22*S,CY=H*.45-22*S;
+  m=el("sp-m",'<div class="sp-tile"></div><svg class="sp-c" viewBox="0 0 52 52"><path stroke-width="4.4" d="M33.5 17.2A12 12 0 1 0 33.5 34.8"/></svg><svg class="sp-a" viewBox="0 0 52 52"><path stroke-width="4" d="M24 26h13.5M32.5 20.8L37.8 26l-5.3 5.2"/></svg>');
+  m.__home=[CX,CY,S];
+  var ti=el("sp-t"),tx="Candidature ",h="";for(var i=0;i<tx.length;i++)h+="<span>"+(tx[i]===" "?"&nbsp;":tx[i])+"</span>";
+  h+="<em>";for(var j=0,x="Express";j<x.length;j++)h+="<span>"+x[j]+"</span>";ti.innerHTML=h+"</em>";
+  try{if(document.fonts&&document.fonts.check("700 26px Sora"))ti.classList.add("sora")}catch(e){}
+  var tw=ti.getBoundingClientRect().width,TX=W/2-tw/2,TY=CY+44*S+26;
+  if(reduce){m.style.opacity=1;m.style.transform=tr(CX,CY,S);ti.style.transform="translate("+TX+"px,"+TY+"px)";[].forEach.call(ti.children,function(c){c.style.opacity=1});[].forEach.call(ti.querySelectorAll("span"),function(c){c.style.opacity=1});return}
+  // 1. Le logo arrive étiré, avec deux traînées, puis freine (écrasement) et se stabilise au centre.
+  [52,84].forEach(function(dy){var g=el("sp-tr");s.insertBefore(g,m);
+    an(g,[{t:0,opacity:0,transform:"translate(-60px,"+(CY+dy*S/3.1)+"px) scaleX(.2)",easing:OUT},{t:300,opacity:.55,transform:"translate("+(CX-130)+"px,"+(CY+dy*S/3.1)+"px) scaleX(1)"},{t:560,opacity:0,transform:"translate("+(CX-60)+"px,"+(CY+dy*S/3.1)+"px) scaleX(.1)"},{t:T,opacity:0,transform:"translate("+(CX-60)+"px,"+(CY+dy*S/3.1)+"px) scaleX(.1)"}])});
+  an(m,[{t:0,opacity:0,transform:tr(-180,CY,S*1.5,S),easing:OUT},{t:360,opacity:1,transform:tr(CX,CY,S),easing:OUT},{t:440,opacity:1,transform:tr(CX+4,CY-6,S*.9,S*1.06),easing:OUT},{t:520,opacity:1,transform:tr(CX,CY,S)},{t:T,opacity:1,transform:tr(CX,CY,S)}]);
+  // 2. Le C tourne comme une roue et ralentit avec le freinage.
+  an(m.querySelector(".sp-c"),[{t:0,transform:"rotate(-300deg) scale(.7)",easing:OUT},{t:360,transform:"rotate(-40deg) scale(.95)",easing:OUT},{t:560,transform:"rotate(0deg) scale(1)"},{t:T,transform:"none"}]);
+  // 3. La flèche se charge (léger recul), part, puis une nouvelle flèche se remet en place d'un coup sec.
+  an(m.querySelector(".sp-a"),[{t:0,opacity:0,transform:"translateX(-16px)"},{t:400,opacity:0,transform:"translateX(-16px)",easing:OUT},{t:500,opacity:1,transform:"translateX(-3px)",easing:IO},{t:580,opacity:1,transform:"translateX(-7px)",easing:"cubic-bezier(.5,0,.9,.3)"},{t:640,opacity:0,transform:"translateX(30px)"},{t:800,opacity:0,transform:"translateX(-18px)",easing:OUT},{t:900,opacity:1,transform:"translateX(3px)",easing:OUT},{t:980,opacity:1,transform:"none"},{t:T,opacity:1,transform:"none"}]);
+  // 4. La flèche décochée écrit le nom dans son sillage ; le nom s'efface en montant vers l'en-tête.
+  an(ti,[{t:0,opacity:1,transform:"translate("+TX+"px,"+TY+"px)"},{t:900,opacity:1,transform:"translate("+TX+"px,"+TY+"px)",easing:DR},{t:T,opacity:0,transform:"translate("+TX+"px,"+(TY-14)+"px)"}]);
+  [].forEach.call(ti.querySelectorAll("span"),function(c,i){var a0=620+i*9;
+    an(c,[{t:0,opacity:0,transform:"translateX(-10px)"},{t:a0,opacity:0,transform:"translateX(-10px)",easing:OUT},{t:a0+110,opacity:1,transform:"none"},{t:T,opacity:1,transform:"none"}])});
+  var fa=el("sp-f",'<svg viewBox="0 0 64 20"><path d="M2 10h58M50 3l8 7-8 7"/></svg>'),fy=TY+38;
+  an(fa,[{t:0,opacity:0,transform:"translate("+(TX-40)+"px,"+fy+"px)"},{t:600,opacity:0,transform:"translate("+(TX-40)+"px,"+fy+"px)",easing:OUT},{t:630,opacity:1,transform:"translate("+(TX-10)+"px,"+fy+"px)",easing:"linear"},{t:860,opacity:1,transform:"translate("+(TX+tw-30)+"px,"+fy+"px)",easing:OUT},{t:950,opacity:0,transform:"translate("+(TX+tw+40)+"px,"+fy+"px)"},{t:T,opacity:0,transform:"translate("+(TX+tw+40)+"px,"+fy+"px)"}]);
+}
+function finishSplash(){if(done)return;done=true;phase="end";s.remove();if(hl)hl.style.visibility="";window.CE_splashGate=null}
+// 5. Le logo va se poser à sa place dans l'en-tête ; le fond s'efface et l'app apparaît en remontant légèrement.
+function dock(){if(phase!=="wait"||done)return;phase="dock";
+  var g=document.documentElement.classList.contains("ce-gated");
+  if(reduce||g||!m||!hl){s.animate([{opacity:1},{opacity:0}],{duration:reduce?300:240,easing:"ease-out",fill:"forwards"}).onfinish=finishSplash;return}
+  var r=hl.getBoundingClientRect(),h=m.__home;
+  an(m,[{t:0,opacity:1,transform:tr(h[0],h[1],h[2]),easing:DR},{t:330,opacity:1,transform:tr(r.left,r.top,r.width/44)}],330);
+  an(bg,[{t:0,opacity:1,easing:OUT},{t:40,opacity:1,easing:OUT},{t:380,opacity:0}],380);
+  // (la barre du bas n'est pas déplacée : elle reste collée au bas de l'écran)
+  [].forEach.call(document.querySelectorAll("body>.page>:not(.bnav):not(script):not(dialog)"),function(e){e.animate([{transform:"translateY(10px)"},{transform:"none"}],{duration:340,delay:40,easing:OUT,fill:"backwards"})});
+  setTimeout(finishSplash,390)}
+function tryDock(){if(held&&appOk)dock()}
+function go(){if(t0||upd)return;t0=Date.now();s.classList.add("go");try{sessionStorage.setItem("ce.op","1")}catch(e){}
+  hl=document.querySelector("header .logo");if(hl)hl.style.visibility="hidden";
+  build();started();setTimeout(function(){held=true;tryDock()},reduce?250:HOLD)}
+// Un toucher (ou une touche du clavier) passe l'animation : le logo va tout de suite se poser (dès que l'app est prête).
+function skip(){if(!t0||done)return;
+  if(phase==="wait"){A.forEach(function(a){try{a.finish()}catch(e){}});held=true;tryDock()}
+  else{A.forEach(function(a){try{a.finish()}catch(e){}});finishSplash()}}
+s.addEventListener("pointerdown",skip);addEventListener("keydown",function(e){if(!done&&t0&&!/^(Shift|Control|Alt|Meta|Tab)$/.test(e.key))skip()});
 // Avant l'animation : nouvelle version disponible ? Si oui, on recharge pendant que l'écran est encore fixe,
 // pour que l'animation ne se joue qu'une fois, déjà sur la bonne version. Vérification limitée à 0,6 s.
-var upd=false;
 function preCheck(){return new Promise(function(ok){try{var sw=navigator.serviceWorker;
   if(/[?&]demo\b/.test(location.search)||!sw||!sw.controller||navigator.onLine===false)return ok();
   try{if(Date.now()-(+sessionStorage.getItem("ce.upd")||0)<15000)return ok()}catch(e){}
@@ -921,12 +888,12 @@ function preCheck(){return new Promise(function(ok){try{var sw=navigator.service
 function start(){preCheck().then(function(){requestAnimationFrame(function(){requestAnimationFrame(go)})})}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 setTimeout(go,2000);
-window.CE_splashGate=function(){return ready.then(function(){var wt=reduce?0:Math.max(0,1750-(Date.now()-t0));return new Promise(function(ok){setTimeout(ok,wt)})})};
-window.CE_splashOut=function(){if(done)return;done=true;ready.then(function(){setTimeout(function(){s.classList.add("out");document.documentElement.classList.add("ce-enter");
-  setTimeout(function(){s.remove();window.CE_splashGate=null;metas.forEach(function(m,i){m.content=old[i]});document.documentElement.classList.remove("ce-enter")},1250)},Math.max(0,(reduce?300:2200)-(Date.now()-t0)))})};
+// L'app démarre dès que l'animation est lancée (deux images plus tard) : elle tourne sur la puce graphique.
+window.CE_splashGate=function(){return ready.then(function(){return new Promise(function(ok){requestAnimationFrame(function(){requestAnimationFrame(ok)})})})};
+window.CE_splashOut=function(){appOk=true;ready.then(tryDock)};
 function chk(){var c=document.documentElement.classList;if(!c.contains("ce-boot")||c.contains("ce-gated"))window.CE_splashOut()}
 try{new MutationObserver(chk).observe(document.documentElement,{attributes:true,attributeFilter:["class"]})}catch(e){}
-setTimeout(window.CE_splashOut,10000)})();
+setTimeout(function(){appOk=true;held=true;tryDock();setTimeout(finishSplash,600)},10000)})();
 </script>
 <div class="page">
 <header>
