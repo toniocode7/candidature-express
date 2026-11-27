@@ -1,7 +1,7 @@
 (function(){
 var K="candexp.";
 function lsg(k,d){try{var v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}}
-function lss(k,v){try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){}}
+function lss(k,v){SGC=null;try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){}} // tout enregistrement vide la mémoire du tri des suggestions
 function G(id){return document.getElementById(id)}
 var FCMAX=1000,FCRES=150;
 function fcMonth(){var d=new Date(),day=(typeof PF!=="undefined"&&PF.fcDay)||24,y=d.getFullYear(),m=d.getMonth()+1;if(d.getDate()<day){m--;if(m<1){m=12;y--}}return y+"-"+m}

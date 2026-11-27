@@ -1,7 +1,7 @@
 /* ---------- Navigation et prise en main ---------- */
 function agoTxt(t){var m=Math.round((Date.now()-t)/6e4);if(m<1)return "à l'instant";if(m<60)return "il y a "+m+" min";var h=Math.round(m/60);if(h<24)return "il y a "+h+" h";var d=Math.round(h/24);return d===1?"hier":"il y a "+d+" jours"}
 var VIEWS={mapv:["mapv"],home:["hello","cmdsec","hnext","todo","hfeed"],dashbox:["dashbox"],pastewrap:["pastewrap","res"],sugbox:["sugbox"],histbox:["histbox"]},VIEW="home";
-function setView(v){if(!VIEWS[v])v="home";var chg=v!==VIEW;VIEW=v;if(v==="sugbox"&&!window.CE_BG&&SG.at&&(SG.seenAt||0)<SG.at){SG.seenAt=SG.at;try{sgSave()}catch(e){}}Object.keys(VIEWS).forEach(function(k){VIEWS[k].forEach(function(id){var e=G(id);if(e)e.classList.toggle("offv",k!==v)})});
+function setView(v){if(!VIEWS[v])v="home";var chg=v!==VIEW;VIEW=v;if(v==="sugbox"&&!window.CE_BG&&SG.at&&(SG.seenAt||0)<SG.at){SG.seenAt=SG.at;setTimeout(function(){try{sgSave()}catch(e){}},400)}Object.keys(VIEWS).forEach(function(k){VIEWS[k].forEach(function(id){var e=G(id);if(e)e.classList.toggle("offv",k!==v)})});
 VIEWS[v].forEach(function(id){var e=G(id);if(e&&e.tagName==="DETAILS"&&!e.open)e.open=true});
 document.querySelectorAll("#bnav [data-go]").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-go")===v);b.setAttribute("aria-current",b.getAttribute("data-go")===v?"page":"false")});
 document.body.setAttribute("data-view",v);if(chg)window.scrollTo(0,0);try{homeUI()}catch(e){}if(v==="histbox"){try{mlUI()}catch(e){}if(chg&&ML.last&&Date.now()-ML.last>20*6e4)setTimeout(function(){try{mlCheck(true)}catch(e){}},400)}}
@@ -70,8 +70,10 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&VIE
 /* ---------- Accueil : offre du jour ---------- */
 
 (function(){var _rl=renderList;renderList=function(){_rl.apply(this,arguments);try{todoUI();homeUI()}catch(e){}};var _ml=mlUI;mlUI=function(){_ml.apply(this,arguments);try{todoUI()}catch(e){}};var _ss=sgSave;sgSave=function(){_ss.apply(this,arguments);try{todoUI()}catch(e){}}})();
-// Rafraîchit l'accueil toutes les 5 s seulement quand il est affiché ; ailleurs, juste la pastille de l'icône.
-setInterval(function(){if(document.hidden)return;try{if(VIEW==="home"){todoUI();homeUI()}else appBadge()}catch(e){}},5000);
+// Rafraîchit l'accueil toutes les 5 s seulement quand il est affiché.
+setInterval(function(){if(document.hidden||VIEW!=="home")return;try{todoUI();homeUI()}catch(e){}},5000);
+// Pastille de l'icône : mise à jour quand on quitte l'app (c'est là qu'elle se voit).
+document.addEventListener("visibilitychange",function(){if(document.hidden){try{appBadge()}catch(e){}}});
 document.querySelectorAll("dialog.sheet [data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
 document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d&&Date.now()-(+d.dataset.opened||0)>600)d.close()})});
 function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}}

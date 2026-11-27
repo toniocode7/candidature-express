@@ -1,7 +1,7 @@
 (function(){
 var K="candexp.";
 function lsg(k,d){try{var v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}}
-function lss(k,v){try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){}}
+function lss(k,v){SGC=null;try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){}} // tout enregistrement vide la mémoire du tri des suggestions
 function G(id){return document.getElementById(id)}
 var FCMAX=1000,FCRES=150;
 function fcMonth(){var d=new Date(),day=(typeof PF!=="undefined"&&PF.fcDay)||24,y=d.getFullYear(),m=d.getMonth()+1;if(d.getDate()<day){m--;if(m<1){m=12;y--}}return y+"-"+m}
@@ -177,7 +177,7 @@ G("cmdnew").onclick=function(){CMDH=[];G("cmdlog").innerHTML="";G("cmdn").textCo
 /* ---------- Navigation et prise en main ---------- */
 function agoTxt(t){var m=Math.round((Date.now()-t)/6e4);if(m<1)return "à l'instant";if(m<60)return "il y a "+m+" min";var h=Math.round(m/60);if(h<24)return "il y a "+h+" h";var d=Math.round(h/24);return d===1?"hier":"il y a "+d+" jours"}
 var VIEWS={mapv:["mapv"],home:["hello","cmdsec","hnext","todo","hfeed"],dashbox:["dashbox"],pastewrap:["pastewrap","res"],sugbox:["sugbox"],histbox:["histbox"]},VIEW="home";
-function setView(v){if(!VIEWS[v])v="home";var chg=v!==VIEW;VIEW=v;if(v==="sugbox"&&!window.CE_BG&&SG.at&&(SG.seenAt||0)<SG.at){SG.seenAt=SG.at;try{sgSave()}catch(e){}}Object.keys(VIEWS).forEach(function(k){VIEWS[k].forEach(function(id){var e=G(id);if(e)e.classList.toggle("offv",k!==v)})});
+function setView(v){if(!VIEWS[v])v="home";var chg=v!==VIEW;VIEW=v;if(v==="sugbox"&&!window.CE_BG&&SG.at&&(SG.seenAt||0)<SG.at){SG.seenAt=SG.at;setTimeout(function(){try{sgSave()}catch(e){}},400)}Object.keys(VIEWS).forEach(function(k){VIEWS[k].forEach(function(id){var e=G(id);if(e)e.classList.toggle("offv",k!==v)})});
 VIEWS[v].forEach(function(id){var e=G(id);if(e&&e.tagName==="DETAILS"&&!e.open)e.open=true});
 document.querySelectorAll("#bnav [data-go]").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-go")===v);b.setAttribute("aria-current",b.getAttribute("data-go")===v?"page":"false")});
 document.body.setAttribute("data-view",v);if(chg)window.scrollTo(0,0);try{homeUI()}catch(e){}if(v==="histbox"){try{mlUI()}catch(e){}if(chg&&ML.last&&Date.now()-ML.last>20*6e4)setTimeout(function(){try{mlCheck(true)}catch(e){}},400)}}
@@ -246,8 +246,10 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&VIE
 /* ---------- Accueil : offre du jour ---------- */
 
 (function(){var _rl=renderList;renderList=function(){_rl.apply(this,arguments);try{todoUI();homeUI()}catch(e){}};var _ml=mlUI;mlUI=function(){_ml.apply(this,arguments);try{todoUI()}catch(e){}};var _ss=sgSave;sgSave=function(){_ss.apply(this,arguments);try{todoUI()}catch(e){}}})();
-// Rafraîchit l'accueil toutes les 5 s seulement quand il est affiché ; ailleurs, juste la pastille de l'icône.
-setInterval(function(){if(document.hidden)return;try{if(VIEW==="home"){todoUI();homeUI()}else appBadge()}catch(e){}},5000);
+// Rafraîchit l'accueil toutes les 5 s seulement quand il est affiché.
+setInterval(function(){if(document.hidden||VIEW!=="home")return;try{todoUI();homeUI()}catch(e){}},5000);
+// Pastille de l'icône : mise à jour quand on quitte l'app (c'est là qu'elle se voit).
+document.addEventListener("visibilitychange",function(){if(document.hidden){try{appBadge()}catch(e){}}});
 document.querySelectorAll("dialog.sheet [data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
 document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d&&Date.now()-(+d.dataset.opened||0)>600)d.close()})});
 function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}}
@@ -1316,7 +1318,10 @@ var drom=!!(p.cc&&CEDROM[p.cc])||(p.fr&&(p.lon<-20||p.lon>40)),foreign=!drom&&!!
 if(foreign){if(SG.ze===false)return "lieu";var E=splitList(SG.etr).map(geoOf).filter(Boolean);if(!E.length)return "lieu";if(p.ctry)return E.some(function(g){return g.cc===p.cc})?"":"lieu";return E.some(function(g){return g.ctry?g.cc===p.cc:hav(g,p)<=R})?"":"lieu"}
 if(drom){if(SG.zd===false)return "lieu";var D=splitList(SG.drom).map(geoOf).filter(Boolean);if(!D.length)return "lieu";return D.some(function(g){return hav(g,p)<=400})?"":"lieu"}
 if(SG.zf===false)return "lieu";var F=splitList(SG.lieux).map(geoOf).filter(Boolean);if(!F.length)return "";return F.some(function(g){return hav(g,p)<=R})?"":"lieu"}
-function sgKeep(){return sgKeep0().filter(function(x){return !ceOut(x)})}
+/* Tri des suggestions mis en mémoire le temps d'une action : il était refait plusieurs fois à chaque changement
+   d'onglet (compteurs de l'accueil, pastille...). La mémoire est vidée dès la fin de l'action en cours. */
+var SGC=null;function sgMemo(name,f){if(!SGC){SGC={};setTimeout(function(){SGC=null},0)}if(!SGC[name])SGC[name]=f();return SGC[name].slice()}
+function sgKeep(){return sgMemo("keep",function(){return sgKeep0().filter(function(x){return !ceOut(x)})})}
 /* Offres masquées seulement par un critère réglable (lieu, contrat, salaire, entreprise exclue, expérience) : gardées en réserve. */
 function sgReserve(){return sgKeep0(true).filter(function(x){return ceOut(x)||sgExpX(x)||xpOut(x)})}
 function sgWithReserve(list){var seen={};list.forEach(function(x){seen[x.url]=1});return list.concat(sgReserve().filter(function(x){return !seen[x.url]}))}
@@ -1345,7 +1350,8 @@ el.innerHTML=keys.map(function(k){var l=CESORT[k],g=k==="dist"?"Distance de "+c:
 var k0=keys.indexOf(ceSortKey())>=0?ceSortKey():"conseil";el.value=k0+(ceSortInv()?":inv":"");el.setAttribute("aria-label","Trier les offres");var sl=G("sgsortl");if(sl){sl.textContent=CESHORT[k0]+" "+(ceSortInv()?"↑":"↓");sl.parentNode.title="Tri : "+el.options[el.selectedIndex].textContent}
 el.onchange=function(){var v=el.value.split(":");try{localStorage.setItem("ce.sgsort",v[0]);localStorage.setItem("ce.sgdir",v[1]?"inv":"")}catch(e){}sgUI()}}
 function ceHiddenN(){try{return sgKeep0().length-sgKeep().length}catch(e){return 0}}
-function sgKeep0(rev){var mine=mineList(),hl=hidList(),lim=Date.now()-SGDAYS*864e5,known={},hid={};OFF.forEach(function(o){if(o.url)known[nurl(o.url)]=1});(SG.hidden||[]).forEach(function(u){hid[nurl(u)]=1});
+function sgKeep0(rev){return sgMemo(rev?"k0r":"k0",function(){return sgKeep0x(rev)})}
+function sgKeep0x(rev){var mine=mineList(),hl=hidList(),lim=Date.now()-SGDAYS*864e5,known={},hid={};OFF.forEach(function(o){if(o.url)known[nurl(o.url)]=1});(SG.hidden||[]).forEach(function(u){hid[nurl(u)]=1});
 return (SG.items||[]).filter(function(x){if(!x.fd)x.fd=SG.at||Date.now();return x.fd>=lim&&!sgUrls(x).some(function(u){u=nurl(u);return known[u]||hid[u]})&&!sgStale(x)&&!sgIsMine(x,mine)&&!sgIsHid(x,hl)&&!sgExcl(x)&&(rev||!sgExpX(x)&&!xpOut(x))&&!sgStage(x)&&!sgLang(x)&&!x.lgReq&&!isCaIndeed(x)})}
 function splitList(v){return String(v||"").split(/[,;\n]+/).map(function(x){return x.trim()}).filter(Boolean)}
 var EXCLDEF="magasinier, manutentionnaire, préparateur de commandes, cariste, agent de quai, agent logistique, opérateur logistique, agent d'entrepôt, employé logistique, équipier logistique, opérateur de production, agent de production, agent de conditionnement, emballeur, réceptionnaire, chauffeur, livreur, warehouse worker, warehouse operative, order picker, picker, packer, forklift, lagerarbetare, lagermedarbejder, lagerarbejder";
@@ -1434,7 +1440,7 @@ function sgExpX(x){return expReq([x.titre,x.extrait].filter(Boolean).join(". "))
 var STG_T=/\b(stages?|stagiaires?|alternances?|alternants?|alternante|apprentie?s?|apprentissage|internships?|interns?|trainees?|traineeship|apprentices?|apprenticeship|work[- ]?study|praktik|praktikant|praktikanter|praktikplats|elev|larling|lærling|contrat pro|professionnalisation|werkstudent|praktikum)\b/;
 var STG_X=/(offre de stage|stage de (fin d.etudes|\d)|stage (conventionne|d.une duree|de [0-9]+ mois|a pourvoir)|convention de stage|en alternance|contrat d.apprentissage|contrat de professionnalisation|rythme d.alternance|stagiaire|alternant|apprenti\b|internship|apprenticeship|work-study|praktikplats|praktikant)/;
 function sgStage(x){var c=norm(x.contrat||"");if(/^(stage|alternance|apprentissage|internship|apprenticeship)/.test(c))return true;var t=" "+norm(x.titre)+" ";if(STG_T.test(t))return true;var e=String(x.extrait||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");return STG_X.test(e)}
-function sgFix(){EXPMAX=+SG.xpmax||4;if(SG.excl==null)SG.excl=EXCLDEF;["kwen","drom","etr","ent"].forEach(function(k){if(SG[k]==null)SG[k]=""});["zf","zd","ze","zc"].forEach(function(k){if(SG[k]==null)SG[k]=true});if(!SG.kwen)SG.kwen="supply chain, procurement, purchasing, logistics, import export";if(!SG.nordic){var ev=norm(SG.etr),add=[];if(ev.indexOf("stockholm")<0)add.push("Stockholm");if(ev.indexOf("copenhague")<0)add.push("Copenhague");if(add.length)SG.etr=(SG.etr?SG.etr.replace(/[\s,]+$/,"")+", ":"")+add.join(", ");SG.nordic=1}}
+function sgFix(){SGC=null;EXPMAX=+SG.xpmax||4;if(SG.excl==null)SG.excl=EXCLDEF;["kwen","drom","etr","ent"].forEach(function(k){if(SG[k]==null)SG[k]=""});["zf","zd","ze","zc"].forEach(function(k){if(SG[k]==null)SG[k]=true});if(!SG.kwen)SG.kwen="supply chain, procurement, purchasing, logistics, import export";if(!SG.nordic){var ev=norm(SG.etr),add=[];if(ev.indexOf("stockholm")<0)add.push("Stockholm");if(ev.indexOf("copenhague")<0)add.push("Copenhague");if(add.length)SG.etr=(SG.etr?SG.etr.replace(/[\s,]+$/,"")+", ":"")+add.join(", ");SG.nordic=1}}
 function sgCost(){var el=G("sgcost");if(el)el.textContent=SG.zf===false&&SG.zd===false&&SG.ze===false&&SG.zc===false?"Coche au moins une zone.":""}
 function sgUI(){G("sgkw").value=SG.kw;G("sglieu").value=SG.lieux;sgFix();G("sgent").value=SG.ent;G("sgexcl").value=SG.excl;G("sgkwen").value=SG.kwen;G("sgdrom").value=SG.drom;G("sgetr").value=SG.etr;["zf","zd","ze","zc"].forEach(function(k){G("sg"+k).checked=SG[k]!==false});
 G("sgct").innerHTML=CTS.map(function(c){return '<label class="chk"><input type="checkbox" value="'+c+'"'+(SG.ct.indexOf(c)>=0?' checked':'')+'> '+c+'</label>'}).join("");
