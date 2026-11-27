@@ -799,8 +799,8 @@ details:not(.sugd)[open]>:not(summary){animation:rfReveal .18s var(--ease-out)}
 #ce-splash .sp-m,#ce-splash .sp-t,#ce-splash .sp-f,#ce-splash .sp-tr{position:absolute;left:0;top:0;will-change:transform,opacity}
 #ce-splash .sp-m{width:44px;height:44px;transform-origin:0 0;opacity:0}
 #ce-splash .sp-m>*{position:absolute;left:0;top:0;width:44px;height:44px;overflow:visible}
-#ce-splash .sp-tile{border-radius:12.7px;background:var(--brand)}
-#ce-splash .sp-m path{fill:none;stroke:var(--onbrand);stroke-linecap:round;stroke-linejoin:round}
+#ce-splash .sp-tile{border-radius:12.7px;background:#4338CA} /* couleurs de l'icône de l'app, en clair comme en sombre */
+#ce-splash .sp-m path{fill:none;stroke:#fff;stroke-linecap:round;stroke-linejoin:round}
 #ce-splash .sp-c,#ce-splash .sp-a{transform-origin:21.7px 22px;will-change:transform,opacity}
 #ce-splash .sp-t{font:700 26px/1.1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;letter-spacing:-.02em;color:var(--ink);white-space:nowrap}
 #ce-splash .sp-t.sora{font-family:Sora,-apple-system,system-ui,sans-serif}
@@ -909,9 +909,9 @@ setTimeout(function(){appOk=true;held=true;tryDock();setTimeout(finishSplash,600
 <header>
   <div class="brand">
     <div class="logo" aria-hidden="true"><svg viewBox="0 0 52 52">
-      <rect width="52" height="52" rx="15" fill="var(--brand)"/>
-      <path d="M33.5 17.2A12 12 0 1 0 33.5 34.8" fill="none" stroke="var(--onbrand)" stroke-width="4.4" stroke-linecap="round"/>
-      <path d="M24 26h13.5M32.5 20.8L37.8 26l-5.3 5.2" fill="none" stroke="var(--onbrand)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect width="52" height="52" rx="15" fill="#4338CA"/>
+      <path d="M33.5 17.2A12 12 0 1 0 33.5 34.8" fill="none" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/>
+      <path d="M24 26h13.5M32.5 20.8L37.8 26l-5.3 5.2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
     </svg></div>
     <div style="min-width:0"><h1>Candidature <em>Express</em></h1>
       <div class="tagline">CDI, CDD et intérim : de l'annonce à la candidature</div></div>
