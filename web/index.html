@@ -610,6 +610,10 @@ select.sbsel{font-size:1rem!important}
 .ofres .ab{margin-top:12px}
 .lchev.r svg{transform:none!important}
 .oi{position:relative;overflow:hidden}
+/* Liste longue : l'iPhone ne calcule et ne dessine que les candidatures visibles à l'écran. */
+.oi:not(.open){content-visibility:auto;contain-intrinsic-size:auto 92px}
+/* Pas de zoom au pincement, sans bloquer le défilement (remplace un écouteur JavaScript sur chaque mouvement du doigt). */
+html{touch-action:pan-x pan-y}
 .oi.swing .it{position:relative;z-index:1;background:var(--card)}
 .simc{display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 14px;background:color-mix(in srgb,var(--brand) 6%,var(--card))}.simc .note{margin:2px 0 0}.simc .sb{flex:none}
 .simb{display:flex;flex-direction:column;gap:12px}.simq{font:600 1.12rem/1.4 var(--fb);margin:0}.simmic{display:flex;flex-direction:column;align-items:center;gap:8px;margin:14px 0}

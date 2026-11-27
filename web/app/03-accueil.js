@@ -70,7 +70,8 @@ document.addEventListener("visibilitychange",function(){if(!document.hidden&&VIE
 /* ---------- Accueil : offre du jour ---------- */
 
 (function(){var _rl=renderList;renderList=function(){_rl.apply(this,arguments);try{todoUI();homeUI()}catch(e){}};var _ml=mlUI;mlUI=function(){_ml.apply(this,arguments);try{todoUI()}catch(e){}};var _ss=sgSave;sgSave=function(){_ss.apply(this,arguments);try{todoUI()}catch(e){}}})();
-setInterval(function(){try{todoUI();homeUI()}catch(e){}},5000);
+// Rafraîchit l'accueil toutes les 5 s seulement quand il est affiché ; ailleurs, juste la pastille de l'icône.
+setInterval(function(){if(document.hidden)return;try{if(VIEW==="home"){todoUI();homeUI()}else appBadge()}catch(e){}},5000);
 document.querySelectorAll("dialog.sheet [data-close]").forEach(function(b){b.onclick=function(){b.closest("dialog").close()}});
 document.querySelectorAll("dialog.sheet").forEach(function(d){d.addEventListener("click",function(e){if(e.target===d&&Date.now()-(+d.dataset.opened||0)>600)d.close()})});
 function shOpen(d){if(!d.open){d.dataset.opened=Date.now();try{d.showModal()}catch(e){d.setAttribute("open","")}noAutoFocus()}}
