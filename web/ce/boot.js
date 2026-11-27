@@ -33,7 +33,7 @@
   var gate = null;
   function showGate(html) {
     if (!gate) { gate = el("div", { class: "ce-gate", role: "dialog", "aria-modal": "true" }); document.body.appendChild(gate); }
-    gate.innerHTML = '<div class="ce-card"><div class="ce-logo" aria-hidden="true"><svg viewBox="0 0 52 52"><rect width="52" height="52" rx="15" fill="var(--brand)"/><path d="M33.5 17.2A12 12 0 1 0 33.5 34.8" fill="none" stroke="var(--onbrand)" stroke-width="4.4" stroke-linecap="round"/><path d="M24 26h13.5M32.5 20.8L37.8 26l-5.3 5.2" fill="none" stroke="var(--onbrand)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' + html + "</div>";
+    gate.innerHTML = '<div class="ce-card"><div class="ce-logo" aria-hidden="true"><svg viewBox="0 0 52 52"><rect width="52" height="52" rx="15" fill="#4338CA"/><path d="M33.5 17.2A12 12 0 1 0 33.5 34.8" fill="none" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/><path d="M24 26h13.5M32.5 20.8L37.8 26l-5.3 5.2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' + html + "</div>";
     document.documentElement.classList.add("ce-gated");
     return gate;
   }
