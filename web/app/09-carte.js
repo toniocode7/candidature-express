@@ -17,7 +17,7 @@ for(var cn in g.ctry){if((" "+n+" ").indexOf(" "+cn+" ")>=0){var q=g.ctry[cn];re
 var tl=t.split(",").map(function(x){return x.trim()}).filter(Boolean);if(tl.length>=2){var lt=tl[tl.length-1],cd=lt.toUpperCase(),cc2={UK:"GB",ENG:"GB",SCT:"GB",WLS:"GB",NIR:"GB",USA:"US"}[cd]||(/^[A-Z]{2}$/.test(lt)?cd:"");if(cd==="ENG"||cd==="SCT"||cd==="WLS")cc2="GB";if(cc2&&cc2!=="FR"&&g.ccp[cc2]){var q2=g.ccp[cc2];return {lon:q2[0],lat:q2[1],nm:cd,cc:cc2,ctry:1}}}return null}
 var GCACHE={};window.__geoOf=function(l){return geoOf(l)};function geoOf(lieu){var k=String(lieu||"");if(!(k in GCACHE))GCACHE[k]=geoFind(k);return GCACHE[k]}
 function titleCase(s){return String(s||"").replace(/\s+\d+(er|e)?$/,"").replace(/(^|[\s-])([a-zà-ÿ])/g,function(a,b,c){return b+c.toUpperCase()})}
-var MCOL={2:"var(--ochre)",4:"var(--brandtx)",1:"var(--good)",0:"var(--mute)",3:"var(--bad)"},MRANK={2:5,4:4,1:3,0:2,3:1};
+var MCOL={2:"var(--ochre)",4:"var(--brand)",1:"var(--good)",0:"var(--mute)",3:"var(--bad)"},MRANK={2:5,4:4,1:3,0:2,3:1};
 function mStat(o){return o.st===2&&o.ir?3:o.st}
 function mGroups(){var gr={},none=0;function add(item,lieu,kind){var p=geoOf(lieu);if(!p){if(kind==="off")none++;return}var key=kind+":"+p.lon.toFixed(2)+","+p.lat.toFixed(2);var gg=gr[key]=gr[key]||{key:key,kind:kind,p:p,lieu:lieu,items:[]};gg.items.push(item)}
 if(MLAY.off)OFF.forEach(function(o){if(o.st==null||isArch(o))return;add(o,dInfo(o).lieu,"off")});
